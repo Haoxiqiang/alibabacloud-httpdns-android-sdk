@@ -2,9 +2,6 @@ package com.alibaba.sdk.android.httpdns.track;
 
 import android.util.Log;
 
-import com.alibaba.sdk.android.httpdns.net.SpConstants;
-import com.alibaba.sdk.android.httpdns.net.SpStatusManager;
-
 import java.util.Random;
 
 /**
@@ -37,31 +34,6 @@ public class SessionTrackMgr {
 
     private final static class InstanceHolder {
         private final static SessionTrackMgr INSTANCE = new SessionTrackMgr();
-    }
-
-
-    public String getNetType() {
-        final int networkType = SpStatusManager.getInstance().getNetworkType();
-
-        switch (networkType) {
-            case SpConstants.NETWORK_TYPE_UNCONNECTED:
-            case SpConstants.NETWORK_TYPE_UNKNOWN:
-                return SessionTrackConfig.TYPE_UNKNOWN;
-            case SpConstants.NETWORK_TYPE_WIFI:
-                return SessionTrackConfig.TYPE_WIFI;
-            case SpConstants.NETWORK_TYPE_2G:
-                return SessionTrackConfig.TYPE_2G;
-            case SpConstants.NETWORK_TYPE_3G:
-                return SessionTrackConfig.TYPE_3G;
-            case SpConstants.NETWORK_TYPE_4G:
-                return SessionTrackConfig.TYPE_4G;
-        }
-
-        return SessionTrackConfig.TYPE_UNKNOWN;
-    }
-
-    public String getBssid() {
-        return SpStatusManager.getInstance().getBssid();
     }
 
     public String getSessionId() {

@@ -27,14 +27,15 @@
 -keeppackagenames com.alibaba.sdk.android.httpdns
 -keep class com.alibaba.sdk.android.httpdns.HttpDns{*;}
 -keep class com.alibaba.sdk.android.httpdns.HttpDnsService{*;}
+-keep class com.alibaba.sdk.android.httpdns.SyncService{*;}
+-keep class com.alibaba.sdk.android.httpdns.RequestIpType{*;}
 -keep class com.alibaba.sdk.android.httpdns.net64.Net64Service{*;}
 -keep class com.alibaba.sdk.android.httpdns.DegradationFilter{*;}
--keep class com.alibaba.sdk.android.httpdns.probe.IPProbeService{*;}
 -keep class com.alibaba.sdk.android.httpdns.probe.IPProbeItem{*;}
 -keep class com.alibaba.sdk.android.httpdns.ILogger{*;}
+-keepclasseswithmembers class com.alibaba.sdk.android.httpdns.log.HttpDnsLog {
+    public static *** setLogger(***);
+    public static *** removeLogger(***);
+    public static *** enable(***);
+}
 -keep class com.alibaba.sdk.android.httpdns.HTTPDNSResult{*;}
-
--keep class com.alibaba.sdk.android.beacon.**{*;}
--keep class com.alibaba.sdk.android.utils.**{*;}
--keep class * implements com.alibaba.sdk.android.beacon.Beacon.OnUpdateListener{*;}
--keep class * implements com.alibaba.sdk.android.beacon.Beacon.OnServiceErrListener{*;}

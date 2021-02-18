@@ -2,7 +2,7 @@ package com.alibaba.sdk.android.httpdns.report;
 
 import android.text.TextUtils;
 
-import com.alibaba.sdk.android.httpdns.HttpDnsException;
+import com.alibaba.sdk.android.httpdns.request.HttpException;
 
 import java.net.SocketTimeoutException;
 
@@ -12,8 +12,8 @@ import java.net.SocketTimeoutException;
 
 public class ReportUtils {
     public static int getErrorCode(Throwable throwable) {
-        if (throwable instanceof HttpDnsException) {
-            return ((HttpDnsException) throwable).getErrorCode();
+        if (throwable instanceof HttpException) {
+            return ((HttpException) throwable).getCode();
         } else if (throwable instanceof SocketTimeoutException) {
             return ReportConfig.ERROR_CODE_TIMEOUT;
         } else {
@@ -31,15 +31,5 @@ public class ReportUtils {
                 return ReportConfig.ERROR_MSG_DEFAULT;
             }
         }
-    }
-
-
-    /**
-     * 判断当前是否是ipv6环境
-     *
-     * @return 目前统一返回0
-     */
-    public static int isIpv6() {
-        return 0;
     }
 }

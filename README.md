@@ -4,11 +4,34 @@
 
 ## 注意
 
-请在HttpDnsConfig中配置你所使用账号的初始服务IP，否则无法请求
-```java
-    // HttpDnsConfig.java
-    // 此处需要配置自己的初始服务IP
-    static String[] SERVER_IPS = new String[]{"初始服务IP"};
-    // 此处需要配置自己的初始服务IP
-    static final String[] SCHEDULE_CENTER_URLS = {"初始服务IP"};
+### 配置初始IP
+请在gradle.properties中配置你所使用账号的初始服务IP，否则无法请求
+```gradle
+// InputYourInitServerIp 替换为启动IP, 有几个就放几个
+INIT_SERVERS={"InputYourInitServerIp", "InputYourInitServerIp", "InputYourInitServerIp"}
+```
+### 编译项目
+如果编译报如下错误
+```gradle
+Could not find :alicloud-android-httpdns-0.0.0.1-local-SNAPSHOT-end2end-forTest:.
+```
+请先执行
+```
+./gradlew copyAARForApp
+```
+
+### 运行测试case
+```
+// end2end test
+./gradlew clean :app:testDebugUnitTest
+
+// unit test
+./gradlew clean :httpdns-sdk:testEnd2endForTestUnitTest
+```
+
+### 打包
+需要先修改gradle.properties的INIT_SERVERS配置，然后执行如下命令打包
+```
+// 2.0.0 为 版本号
+./gradlew clean :httpdns-sdk:assembleNormalRelease -PVERSION_NAME=2.0.0
 ```

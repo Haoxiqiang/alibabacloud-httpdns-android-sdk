@@ -1,5 +1,8 @@
 package com.alibaba.sdk.android.httpdns.report;
 
+import com.alibaba.sdk.android.httpdns.exception.HttpDnsUncaughtExceptionHandler;
+import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
@@ -20,6 +23,7 @@ final class ReportDispatcher {
         public Thread newThread(Runnable runnable) {
             Thread result = new Thread(runnable, DEMO_NAME);
             result.setDaemon(false);
+            result.setUncaughtExceptionHandler(new HttpDnsUncaughtExceptionHandler());
             return result;
         }
     };
@@ -28,9 +32,18 @@ final class ReportDispatcher {
 
     synchronized ExecutorService getExecutorService() {
         if (mExecutorService == null) {
-            mExecutorService = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 1, TimeUnit.SECONDS,
-                    new SynchronousQueue<Runnable>(), mThreadFactory);
+            mExecutorService = new ThreadPoolExecutor(0, 10, 1, TimeUnit.SECONDS,
+                    new SynchronousQueue<Runnable>(), mThreadFactory, new MyDiscardPolicy());
         }
         return mExecutorService;
     }
+
+    private static class MyDiscardPolicy extends ThreadPoolExecutor.DiscardPolicy {
+        @Override
+        public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+            super.rejectedExecution(r, e);
+            HttpDnsLog.d("too many report? drop it!");
+        }
+    }
+
 }

@@ -6,13 +6,19 @@ package com.alibaba.sdk.android.httpdns.net64;
  * @author lianke
  */
 public interface Net64Service {
+    /**
+     * 判断当前网络环境是否支持ipv6
+     * @return 支持返回true，否则返回false
+     */
+//    boolean haveIPv6Stack();
 
 
     /**
-     * 设置是否开启httpdns-ipv6解析，开启时会解析ipv6地址
+     * ipv6不再需要开关控制
      *
      * @param enable enable为true时开启，否则不开启
      */
+    @Deprecated
     void enableIPv6(boolean enable);
 
 

@@ -1,9 +1,9 @@
 package com.aliyun.ams.httpdns.demo;
 
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String APPLE_URL = "www.apple.com";
     private static final String TAOBAO_URL = "m.taobao.com";
@@ -32,8 +32,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final String HTTPS_SCHEMA = "https://";
     private static final String TAG = "httpdns_android_demo";
     private static final String HTTPDNS_RESULT = "httpdns_result";
-    private String TARGET_URL = TAOBAO_URL;
-
+    private String TARGET_URL = DOUBAN_URL;
 
     public static final String accountID = "100000";
     public static final int SLEEP_INTERVAL = 5 * 1000;
@@ -72,17 +71,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initViews() {
-        this.btnNormalParse = (Button)findViewById(R.id.btnNormalParse);
-        this.btnHttpsParse = (Button)findViewById(R.id.btnHttpsParse);
-        this.btnTimeout = (Button)findViewById(R.id.btnTimeout);
-        this.btnSetExpired = (Button)findViewById(R.id.btnSetExpired);
-        this.btnDegrationFilter = (Button)findViewById(R.id.btnDegrationFilter);
-        this.btnPreresolve = (Button)findViewById(R.id.btnPreResove);
-        this.btnRequestApple = (Button)findViewById(R.id.btnRequestApple);
-        this.btnRequestTaobao = (Button)findViewById(R.id.btnRequestTaobao);
-        this.btnRequestDouban = (Button)findViewById(R.id.btnRequestDouban);
-        this.btnSetCache = (Button)findViewById(R.id.btnSetCache);
-        this.tvConsole = (TextView)findViewById(R.id.tvConsoleText);
+        this.btnNormalParse = (Button) findViewById(R.id.btnNormalParse);
+        this.btnHttpsParse = (Button) findViewById(R.id.btnHttpsParse);
+        this.btnTimeout = (Button) findViewById(R.id.btnTimeout);
+        this.btnSetExpired = (Button) findViewById(R.id.btnSetExpired);
+        this.btnDegrationFilter = (Button) findViewById(R.id.btnDegrationFilter);
+        this.btnPreresolve = (Button) findViewById(R.id.btnPreResove);
+        this.btnRequestApple = (Button) findViewById(R.id.btnRequestApple);
+        this.btnRequestTaobao = (Button) findViewById(R.id.btnRequestTaobao);
+        this.btnRequestDouban = (Button) findViewById(R.id.btnRequestDouban);
+        this.btnSetCache = (Button) findViewById(R.id.btnSetCache);
+        this.tvConsole = (TextView) findViewById(R.id.tvConsoleText);
         this.btnRequestIpv6 = (Button) findViewById(R.id.btnRequestIpv6);
         this.btnIpv6Parse = (Button) findViewById(R.id.btnIpv6Parse);
 
@@ -113,6 +112,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Log.d("test", "from sdk: " + msg);
             }
         });
+//        // 允许过期IP以实现懒加载策略
+//        httpdns.setExpiredIPEnabled(true);
 
         // ipv6
         httpdns.enableIPv6(true);
@@ -132,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 int what = msg.what;
                 switch (what) {
                     case MESSAGE_NORMAL_KEY:
-                        String obj = (String)msg.obj;
+                        String obj = (String) msg.obj;
                         tvConsole.setText(obj);
                         break;
                 }
@@ -235,6 +236,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void httpsParse() {
         httpdns.setHTTPSRequestEnabled(true);
+
+        this.sendRunnable(new Runnable() {
+            @Override
+            public void run() {
+                // 解析IP
+                long start = System.currentTimeMillis();
+                String ip = httpdns.getIpByHostAsync(TARGET_URL);
+                long end = System.currentTimeMillis();
+                Log.d("tt", "cost time: " + (end - start));
+                Message msg = mHandler.obtainMessage();
+                msg.what = MESSAGE_NORMAL_KEY;
+                String result = "Get IP for host:" + TARGET_URL;
+                if (ip != null) {
+                    msg.obj = result + " success. ip:" + ip;
+                } else {
+                    msg.obj = result + " failed.";
+                }
+                mHandler.sendMessage(msg);
+            }
+        });
     }
 
     private void timeoutConfig() {

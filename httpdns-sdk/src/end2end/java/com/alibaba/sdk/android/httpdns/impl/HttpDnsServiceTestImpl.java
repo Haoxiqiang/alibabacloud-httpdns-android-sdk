@@ -1,0 +1,55 @@
+package com.alibaba.sdk.android.httpdns.impl;
+
+import android.content.Context;
+
+import com.alibaba.sdk.android.httpdns.ApiForTest;
+import com.alibaba.sdk.android.httpdns.probe.ProbeTask;
+import com.alibaba.sdk.android.httpdns.serverip.UpdateServerTask;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
+
+/**
+ * @author zonglin.nzl
+ * @date 2020/10/16
+ */
+public class HttpDnsServiceTestImpl extends HttpDnsServiceImpl implements ApiForTest {
+    public HttpDnsServiceTestImpl(Context context, String accountId, String secret) {
+        super(context, accountId, secret);
+    }
+
+    @Override
+    public void setInitServer(String[] ips, int[] ports) {
+        this.config.setInitServers(ips, ports);
+    }
+
+    @Override
+    public void setThread(ScheduledExecutorService scheduledExecutorService) {
+        this.config.setWorker(scheduledExecutorService);
+    }
+
+    @Override
+    public void setSocketFactory(ProbeTask.SpeedTestSocketFactory speedTestSocketFactory) {
+        this.ipProbeService.setSocketFactory(speedTestSocketFactory);
+    }
+
+    @Override
+    public void setUpdateServerTimeInterval(int timeInterval) {
+        this.scheduleService.setTimeInterval(timeInterval);
+    }
+
+    @Override
+    public void setSniffTimeInterval(int timeInterval) {
+        this.requestHandler.setSniffTimeInterval(timeInterval);
+    }
+
+    @Override
+    public void setUpdateServerTaskSchema(String schema) {
+        UpdateServerTask.schema = schema;
+    }
+
+    @Override
+    public ExecutorService getWorker() {
+        return this.config.worker;
+    }
+}

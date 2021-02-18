@@ -1,5 +1,4 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/background_dark">
@@ -17,22 +16,22 @@
             android:layout_width="fill_parent"
             android:layout_height="match_parent"
             android:layout_weight="1">
+
             <Button
                 android:id="@+id/btnRequestIpv6"
                 style="@style/button_allgrade_content"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="解析ipv6域名"
-                />
+                android:text="解析ipv6域名" />
+
             <Button
                 android:id="@+id/btnRequestTaobao"
                 style="@style/button_allgrade_content"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="@string/request_taobao"
-                />
+                android:text="@string/request_taobao" />
 
             <Button
                 android:id="@+id/btnRequestApple"
@@ -40,46 +39,45 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="@string/request_apple"
-                />
+                android:text="@string/request_apple" />
+
             <Button
                 android:id="@+id/btnRequestDouban"
                 style="@style/button_allgrade_content"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="@string/request_douban"
-                />
+                android:text="@string/request_douban" />
         </TableRow>
 
         <TableRow
             android:layout_width="fill_parent"
             android:layout_height="match_parent"
             android:layout_weight="1">
+
             <Button
                 android:id="@+id/btnNormalParse"
                 style="@style/button_allgrade_content"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="@string/normal_parse"
-                />
+                android:text="@string/normal_parse" />
+
             <Button
                 android:id="@+id/btnHttpsParse"
                 style="@style/button_allgrade_content"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="@string/https_parse"
-                />
+                android:text="@string/https_parse" />
+
             <Button
                 android:id="@+id/btnIpv6Parse"
                 style="@style/button_allgrade_content"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="ipv6解析"
-                />
+                android:text="ipv6解析" />
         </TableRow>
 
         <TableRow
@@ -94,8 +92,7 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="@string/timeout"
-                />
+                android:text="@string/timeout" />
 
             <Button
                 android:id="@+id/btnSetExpired"
@@ -103,8 +100,7 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="@string/set_expired"
-                />
+                android:text="@string/set_expired" />
 
             <Button
                 android:id="@+id/btnSetCache"
@@ -112,8 +108,7 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="@string/set_cache"
-                />
+                android:text="@string/set_cache" />
         </TableRow>
 
         <TableRow
@@ -128,8 +123,7 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="@string/set_degration_filter"
-                />
+                android:text="@string/set_degration_filter" />
 
             <Button
                 android:id="@+id/btnPreResove"
@@ -137,8 +131,7 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="@string/set_pre_resolve"
-                />
+                android:text="@string/set_pre_resolve" />
         </TableRow>
 
     </TableLayout>
@@ -152,7 +145,6 @@
         android:textSize="20sp"
         android:textColor="@android:color/white"
         android:padding="5dp"
-        android:background="@drawable/aliyun_bg"
-        />
+        android:background="@drawable/aliyun_bg" />
 
 </RelativeLayout>

@@ -7,20 +7,33 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * HttpDns服务接口
+ */
 public interface HttpDnsService extends Net64Service {
+
     /**
      * 设置是否打印log, 仅供调试, 正式发布时请勿开启
      *
      * @param shouldPrintLog
+     * @deprecated 请直接使用 {@link com.alibaba.sdk.android.httpdns.log.HttpDnsLog}
      */
+    @Deprecated
     void setLogEnabled(boolean shouldPrintLog);
 
     /**
-     * 设置预解析域名列表
+     * 设置预解析域名列表，默认解析ipv4
      *
      * @param hostList
      */
     void setPreResolveHosts(ArrayList<String> hostList);
+
+    /**
+     * 设置预解析域名列表和解析的ip类型
+     * @param hostList
+     * @param requestIpType
+     */
+    void setPreResolveHosts(ArrayList<String> hostList, RequestIpType requestIpType);
 
     /**
      * 异步解析接口, 首先查询缓存, 若存在则返回结果, 若不存在返回null 并且进行异步域名解析请求
@@ -37,6 +50,22 @@ public interface HttpDnsService extends Net64Service {
      * @return 返回String 数组, 如果没得到解析结果, 则String 数组的长度为0
      */
     String[] getIpsByHostAsync(String host);
+
+    /**
+     * 异步解析接口，获取ipv6列表
+     *
+     * @param host
+     * @return
+     */
+    String[] getIPv6sByHostAsync(String host);
+
+    /**
+     * 异步解析接口，获取ipv4ipv6列表
+     *
+     * @param host
+     * @return
+     */
+    HTTPDNSResult getAllByHostAsync(String host);
 
     /**
      * 设置是否允许返回超过ttl 的ip
@@ -84,7 +113,7 @@ public interface HttpDnsService extends Net64Service {
 
 
     /**
-     * 设置请求超时时间,默认为15S
+     * 设置请求超时时间,单位ms,默认为15S
      *
      * @param timeoutInterval
      */
@@ -98,7 +127,7 @@ public interface HttpDnsService extends Net64Service {
     void setHTTPSRequestEnabled(boolean enabled);
 
     /**
-     * 设置要探测的域名列表
+     * 设置要探测的域名列表,默认只会对ipv4的地址进行ip优选
      *
      * @param ipProbeList
      */
@@ -115,11 +144,14 @@ public interface HttpDnsService extends Net64Service {
     /**
      * 设置用于接收sdk日志的回调类
      *
+     *
+     * @deprecated 请直接使用 {@link com.alibaba.sdk.android.httpdns.log.HttpDnsLog}
      * @param logger
      */
+    @Deprecated
     void setLogger(ILogger logger);
 
-    //以下针对SNDS
+    //以下针对SDNS
 
     /**
      * 异步解析接口, 获取ip列表
@@ -128,6 +160,8 @@ public interface HttpDnsService extends Net64Service {
      * @host host
      */
     HTTPDNSResult getIpsByHostAsync(String host, Map<String, String> params, String cacheKey);
+
+    HTTPDNSResult getIpsByHostAsync(String host, RequestIpType type, Map<String, String> params, String cacheKey);
 
     /**
      * 设置sdns全局参数（该全局参数不影响异步解析任务，只用于解析接口调用时进行参数合并）
@@ -140,6 +174,8 @@ public interface HttpDnsService extends Net64Service {
      * 清除sdns全局参数
      */
     void clearSdnsGlobalParams();
+
+    //以上针对SDNS
 
     /**
      * 设置region，海外节点
