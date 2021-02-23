@@ -13,8 +13,10 @@ import com.alibaba.sdk.android.httpdns.DegradationFilter;
 import com.alibaba.sdk.android.httpdns.HttpDns;
 import com.alibaba.sdk.android.httpdns.HttpDnsService;
 import com.alibaba.sdk.android.httpdns.ILogger;
+import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import com.alibaba.sdk.android.httpdns.probe.IPProbeItem;
-import com.alibaba.sdk.android.utils.AMSDevReporter;
+import com.alibaba.sdk.android.logger.LogLevel;
+import com.alibaba.sdk.android.sender.SenderLog;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,7 +27,7 @@ import java.util.concurrent.Executors;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String APPLE_URL = "www.apple.com";
-    private static final String TAOBAO_URL = "m.taobao.com";
+    private static final String TAOBAO_URL = "www.taobao.com";
     private static final String DOUBAN_URL = "dou.bz";
     private static final String IPV6_HOST = "ipv6.sjtu.edu.cn";
     private static final String HTTP_SCHEMA = "http://";
@@ -102,7 +104,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void initHttpDns() {
         // 初始化httpdns
-        AMSDevReporter.setLogEnabled(true);
+        SenderLog.setLevel(LogLevel.DEBUG);
+        HttpDnsLog.enable(true);
 //        HttpDns.enableIPv6Service(this,(true);
         httpdns = HttpDns.getService(getApplicationContext(), accountID);
         httpdns.setLogEnabled(true);
@@ -194,6 +197,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void getIp() {
+        httpdns.setHTTPSRequestEnabled(false);
         this.sendRunnable(new Runnable() {
             @Override
             public void run() {

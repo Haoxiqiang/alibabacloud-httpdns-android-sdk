@@ -5,7 +5,7 @@ import android.text.Html;
 import android.util.Pair;
 
 import com.alibaba.sdk.android.httpdns.RequestIpType;
-import com.alibaba.sdk.android.utils.AMSConfigUtils;
+import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 
 import org.json.JSONObject;
 
@@ -165,12 +165,26 @@ public class CommonUtil {
 
 
     public static String getAccountId(Context context) {
-        return AMSConfigUtils.getAccountId(context);
+        return getStringStr(context, "ams_accountId");
     }
 
     public static String getSecretKey(Context context) {
-        return AMSConfigUtils.getHttpdnsSecretKey(context);
+        return getStringStr(context, "ams_httpdns_secretKey");
     }
+
+    private static int getResourceString(Context context, String resourceName) {
+        return context.getResources().getIdentifier(resourceName, "string", context.getPackageName());
+    }
+
+    public static String getStringStr(Context context, String resourceName) {
+        try {
+            return context.getResources().getString(getResourceString(context, resourceName));
+        } catch (Exception var3) {
+            HttpDnsLog.w("AMSConfigUtils " + resourceName + " is NULL");
+            return null;
+        }
+    }
+
 
     public static boolean isAHost(String host) {
         try {

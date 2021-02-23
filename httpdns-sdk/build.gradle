@@ -4,7 +4,7 @@ android {
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
     defaultConfig {
-        minSdkVersion 10
+        minSdkVersion 16
         targetSdkVersion 29
         versionCode 1
         if (project.hasProperty("VERSION_NAME")) {
@@ -79,8 +79,11 @@ dependencies {
     androidTestImplementation 'com.squareup.okhttp3:mockwebserver:3.9.0'
     androidTestImplementation 'com.android.support:appcompat-v7:28.0.0'
 
-    implementation "com.aliyun.ams:alicloud-android-utils:${utilsVersion}"
+    implementation "com.aliyun.ams:alicloud-android-sender:${senderVersion}"
+    implementation "com.aliyun.ams:alicloud-android-rest:${restVersion}"
+    implementation "com.aliyun.ams:alicloud-android-crashdefend:${crashDefendVersion}"
     implementation "com.aliyun.ams:alicloud-android-utdid:${utdidVersion}"
+    implementation "com.aliyun.ams:alicloud-android-beacon:${beaconVersion}"
 }
 
 task copyAARForApp(type: Copy) {

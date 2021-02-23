@@ -37,6 +37,9 @@ public class ProbeService {
      * @param probeCallback
      */
     public void probleIpv4(String host, String[] ips, final ProbeCallback probeCallback) {
+        if (config.isProbeDisabled()) {
+            return;
+        }
         IPProbeItem ipProbeItem = getIpProbeItem(host);
         if (ipProbeItem != null && ips != null && ips.length > 1) {
             if (probingHosts.contains(host)) {

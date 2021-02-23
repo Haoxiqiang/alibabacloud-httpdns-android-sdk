@@ -4,9 +4,12 @@ buildscript {
     repositories {
         maven {
             url "http://maven.aliyun.com/nexus/content/groups/public/"
+            name 'jcenter'
         }
-        google()
-        jcenter()
+        maven {
+            url "https://maven.aliyun.com/repository/google"
+            name 'google'
+        }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.6.3'
@@ -19,19 +22,31 @@ buildscript {
 allprojects {
     repositories {
         maven {
-            url "http://maven.aliyun.com/nexus/content/groups/public/"
-        }
-        maven {
             url 'http://maven.aliyun.com/nexus/content/repositories/releases/'
         }
-        google()
-        jcenter()
+        maven {
+            url "http://maven.aliyun.com/nexus/content/groups/public/"
+            name 'jcenter'
+        }
+        maven {
+            url "https://maven.aliyun.com/repository/google"
+            name 'google'
+        }
+        maven {
+            url "http://nexus-ce.emas-poc.com/repository/maven-public/"
+            credentials {
+                username = "CenterExperience"
+                password = "77kkyy99"
+            }
+        }
     }
 
-    ext.utilsVersion = '1.1.6.4'
+    ext.senderVersion = '1.0.0'
+    ext.restVersion = '1.5.1-open-SNAPSHOT'
+    ext.crashDefendVersion = '0.0.4'
     ext.utdidVersion = '2.5.1-proguard'
+    ext.beaconVersion = '1.0.5'
     ext.httpdnsDebugVersion = '0.0.0.1-local-SNAPSHOT'
-    ext.appiumVersion = '3.2.0'
 
 }
 

@@ -1,14 +1,19 @@
 package com.alibaba.sdk.android.httpdns.impl;
 
+import android.app.Application;
 import android.content.Context;
 import android.os.Looper;
 
+import com.alibaba.sdk.android.crashdefend.CrashDefendApi;
+import com.alibaba.sdk.android.crashdefend.CrashDefendCallback;
+import com.alibaba.sdk.android.httpdns.BuildConfig;
 import com.alibaba.sdk.android.httpdns.DegradationFilter;
 import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
 import com.alibaba.sdk.android.httpdns.HttpDnsService;
 import com.alibaba.sdk.android.httpdns.ILogger;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.SyncService;
+import com.alibaba.sdk.android.httpdns.beacon.BeaconControl;
 import com.alibaba.sdk.android.httpdns.interpret.HostFilter;
 import com.alibaba.sdk.android.httpdns.interpret.InterpretHostRequestHandler;
 import com.alibaba.sdk.android.httpdns.interpret.InterpretHostResultRepo;
@@ -22,7 +27,8 @@ import com.alibaba.sdk.android.httpdns.report.ReportManager;
 import com.alibaba.sdk.android.httpdns.serverip.ScheduleService;
 import com.alibaba.sdk.android.httpdns.track.SessionTrackMgr;
 import com.alibaba.sdk.android.httpdns.utils.CommonUtil;
-import com.alibaba.sdk.android.utils.crashdefend.SDKMessageCallback;
+import com.alibaba.sdk.android.sender.AlicloudSender;
+import com.alibaba.sdk.android.sender.SdkInfo;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,35 +56,80 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
     private HostInterpretRecorder recorder = new HostInterpretRecorder();
 
     public HttpDnsServiceImpl(Context context, final String accountId, String secret) {
-        NetworkStateManager.getInstance().init(context);
-        config = new HttpDnsConfig(context, accountId);
-        filter = new HostFilter();
-        signService = new SignService(secret);
-        ipProbeService = new ProbeService(this.config);
-        repo = new InterpretHostResultRepo(this.config, this.ipProbeService);
-        scheduleService = new ScheduleService(this.config, this);
-        requestHandler = new InterpretHostRequestHandler(config, scheduleService, signService);
-        interpretHostService = new InterpretHostService(ipProbeService, requestHandler, repo, filter, recorder);
-        resolveHostService = new ResolveHostService(repo, requestHandler, ipProbeService, filter, recorder);
-        NetworkStateManager.getInstance().addListener(this);
-        if (config.shouldUpdateServerIp()) {
-            scheduleService.updateServerIps();
+        try {
+            config = new HttpDnsConfig(context, accountId);
+            initCrashDefend(context, config);
+            if (!config.isEnabled()) {
+                HttpDnsLog.w("init fail, crashdefend");
+                return;
+            }
+            NetworkStateManager.getInstance().init(context);
+            filter = new HostFilter();
+            signService = new SignService(secret);
+            ipProbeService = new ProbeService(this.config);
+            repo = new InterpretHostResultRepo(this.config, this.ipProbeService);
+            scheduleService = new ScheduleService(this.config, this);
+            requestHandler = new InterpretHostRequestHandler(config, scheduleService, signService);
+            interpretHostService = new InterpretHostService(ipProbeService, requestHandler, repo, filter, recorder);
+            resolveHostService = new ResolveHostService(repo, requestHandler, ipProbeService, filter, recorder);
+            NetworkStateManager.getInstance().addListener(this);
+            if (config.shouldUpdateServerIp()) {
+                scheduleService.updateServerIps();
+            }
+            ReportManager.init(context);
+            ReportManager reportManager = ReportManager.getReportManagerByAccount(accountId);
+            reportManager.setAccountId(accountId);
+            reportSdkStart(context, accountId);
+            BeaconControl.initBeacon(context, accountId, config);
+            HttpDnsLog.d("httpdns service is inited " + accountId);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        ReportManager.init(context);
-        ReportManager reportManager = ReportManager.getReportManagerByAccount(accountId);
-        reportManager.setAccountId(accountId);
-        reportManager.reportSdkStart();
-        ReportManager.registerCrash(context, new SDKMessageCallback() {
+    }
+
+    private void initCrashDefend(Context context, final HttpDnsConfig config) {
+        CrashDefendApi.registerCrashDefendSdk(context, "httpdns", BuildConfig.VERSION_NAME, 2, 7, new CrashDefendCallback() {
             @Override
-            public void crashDefendMessage(int limit, int count) {
-                config.crashDefend(limit <= count);
-                HttpDnsLog.d("httpdns " + accountId + " crashdefend " + (limit <= count));
+            public void onSdkStart(int limitCount, int crashCount, int restoreCount) {
+                config.crashDefend(false);
+            }
+
+            @Override
+            public void onSdkStop(int limitCount, int crashCount, int restoreCount, long nextRestoreInterval) {
+                config.crashDefend(true);
+                HttpDnsLog.w("sdk is not safe to run");
+            }
+
+            @Override
+            public void onSdkClosed(int restoreCount) {
+                config.crashDefend(true);
+                HttpDnsLog.e("sdk will not run any more");
             }
         });
-        HttpDnsLog.d("httpdns service is inited " + accountId);
+    }
+
+    private void reportSdkStart(Context context, String accountId) {
+        try {
+            HashMap<String, String> ext = new HashMap<>();
+            ext.put("accountId", accountId);
+            SdkInfo sdkInfo = new SdkInfo();
+            sdkInfo.setSdkId("httpdns");
+            sdkInfo.setSdkVersion(BuildConfig.VERSION_NAME);
+            sdkInfo.setExt(ext);
+            if (context.getApplicationContext() instanceof Application) {
+                AlicloudSender.asyncSend((Application) context.getApplicationContext(), sdkInfo);
+            } else {
+                AlicloudSender.asyncSend(context.getApplicationContext(), sdkInfo);
+            }
+        } catch (Throwable ignore) {
+            ignore.printStackTrace();
+        }
     }
 
     public void setSecret(String secret) {
+        if (!config.isEnabled()) {
+            return;
+        }
         if (secret == null || secret.equals("")) {
             HttpDnsLog.e("set empty secret!?");
         }
@@ -87,6 +138,9 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
 
     @Override
     public void serverIpUpdated(boolean regionUpdated) {
+        if (!config.isEnabled()) {
+            return;
+        }
         if (regionUpdated) {
             repo.clear();
         }
@@ -95,6 +149,9 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
 
     @Override
     public void setLogEnabled(boolean shouldPrintLog) {
+        if (!config.isEnabled()) {
+            return;
+        }
         System.out.println("------> log control " + shouldPrintLog + " account " + config.getAccountId());
         HttpDnsLog.enable(shouldPrintLog);
     }
@@ -199,46 +256,73 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
 
     @Override
     public void setExpiredIPEnabled(boolean enable) {
+        if (!config.isEnabled()) {
+            return;
+        }
         interpretHostService.setEnableExpiredIp(enable);
     }
 
     @Override
     public void setCachedIPEnabled(boolean enable) {
+        if (!config.isEnabled()) {
+            return;
+        }
         setCachedIPEnabled(enable, false);
     }
 
     @Override
     public void setCachedIPEnabled(boolean enable, boolean autoCleanCacheAfterLoad) {
+        if (!config.isEnabled()) {
+            return;
+        }
         repo.setCachedIPEnabled(enable, autoCleanCacheAfterLoad);
     }
 
     @Override
     public void setAuthCurrentTime(long time) {
+        if (!config.isEnabled()) {
+            return;
+        }
         signService.setCurrentTimestamp(time);
     }
 
     @Override
     public void setDegradationFilter(DegradationFilter filter) {
+        if (!config.isEnabled()) {
+            return;
+        }
         this.filter.setFilter(filter);
     }
 
     @Override
     public void setPreResolveAfterNetworkChanged(boolean enable) {
+        if (!config.isEnabled()) {
+            return;
+        }
         this.resolveAfterNetworkChange = enable;
     }
 
     @Override
     public void setTimeoutInterval(int timeoutInterval) {
+        if (!config.isEnabled()) {
+            return;
+        }
         this.config.setTimeout(timeoutInterval);
     }
 
     @Override
     public void setHTTPSRequestEnabled(boolean enabled) {
+        if (!config.isEnabled()) {
+            return;
+        }
         config.setHTTPSRequestEnabled(enabled);
     }
 
     @Override
     public void setIPProbeList(List<IPProbeItem> ipProbeList) {
+        if (!config.isEnabled()) {
+            return;
+        }
         ipProbeService.setProbeItems(ipProbeList);
     }
 
@@ -288,11 +372,17 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
 
     @Override
     public void setSdnsGlobalParams(Map<String, String> params) {
+        if (!config.isEnabled()) {
+            return;
+        }
         requestHandler.setSdnsGlobalParams(params);
     }
 
     @Override
     public void clearSdnsGlobalParams() {
+        if (!config.isEnabled()) {
+            return;
+        }
         requestHandler.clearSdnsGlobalParams();
     }
 
@@ -333,6 +423,9 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
 
     @Override
     public void onNetworkChange(String networkType) {
+        if (!config.isEnabled()) {
+            return;
+        }
         HashMap<String, RequestIpType> allHost = repo.getAllHost();
         HttpDnsLog.d("network change, clean record");
         repo.clear();

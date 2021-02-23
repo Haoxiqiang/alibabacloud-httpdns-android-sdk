@@ -32,6 +32,8 @@ public class HttpDnsConfig {
     private long serverIpsLastUpdatedTime = 0;
     private int timeout = HttpRequestConfig.DEFAULT_TIMEOUT;
     private boolean crashDefend;
+    private boolean remoteDisabled = false;
+    private boolean probeDisabled = false;
 
 
     protected ExecutorService worker = ThreadUtil.createExecutorService();
@@ -62,7 +64,7 @@ public class HttpDnsConfig {
     }
 
     public boolean isEnabled() {
-        return enabled && !crashDefend;
+        return enabled && !crashDefend && !remoteDisabled;
     }
 
     public void setEnabled(boolean enabled) {
@@ -319,6 +321,17 @@ public class HttpDnsConfig {
         this.crashDefend = crashDefend;
     }
 
+    public void remoteDisable(boolean disable) {
+        this.remoteDisabled = disable;
+    }
+
+    public void probeDisable(boolean disable) {
+        this.probeDisabled = disable;
+    }
+
+    public boolean isProbeDisabled() {
+        return probeDisabled;
+    }
 
     private static final String CONFIG_CACHE_PREFIX = "httpdns_config_";
     private static final String CONFIG_KEY_SERVERS = "serverIps";
