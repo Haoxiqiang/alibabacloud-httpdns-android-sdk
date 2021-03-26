@@ -316,6 +316,12 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             return;
         }
         config.setHTTPSRequestEnabled(enabled);
+        if (enabled) {
+            // 避免应用禁止http请求，导致初始化时的服务更新请求失败
+            if (config.shouldUpdateServerIp()) {
+                scheduleService.updateServerIps();
+            }
+        }
     }
 
     @Override

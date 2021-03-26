@@ -18,20 +18,37 @@ public class HttpRequestWatcher<T> extends HttpRequestWrapper<T> {
     @Override
     public T request() throws Throwable {
         try {
+            if (watcher != null) {
+                try {
+                    watcher.onStart(getRequestConfig());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             T t = super.request();
             if (watcher != null) {
-                watcher.onSuccess(getRequestConfig(), t);
+                try {
+                    watcher.onSuccess(getRequestConfig(), t);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             return t;
         } catch (Throwable throwable) {
             if (watcher != null) {
-                watcher.onFail(getRequestConfig(), throwable);
+                try {
+                    watcher.onFail(getRequestConfig(), throwable);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             throw throwable;
         }
     }
 
     public interface Watcher {
+        void onStart(HttpRequestConfig config);
+
         void onSuccess(HttpRequestConfig config, Object data);
 
         void onFail(HttpRequestConfig config, Throwable throwable);

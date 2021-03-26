@@ -52,9 +52,9 @@ public class HttpRequest<T> {
         BufferedReader streamReader = null;
 
         long start = System.currentTimeMillis();
+        String url = requestConfig.url();
+        HttpDnsLog.d("request url " + url);
         try {
-            String url = requestConfig.url();
-            HttpDnsLog.d("request url " + url);
             conn = (HttpURLConnection) new URL(url).openConnection();
             conn.setReadTimeout(requestConfig.getTimeout());
             conn.setConnectTimeout(requestConfig.getTimeout());
@@ -80,7 +80,7 @@ public class HttpRequest<T> {
             }
         } catch (Throwable e) {
             long cost = System.currentTimeMillis() - start;
-            HttpDnsLog.w("request fail, cost " + cost, e);
+            HttpDnsLog.w("request " + url + " fail, cost " + cost, e);
             throw e;
         } finally {
             if (conn != null) {

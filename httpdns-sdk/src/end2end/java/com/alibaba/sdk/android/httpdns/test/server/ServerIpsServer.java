@@ -31,7 +31,7 @@ public class ServerIpsServer extends BaseDataServer<String, UpdateServerResponse
 
     @Override
     public UpdateServerResponse randomData(String s) {
-        return new UpdateServerResponse(new String[]{"localhost"}, new String[]{"2401:b180:2000:20::10"}, new int[]{80}, new int[]{80});
+        return new UpdateServerResponse(null, null, null, null);
     }
 
     @Override

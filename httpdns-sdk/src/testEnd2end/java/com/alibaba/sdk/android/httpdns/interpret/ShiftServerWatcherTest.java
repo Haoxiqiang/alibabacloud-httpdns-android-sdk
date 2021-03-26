@@ -1,9 +1,9 @@
 package com.alibaba.sdk.android.httpdns.interpret;
 
 import com.alibaba.sdk.android.httpdns.impl.HttpDnsConfig;
-import com.alibaba.sdk.android.httpdns.serverip.ScheduleService;
 import com.alibaba.sdk.android.httpdns.request.HttpException;
 import com.alibaba.sdk.android.httpdns.request.HttpRequestConfig;
+import com.alibaba.sdk.android.httpdns.serverip.ScheduleService;
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
 
 import org.junit.Before;
@@ -77,12 +77,27 @@ public class ShiftServerWatcherTest {
     @Test
     public void doNotshiftServerWhenThrowOtherError() throws Throwable {
         Exception exception = new Exception();
+        watcher.onStart(requestConfig);
         watcher.onFail(requestConfig, exception);
         Mockito.verify(config, Mockito.never()).shiftServer(ip, port);
         Mockito.verify(requestConfig, Mockito.never()).setIp(ip);
         Mockito.verify(requestConfig, Mockito.never()).setPort(port);
         Mockito.verify(statusControl, Mockito.never()).turnUp();
         Mockito.verify(statusControl, Mockito.never()).turnDown();
+    }
+
+    @Test
+    public void shiftServerWhenFailCostMoreThanTimeout() throws Throwable {
+        requestConfig.setTimeout(299);
+        Exception exception = new Exception();
+        watcher.onStart(requestConfig);
+        Thread.sleep(300);
+        watcher.onFail(requestConfig, exception);
+        Mockito.verify(config).shiftServer(ip, port);
+        Mockito.verify(requestConfig).setIp(ip);
+        Mockito.verify(requestConfig).setPort(port);
+        Mockito.verify(statusControl).turnDown();
+        Mockito.verify(statusControl, Mockito.never()).turnUp();
     }
 
 

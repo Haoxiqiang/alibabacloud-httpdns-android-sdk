@@ -1,10 +1,10 @@
 package com.alibaba.sdk.android.httpdns.interpret;
 
 import com.alibaba.sdk.android.httpdns.impl.HttpDnsConfig;
-import com.alibaba.sdk.android.httpdns.serverip.ScheduleService;
 import com.alibaba.sdk.android.httpdns.request.HttpException;
 import com.alibaba.sdk.android.httpdns.request.HttpRequestConfig;
 import com.alibaba.sdk.android.httpdns.request.HttpRequestWatcher;
+import com.alibaba.sdk.android.httpdns.serverip.ScheduleService;
 
 import java.net.SocketTimeoutException;
 
@@ -19,11 +19,17 @@ public class ShiftServerWatcher implements HttpRequestWatcher.Watcher {
     private HttpDnsConfig config;
     private ScheduleService scheduleService;
     private StatusControl statusControl;
+    private long beginRequestTime;
 
     public ShiftServerWatcher(HttpDnsConfig config, ScheduleService scheduleService, StatusControl statusControl) {
         this.config = config;
         this.scheduleService = scheduleService;
         this.statusControl = statusControl;
+    }
+
+    @Override
+    public void onStart(HttpRequestConfig config) {
+        beginRequestTime = System.currentTimeMillis();
     }
 
     @Override
@@ -37,8 +43,9 @@ public class ShiftServerWatcher implements HttpRequestWatcher.Watcher {
 
     @Override
     public void onFail(HttpRequestConfig requestConfig, Throwable throwable) {
-        // 是否切换服务IP
-        if (shouldShiftServer(throwable)) {
+        long cost = System.currentTimeMillis() - beginRequestTime;
+        // 是否切换服务IP, 超过超时时间，我们也切换ip，花费时间太长，说明这个ip可能也有问题
+        if (shouldShiftServer(throwable) || cost > requestConfig.getTimeout()) {
             // 切换和更新请求的服务IP
             boolean isBackToFirstServer = this.config.shiftServer(requestConfig.getIp(), requestConfig.getPort());
             requestConfig.setIp(this.config.getServerIp());

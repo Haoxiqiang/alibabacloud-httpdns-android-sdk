@@ -99,7 +99,10 @@ public class HttpDnsConfig {
         this.ports = ports;
         this.lastOkServerIndex = 0;
         this.currentServerIndex = 0;
-        this.serverIpsLastUpdatedTime = System.currentTimeMillis();
+        if (!Arrays.equals(serverIps, initServerIps)) {
+            // 非初始化IP，才认为是真正的更新了服务IP
+            this.serverIpsLastUpdatedTime = System.currentTimeMillis();
+        }
         saveToCache(context, this);
         return true;
     }
@@ -122,10 +125,6 @@ public class HttpDnsConfig {
 
     public String getSchema() {
         return schema;
-    }
-
-    public void setSchema(String schema) {
-        this.schema = schema;
     }
 
     public ExecutorService getWorker() {

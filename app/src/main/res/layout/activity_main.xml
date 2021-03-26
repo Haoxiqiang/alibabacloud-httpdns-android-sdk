@@ -132,8 +132,38 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:text="@string/set_pre_resolve" />
+
+            <Button
+                android:id="@+id/btnRegion"
+                style="@style/button_allgrade_content"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="@string/set_region" />
         </TableRow>
 
+        <TableRow
+            android:id="@+id/tableRow1_3"
+            android:layout_width="fill_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <Button
+                android:id="@+id/btnSyncRequest"
+                style="@style/button_allgrade_content"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="@string/sync_request" />
+
+            <Button
+                android:id="@+id/btnMultiSyncRequest"
+                style="@style/button_allgrade_content"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="@string/multi_sync_request" />
+        </TableRow>
     </TableLayout>
 
     <TextView

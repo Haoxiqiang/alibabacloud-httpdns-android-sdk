@@ -92,7 +92,6 @@ public class BusinessApp {
             testExecutorService = new TestExecutorService(((ApiForTest) httpDnsService).getWorker());
             ((ApiForTest) httpDnsService).setThread(testExecutorService);
             ((ApiForTest) httpDnsService).setSocketFactory(speedTestServer);
-            ((ApiForTest) httpDnsService).setUpdateServerTaskSchema("http://");
         }
 
         for (int i = 0; i < servers.length; i++) {

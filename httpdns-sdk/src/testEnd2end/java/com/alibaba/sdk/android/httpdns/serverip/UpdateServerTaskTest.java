@@ -62,7 +62,6 @@ public class UpdateServerTaskTest {
         httpDnsConfig.setInitServers(new String[]{server.getServerIp()}, new int[]{server.getPort()});
         httpDnsConfig.setTimeout(1000);
         httpDnsConfig.setWorker(testExecutorService);
-        UpdateServerTask.schema = "http://";
     }
 
     @After

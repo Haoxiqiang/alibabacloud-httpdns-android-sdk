@@ -10,9 +10,12 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.alibaba.sdk.android.httpdns.DegradationFilter;
+import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
 import com.alibaba.sdk.android.httpdns.HttpDns;
 import com.alibaba.sdk.android.httpdns.HttpDnsService;
 import com.alibaba.sdk.android.httpdns.ILogger;
+import com.alibaba.sdk.android.httpdns.RequestIpType;
+import com.alibaba.sdk.android.httpdns.SyncService;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import com.alibaba.sdk.android.httpdns.probe.IPProbeItem;
 import com.alibaba.sdk.android.logger.LogLevel;
@@ -21,6 +24,7 @@ import com.alibaba.sdk.android.sender.SenderLog;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -40,6 +44,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static final int SLEEP_INTERVAL = 5 * 1000;
     public static final int MESSAGE_NORMAL_KEY = 10001;
     public static final int MESSAGE_HTTPS_KEY = 10002;
+
+    private String currentRegion = "";
 
 
     private Button btnNormalParse;
@@ -86,6 +92,78 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         this.tvConsole = (TextView) findViewById(R.id.tvConsoleText);
         this.btnRequestIpv6 = (Button) findViewById(R.id.btnRequestIpv6);
         this.btnIpv6Parse = (Button) findViewById(R.id.btnIpv6Parse);
+        findViewById(R.id.btnRegion).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (currentRegion.equals("")) {
+                    currentRegion = "sg";
+                } else if (currentRegion.equals("sg")) {
+                    currentRegion = "hk";
+                } else {
+                    currentRegion = "";
+                }
+                httpdns.setRegion(currentRegion);
+            }
+        });
+
+        findViewById(R.id.btnSyncRequest).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (httpdns instanceof SyncService) {
+                            HTTPDNSResult result = ((SyncService) httpdns).getByHost(TARGET_URL, RequestIpType.v4);
+                            Message msg = mHandler.obtainMessage();
+                            msg.what = MESSAGE_NORMAL_KEY;
+                            String log = "Get IPV4 for host:" + TARGET_URL;
+                            if (result != null && result.getIps() != null) {
+                                msg.obj = log + " success. ips:" + Arrays.toString(result.getIps());
+                            } else {
+                                msg.obj = log + " failed.";
+                            }
+                            mHandler.sendMessage(msg);
+                        }
+                    }
+                }).start();
+            }
+        });
+
+        findViewById(R.id.btnMultiSyncRequest).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final int count = 4;
+                ExecutorService service = Executors.newFixedThreadPool(count);
+                final CountDownLatch countDownLatch = new CountDownLatch(count);
+                for (int i = 0; i < count; i++) {
+                    service.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            countDownLatch.countDown();
+                            try {
+                                countDownLatch.await();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            if (httpdns instanceof SyncService) {
+                                Log.d("Sync", "Sync Get IPV4 for host:" + TARGET_URL + " begin");
+                                HTTPDNSResult result = ((SyncService) httpdns).getByHost(TARGET_URL, RequestIpType.v4);
+                                Message msg = mHandler.obtainMessage();
+                                msg.what = MESSAGE_NORMAL_KEY;
+                                String log = "Get IPV4 for host:" + TARGET_URL;
+                                if (result != null && result.getIps() != null) {
+                                    msg.obj = log + " success. ips:" + Arrays.toString(result.getIps());
+                                } else {
+                                    msg.obj = log + " failed.";
+                                }
+                                Log.d("Sync", (String) msg.obj);
+                                mHandler.sendMessage(msg);
+                            }
+                        }
+                    });
+                }
+            }
+        });
 
         this.btnNormalParse.setOnClickListener(this);
         this.btnHttpsParse.setOnClickListener(this);

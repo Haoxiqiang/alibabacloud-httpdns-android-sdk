@@ -21,7 +21,5 @@ public interface ApiForTest {
 
     void setSniffTimeInterval(int timeInterval);
 
-    void setUpdateServerTaskSchema(String schema);
-
     ExecutorService getWorker();
 }

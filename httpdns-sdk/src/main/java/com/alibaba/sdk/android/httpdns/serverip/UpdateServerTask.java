@@ -24,8 +24,6 @@ import static com.alibaba.sdk.android.httpdns.interpret.InterpretHostHelper.getS
  */
 public class UpdateServerTask {
 
-    public static String schema = HttpRequestConfig.HTTPS_SCHEMA;
-
     public static void updateServer(HttpDnsConfig config, String region, RequestCallback<UpdateServerResponse> callback) {
         String path = "/" + config.getAccountId() + "/ss?"
                 + "platform=android&sdk_version=" + BuildConfig.VERSION_NAME
@@ -33,7 +31,7 @@ public class UpdateServerTask {
                 + getSid()
                 + getNetType()
                 + getBssid());
-        HttpRequestConfig requestConfig = new HttpRequestConfig(schema, config.getServerIp(), getPort(config), path, config.getTimeout());
+        HttpRequestConfig requestConfig = new HttpRequestConfig(config.getSchema(), config.getServerIp(), config.getPort(), path, config.getTimeout());
         HttpRequest<UpdateServerResponse> httpRequest = new HttpRequest<>(requestConfig, new ResponseTranslator<UpdateServerResponse>() {
             @Override
             public UpdateServerResponse translate(String response) throws Throwable {
@@ -46,15 +44,5 @@ public class UpdateServerTask {
         // 重试，当前服务Ip和初始服务ip个数
         httpRequest = new RetryHttpRequest<>(httpRequest, config.getServerIps().length + config.getInitServerSize() - 1);
         config.getWorker().execute(new HttpRequestTask<>(httpRequest, callback));
-    }
-
-    private static int getPort(HttpDnsConfig config) {
-        // 此处比较特殊，更新服务IP接口固定使用https，端口是443
-        // 测试时如果修改为http，需要使用测试服务的端口
-        if (schema.equals(HttpRequestConfig.HTTP_SCHEMA)) {
-            return config.getPort();
-        } else {
-            return 443;
-        }
     }
 }

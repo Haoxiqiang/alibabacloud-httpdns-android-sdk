@@ -2,15 +2,15 @@ package com.alibaba.sdk.android.httpdns.interpret;
 
 import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
+import com.alibaba.sdk.android.httpdns.impl.HostInterpretLocker;
 import com.alibaba.sdk.android.httpdns.impl.HostInterpretRecorder;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
-import com.alibaba.sdk.android.httpdns.probe.ProbeService;
 import com.alibaba.sdk.android.httpdns.probe.ProbeCallback;
+import com.alibaba.sdk.android.httpdns.probe.ProbeService;
 import com.alibaba.sdk.android.httpdns.request.RequestCallback;
 import com.alibaba.sdk.android.httpdns.utils.CommonUtil;
 
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -27,6 +27,7 @@ public class InterpretHostService {
     private HostFilter filter;
     private boolean enableExpiredIp = false;
     private HostInterpretRecorder recorder;
+    private HostInterpretLocker locker;
 
     public InterpretHostService(ProbeService ipProbeService, InterpretHostRequestHandler requestHandler, InterpretHostResultRepo repo, HostFilter filter, HostInterpretRecorder recorder) {
         this.ipProbeService = ipProbeService;
@@ -34,6 +35,7 @@ public class InterpretHostService {
         this.repo = repo;
         this.filter = filter;
         this.recorder = recorder;
+        this.locker = new HostInterpretLocker();
     }
 
     /**
@@ -98,47 +100,47 @@ public class InterpretHostService {
         HttpDnsLog.d("request host " + host + " sync with type " + type + " extras : " + CommonUtil.toString(extras) + " cacheKey " + cacheKey);
         HTTPDNSResult result = repo.getIps(host, type, cacheKey);
         HttpDnsLog.d("host " + host + " result is " + CommonUtil.toString(result));
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        if ((result == null || result.isExpired()) && recorder.beginInterpret(host, type, cacheKey)) {
-            requestHandler.requestInterpretHost(host, type, extras, cacheKey, new RequestCallback<InterpretHostResponse>() {
-                @Override
-                public void onSuccess(final InterpretHostResponse interpretHostResponse) {
-                    HttpDnsLog.i("ip request for " + host + " " + type + " return " + interpretHostResponse.toString());
-                    repo.save(host, type, interpretHostResponse.getExtras(), cacheKey, interpretHostResponse);
-                    if (type == RequestIpType.v4 || type == RequestIpType.both) {
-                        ipProbeService.probleIpv4(host, interpretHostResponse.getIps(), new ProbeCallback() {
-                            @Override
-                            public void onResult(String host, String[] sortedIps) {
-                                HttpDnsLog.i("ip probe for " + host + " " + type + " return " + CommonUtil.translateStringArray(sortedIps));
-                                repo.update(host, RequestIpType.v4, cacheKey, sortedIps);
-                            }
-                        });
+        if ((result == null || result.isExpired())) {
+            // 没有缓存，或者缓存过期，需要解析
+            if (locker.beginInterpret(host, type, cacheKey)) {
+                // 没有正在进行的解析，发起新的解析
+                requestHandler.requestInterpretHost(host, type, extras, cacheKey, new RequestCallback<InterpretHostResponse>() {
+                    @Override
+                    public void onSuccess(final InterpretHostResponse interpretHostResponse) {
+                        HttpDnsLog.i("ip request for " + host + " " + type + " return " + interpretHostResponse.toString());
+                        repo.save(host, type, interpretHostResponse.getExtras(), cacheKey, interpretHostResponse);
+                        if (type == RequestIpType.v4 || type == RequestIpType.both) {
+                            ipProbeService.probleIpv4(host, interpretHostResponse.getIps(), new ProbeCallback() {
+                                @Override
+                                public void onResult(String host, String[] sortedIps) {
+                                    HttpDnsLog.i("ip probe for " + host + " " + type + " return " + CommonUtil.translateStringArray(sortedIps));
+                                    repo.update(host, RequestIpType.v4, cacheKey, sortedIps);
+                                }
+                            });
+                        }
+                        locker.endInterpret(host, type, cacheKey);
                     }
-                    recorder.endInterpret(host, type, cacheKey);
-                    countDownLatch.countDown();
-                }
 
-                @Override
-                public void onFail(Throwable throwable) {
-                    HttpDnsLog.w("ip request for " + host + " fail", throwable);
-                    recorder.endInterpret(host, type, cacheKey);
-                    countDownLatch.countDown();
-                }
-            });
+                    @Override
+                    public void onFail(Throwable throwable) {
+                        HttpDnsLog.w("ip request for " + host + " fail", throwable);
+                        locker.endInterpret(host, type, cacheKey);
+                    }
+                });
+            }
+
+            HttpDnsLog.d("wait for request finish");
+            try {
+                locker.await(host, type, cacheKey, 15, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
         } else {
-            countDownLatch.countDown();
-        }
-        if (result != null && (!result.isExpired() || enableExpiredIp || result.isFromDB())) {
             HttpDnsLog.i("request host " + host + " for " + type + " and return " + result.toString() + " immediately");
             return result;
         }
 
-        HttpDnsLog.d("wait for request finish");
-        try {
-            countDownLatch.await(15, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         result = repo.getIps(host, type, cacheKey);
         if (result != null && (!result.isExpired() || enableExpiredIp || result.isFromDB())) {
             HttpDnsLog.i("request host " + host + " for " + type + " and return " + result.toString() + " after request");

@@ -44,11 +44,6 @@ public class HttpDnsServiceTestImpl extends HttpDnsServiceImpl implements ApiFor
     }
 
     @Override
-    public void setUpdateServerTaskSchema(String schema) {
-        UpdateServerTask.schema = schema;
-    }
-
-    @Override
     public ExecutorService getWorker() {
         return this.config.worker;
     }

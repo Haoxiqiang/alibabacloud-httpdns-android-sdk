@@ -16,6 +16,11 @@ public class HttpRequestFailWatcher implements HttpRequestWatcher.Watcher {
     }
 
     @Override
+    public void onStart(HttpRequestConfig config) {
+
+    }
+
+    @Override
     public void onSuccess(HttpRequestConfig config, Object data) {
 
     }

@@ -24,6 +24,7 @@ public class UpdateServerResponse {
         this.serverIpv6s = serverIpv6s;
         this.serverPorts = serverPorts;
         this.serverIpv6Ports = serverIpv6Ports;
+        this.enable = true;
     }
 
     public UpdateServerResponse(boolean enable, String[] serverIps, String[] serverIpv6s, int[] serverPorts, int[] serverIpv6Ports) {

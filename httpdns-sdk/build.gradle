@@ -45,7 +45,7 @@ android {
         }
 
         end2end {
-
+            buildConfigField "String[]", "INIT_SERVER", "{}"
         }
     }
 
@@ -80,7 +80,6 @@ dependencies {
     androidTestImplementation 'com.android.support:appcompat-v7:28.0.0'
 
     implementation "com.aliyun.ams:alicloud-android-sender:${senderVersion}"
-    implementation "com.aliyun.ams:alicloud-android-rest:${restVersion}"
     implementation "com.aliyun.ams:alicloud-android-crashdefend:${crashDefendVersion}"
     implementation "com.aliyun.ams:alicloud-android-utdid:${utdidVersion}"
     implementation "com.aliyun.ams:alicloud-android-beacon:${beaconVersion}"

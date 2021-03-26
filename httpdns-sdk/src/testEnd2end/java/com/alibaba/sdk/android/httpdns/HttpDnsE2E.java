@@ -37,8 +37,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @RunWith(RobolectricTestRunner.class)
 public class HttpDnsE2E {
 
-    private BusinessApp app = new BusinessApp("10000");
-    private BusinessApp app1 = new BusinessApp("10001");
+    private BusinessApp app = new BusinessApp(RandomValue.randomStringWithFixedLength(20));
+    private BusinessApp app1 = new BusinessApp(RandomValue.randomStringWithFixedLength(20));
 
     private HttpDnsServer server = new HttpDnsServer();
     private HttpDnsServer server1 = new HttpDnsServer();
@@ -1097,7 +1097,7 @@ public class HttpDnsE2E {
 
     @Test
     public void testAuthSign() {
-        String account = RandomValue.randomStringWithFixedLength(8);
+        String account = RandomValue.randomStringWithFixedLength(20);
         String secret = server.createSecretFor(account);
         BusinessApp app2 = new BusinessApp(account, secret);
         app2.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
@@ -1116,7 +1116,7 @@ public class HttpDnsE2E {
 
     @Test
     public void testAuthSignValid() {
-        String account = RandomValue.randomStringWithFixedLength(8);
+        String account = RandomValue.randomStringWithFixedLength(20);
         String secret = server.createSecretFor(account);
         BusinessApp app2 = new BusinessApp(account, secret);
         app2.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);

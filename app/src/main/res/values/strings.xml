@@ -11,6 +11,9 @@
     <string name="set_cache">开启持久化缓存</string>
     <string name="set_degration_filter">降级策略</string>
     <string name="set_pre_resolve">预解析</string>
+    <string name="set_region">region</string>
+    <string name="sync_request">同步解析</string>
+    <string name="multi_sync_request">同步解析并发</string>
 
     <string name="main_about_us">关于我们</string>
     <string name="main_helper">帮助中心</string>
