@@ -32,7 +32,6 @@ public class NetworkStateManager {
     private Context context;
     private String netType;
     private String sp;
-    private String bssid;
     private String lastConnectedNetwork = NONE_NETWORK;
     private ArrayList<OnNetworkChange> listeners = new ArrayList<>();
 
@@ -127,13 +126,11 @@ public class NetworkStateManager {
         listeners.clear();
         sp = TYPE_UNKNOWN;
         netType = TYPE_UNKNOWN;
-        bssid = null;
     }
 
     private void updateNetworkStatus(Context context) {
         sp = TYPE_UNKNOWN;
         netType = TYPE_UNKNOWN;
-        bssid = null;
         try {
             ConnectivityManager connectivity = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             if (connectivity == null) {
@@ -150,7 +147,6 @@ public class NetworkStateManager {
             }
 
             if (activeNetInfo.getType() == ConnectivityManager.TYPE_WIFI) {
-                bssid = getBssid(context);
                 sp = getSsid(context);
                 netType = TYPE_WIFI;
                 return;
@@ -227,30 +223,11 @@ public class NetworkStateManager {
         return "UNKNOW";
     }
 
-    private String getBssid(Context context) {
-        try {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                WifiManager wifiMgr = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                WifiInfo info = wifiMgr.getConnectionInfo();
-                return info != null ? info.getBSSID() : null;
-            } else {
-                return null;
-            }
-        } catch (Throwable e) {
-            HttpDnsLog.w("get bssid fail", e);
-            return null;
-        }
-    }
-
     public String getNetType() {
         return netType;
     }
 
     public String getSp() {
         return sp;
-    }
-
-    public String getBssid() {
-        return bssid;
     }
 }

@@ -16,8 +16,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import static com.alibaba.sdk.android.httpdns.net.NetworkStateManager.TYPE_WIFI;
-
 /**
  * @author zonglin.nzl
  * @date 2020/12/9
@@ -77,7 +75,7 @@ public class InterpretHostHelper {
         if (params != null && params.keySet().contains("s")) {
             service = "sign_d";
         }
-        return "/" + config.getAccountId() + "/" + service + "?host=" + host + "&sdk=android_" + BuildConfig.VERSION_NAME + query + getSid() + getNetType() + getBssid() + extra + urlParams;
+        return "/" + config.getAccountId() + "/" + service + "?host=" + host + "&sdk=android_" + BuildConfig.VERSION_NAME + query + getSid() + getNetType() + extra + urlParams;
     }
 
     private static String toUrlParams(HashMap<String, String> params) {
@@ -170,7 +168,7 @@ public class InterpretHostHelper {
         if (signs != null && signs.keySet().contains("s")) {
             service = "sign_resolve";
         }
-        String path = "/" + config.getAccountId() + "/" + service + "?host=" + host + "&sdk=android_" + BuildConfig.VERSION_NAME + query + getSid() + getNetType() + getBssid() + toUrlParams(signs);
+        String path = "/" + config.getAccountId() + "/" + service + "?host=" + host + "&sdk=android_" + BuildConfig.VERSION_NAME + query + getSid() + getNetType() + toUrlParams(signs);
         return new HttpRequestConfig(config.getSchema(), config.getServerIp(), config.getPort(), path, config.getTimeout());
     }
 
@@ -191,19 +189,5 @@ public class InterpretHostHelper {
         } else {
             return "&net=" + netType;
         }
-    }
-
-    public static String getBssid() {
-        String netType = NetworkStateManager.getInstance().getNetType();
-        if (TYPE_WIFI.equals(netType)) {
-            String bssid = NetworkStateManager.getInstance().getBssid();
-            if (bssid != null) {
-                try {
-                    return "&bssid=" + URLEncoder.encode(bssid, "UTF-8");
-                } catch (UnsupportedEncodingException e) {
-                }
-            }
-        }
-        return "";
     }
 }
