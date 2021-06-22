@@ -35,7 +35,7 @@ allprojects {
     }
 
     ext.senderVersion = '1.1.0'
-    ext.crashDefendVersion = '0.0.4'
+    ext.crashDefendVersion = '0.0.5'
     ext.utdidVersion = '2.5.1-proguard'
     ext.beaconVersion = '1.0.5'
     ext.httpdnsDebugVersion = '0.0.0.1-local-SNAPSHOT'
