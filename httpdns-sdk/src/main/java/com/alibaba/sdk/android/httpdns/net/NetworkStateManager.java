@@ -65,7 +65,7 @@ public class NetworkStateManager {
                         return;
                     }
                     String action = intent.getAction();
-                    if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action)) {
+                    if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action) && hasNetInfoPermission(context)) {
                         updateNetworkStatus(context);
                         String currentNetwork = detectCurrentNetwork();
                         if (!currentNetwork.equals(NONE_NETWORK) && !currentNetwork.equalsIgnoreCase(lastConnectedNetwork)) {
@@ -132,6 +132,10 @@ public class NetworkStateManager {
         sp = TYPE_UNKNOWN;
         netType = TYPE_UNKNOWN;
         try {
+            if (!hasNetInfoPermission(context)) {
+                return;
+            }
+
             ConnectivityManager connectivity = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             if (connectivity == null) {
                 return;
@@ -221,6 +225,15 @@ public class NetworkStateManager {
             HttpDnsLog.w("getCellSP fail", e);
         }
         return "UNKNOW";
+    }
+
+    private static boolean hasNetInfoPermission(Context context) {
+        try {
+            return ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_NETWORK_STATE) == PackageManager.PERMISSION_GRANTED;
+        } catch (Throwable e) {
+            HttpDnsLog.w("check network info permission fail", e);
+        }
+        return false;
     }
 
     public String getNetType() {
