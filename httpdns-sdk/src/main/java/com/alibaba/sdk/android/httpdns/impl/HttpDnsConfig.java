@@ -1,5 +1,6 @@
 package com.alibaba.sdk.android.httpdns.impl;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 
@@ -352,6 +353,7 @@ public class HttpDnsConfig {
         config.enabled = sp.getBoolean(CONFIG_ENABLE, true);
     }
 
+    @SuppressLint("ApplySharedPref")
     private static void saveToCache(Context context, HttpDnsConfig config) {
         SharedPreferences.Editor editor = context.getSharedPreferences(CONFIG_CACHE_PREFIX + config.getAccountId(), Context.MODE_PRIVATE).edit();
         editor.putString(CONFIG_KEY_SERVERS, CommonUtil.translateStringArray(config.serverIps));
@@ -361,6 +363,7 @@ public class HttpDnsConfig {
         editor.putLong(CONFIG_SERVERS_LAST_UPDATED_TIME, config.serverIpsLastUpdatedTime);
         editor.putString(CONFIG_REGION, config.region);
         editor.putBoolean(CONFIG_ENABLE, config.enabled);
+        // 虽然提示建议使用apply，但是实践证明，apply是把写文件操作推迟到了一些界面切换等时机，反而影响了UI线程。不如直接在子线程写文件
         editor.commit();
     }
 

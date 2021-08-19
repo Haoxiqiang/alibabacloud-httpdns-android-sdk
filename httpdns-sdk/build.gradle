@@ -1,11 +1,11 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.3"
+    compileSdkVersion 30
+    buildToolsVersion "30.0.2"
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 29
+        minSdkVersion 9
+        targetSdkVersion 30
         versionCode 1
         if (project.hasProperty("VERSION_NAME")) {
             println "version name is $VERSION_NAME from mtl"
@@ -51,7 +51,7 @@ android {
 
     variantFilter { variant ->
         def names = variant.flavors*.name
-        def type = variant.buildType.name;
+        def type = variant.buildType.name
         // To check for a certain build type, use variant.buildType.name == "<buildType>"
         if ((names.contains("normal") && type.contains("forTest"))
                 || (names.contains("end2end") && type.contains("release"))
@@ -78,11 +78,15 @@ android {
 
 dependencies {
 
+    //noinspection GradleDependency 高版本 jdk和androidx有一些依赖，暂时不升级
     end2endImplementation "org.robolectric:robolectric:3.8"
+    //noinspection GradleDependency
     end2endImplementation 'junit:junit:4.12'
+    //noinspection GradleDependency
     end2endImplementation 'org.mockito:mockito-core:2.15.0'
     end2endImplementation 'com.squareup.okhttp3:mockwebserver:3.9.0'
 
+    implementation "com.aliyun.ams:alicloud-android-logger:1.0.2"
     implementation "com.aliyun.ams:alicloud-android-sender:${senderVersion}"
     implementation "com.aliyun.ams:alicloud-android-crashdefend:${crashDefendVersion}"
     implementation "com.aliyun.ams:alicloud-android-utdid:${utdidVersion}"
