@@ -233,6 +233,15 @@ public class BusinessApp {
     }
 
     /**
+     * 清除缓存
+     *
+     * @param hosts
+     */
+    public void cleanHostCache(ArrayList<String> hosts) {
+        httpDnsService.cleanHostCache(hosts);
+    }
+
+    /**
      * 设置更新服务IP的最小间隔
      *
      * @param timeInterval

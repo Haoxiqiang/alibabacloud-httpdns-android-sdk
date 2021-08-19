@@ -183,4 +183,12 @@ public interface HttpDnsService extends Net64Service {
      * @param region
      */
     void setRegion(String region);
+
+    /**
+     * 立即清除域名端侧内存和本地缓存。
+     * 后续调用异步接口，会先返回空，触发域名解析
+     *
+     * @param hosts
+     */
+    void cleanHostCache(ArrayList<String> hosts);
 }

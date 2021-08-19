@@ -487,4 +487,14 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
         }
         return interpretHostService.interpretHost(host, type, null, null);
     }
+
+    public void cleanHostCache(ArrayList<String> hosts) {
+        if (hosts == null || hosts.size() == 0) {
+            // 清理所有host
+            repo.clear();
+        } else {
+            // 清理选中的host
+            repo.clear(hosts);
+        }
+    }
 }

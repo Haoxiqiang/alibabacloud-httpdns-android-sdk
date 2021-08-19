@@ -155,4 +155,8 @@ public class ErrorImpl implements HttpDnsService, SyncService {
         HttpDnsLog.w("init error");
         return HTTPDNSResult.empty(host);
     }
+
+    @Override
+    public void cleanHostCache(ArrayList<String> hosts) {
+    }
 }

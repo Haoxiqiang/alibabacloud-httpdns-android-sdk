@@ -245,6 +245,15 @@ public class CommonUtil {
         return stringBuilder.toString();
     }
 
+    public static String parseHost(String key) {
+        if (key != null && !key.isEmpty()) {
+            String[] tmp = key.split(":");
+            return tmp[0];
+        } else {
+            return null;
+        }
+    }
+
     // 从旧代码中获取，逻辑待确定
     public static Map<String, String> toMap(String extra) {
         Map<String, String> extras = new HashMap<>();
