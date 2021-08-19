@@ -80,14 +80,18 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             ReportManager reportManager = ReportManager.getReportManagerByAccount(accountId);
             reportManager.setAccountId(accountId);
             reportSdkStart(context, accountId);
-            BeaconControl.initBeacon(context, accountId, config);
+            initBeacon(context, accountId, config);
             HttpDnsLog.d("httpdns service is inited " + accountId);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void initCrashDefend(Context context, final HttpDnsConfig config) {
+    protected void initBeacon(Context context, String accountId, HttpDnsConfig config) {
+        BeaconControl.initBeacon(context, accountId, config);
+    }
+
+    protected void initCrashDefend(Context context, final HttpDnsConfig config) {
         CrashDefendApi.registerCrashDefendSdk(context, "httpdns", BuildConfig.VERSION_NAME, 2, 7, new CrashDefendCallback() {
             @Override
             public void onSdkStart(int limitCount, int crashCount, int restoreCount) {
@@ -108,7 +112,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
         });
     }
 
-    private void reportSdkStart(Context context, String accountId) {
+    protected void reportSdkStart(Context context, String accountId) {
         try {
             HashMap<String, String> ext = new HashMap<>();
             ext.put("accountId", accountId);

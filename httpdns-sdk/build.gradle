@@ -78,19 +78,10 @@ android {
 
 dependencies {
 
-    compileOnly 'com.android.support:appcompat-v7:28.0.0'
-
     end2endImplementation "org.robolectric:robolectric:3.8"
     end2endImplementation 'junit:junit:4.12'
     end2endImplementation 'org.mockito:mockito-core:2.15.0'
     end2endImplementation 'com.squareup.okhttp3:mockwebserver:3.9.0'
-    end2endImplementation 'com.android.support:appcompat-v7:28.0.0'
-
-    androidTestImplementation 'com.android.support.test:runner:1.0.0'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.0'
-    androidTestImplementation 'org.mockito:mockito-android:2.15.0'
-    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:3.9.0'
-    androidTestImplementation 'com.android.support:appcompat-v7:28.0.0'
 
     implementation "com.aliyun.ams:alicloud-android-sender:${senderVersion}"
     implementation "com.aliyun.ams:alicloud-android-crashdefend:${crashDefendVersion}"

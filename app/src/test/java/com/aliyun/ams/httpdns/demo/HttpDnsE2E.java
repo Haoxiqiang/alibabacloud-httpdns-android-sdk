@@ -1,5 +1,8 @@
 package com.aliyun.ams.httpdns.demo;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import android.Manifest;
 import android.net.ConnectivityManager;
 
 import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
@@ -25,14 +28,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.RuntimeEnvironment;
+import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowLog;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
-
-import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author zonglin.nzl
@@ -71,7 +75,8 @@ public class HttpDnsE2E {
         server3.start();
         server4.start();
         server5.start();
-
+        ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
+        application.grantPermissions(Manifest.permission.ACCESS_NETWORK_STATE);
         app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
         app1.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
     }

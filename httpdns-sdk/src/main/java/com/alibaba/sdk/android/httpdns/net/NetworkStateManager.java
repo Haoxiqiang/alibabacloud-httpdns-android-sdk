@@ -10,7 +10,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.support.v4.content.ContextCompat;
+import android.os.Process;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
@@ -199,7 +199,7 @@ public class NetworkStateManager {
 
     private static String getSsid(Context context) {
         try {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            if (checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 WifiManager wifiMgr = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 WifiInfo info = wifiMgr.getConnectionInfo();
                 return info != null ? info.getSSID() : null;
@@ -214,7 +214,7 @@ public class NetworkStateManager {
 
     private static String getCellSP(Context context) {
         try {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+            if (checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                 TelephonyManager telManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
                 String operator = telManager.getSimOperator();
                 if (!TextUtils.isEmpty(operator)) {
@@ -229,7 +229,7 @@ public class NetworkStateManager {
 
     private static boolean hasNetInfoPermission(Context context) {
         try {
-            return ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_NETWORK_STATE) == PackageManager.PERMISSION_GRANTED;
+            return checkSelfPermission(context, Manifest.permission.ACCESS_NETWORK_STATE) == PackageManager.PERMISSION_GRANTED;
         } catch (Throwable e) {
             HttpDnsLog.w("check network info permission fail", e);
         }
@@ -242,5 +242,10 @@ public class NetworkStateManager {
 
     public String getSp() {
         return sp;
+    }
+
+
+    private static int checkSelfPermission(Context context, String permission) {
+        return context.checkPermission(permission, Process.myPid(), Process.myUid());
     }
 }
