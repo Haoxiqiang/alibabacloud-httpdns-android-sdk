@@ -20,6 +20,7 @@ import com.alibaba.sdk.android.httpdns.interpret.InterpretHostResultRepo;
 import com.alibaba.sdk.android.httpdns.interpret.InterpretHostService;
 import com.alibaba.sdk.android.httpdns.interpret.ResolveHostService;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
+import com.alibaba.sdk.android.httpdns.net.Inet64Util;
 import com.alibaba.sdk.android.httpdns.net.NetworkStateManager;
 import com.alibaba.sdk.android.httpdns.probe.IPProbeItem;
 import com.alibaba.sdk.android.httpdns.probe.ProbeService;
@@ -64,6 +65,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
                 return;
             }
             NetworkStateManager.getInstance().init(context);
+            Inet64Util.init(NetworkStateManager.getInstance());
             filter = new HostFilter();
             signService = new SignService(secret);
             ipProbeService = new ProbeService(this.config);

@@ -19,9 +19,10 @@ import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import java.util.ArrayList;
 
 
-public class NetworkStateManager {
+public class NetworkStateManager implements INetworkHelper {
 
     // 4g/3g/2g/wifi
+    public final static String TYPE_5G = "5g";
     public final static String TYPE_4G = "4g";
     public final static String TYPE_3G = "3g";
     public final static String TYPE_2G = "2g";
@@ -68,6 +69,7 @@ public class NetworkStateManager {
                     if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action) && hasNetInfoPermission(context)) {
                         updateNetworkStatus(context);
                         String currentNetwork = detectCurrentNetwork();
+                        Inet64Util.startIpStackDetect();
                         if (!currentNetwork.equals(NONE_NETWORK) && !currentNetwork.equalsIgnoreCase(lastConnectedNetwork)) {
                             for (OnNetworkChange onNetworkChange : listeners) {
                                 onNetworkChange.onNetworkChange(currentNetwork);
@@ -177,6 +179,9 @@ public class NetworkStateManager {
                     case TelephonyManager.NETWORK_TYPE_LTE:
                         netType = TYPE_4G;
                         return;
+                    case TelephonyManager.NETWORK_TYPE_NR:
+                        netType = TYPE_5G;
+                        return;
                     case TelephonyManager.NETWORK_TYPE_UNKNOWN:
                     default:
                         return;
@@ -247,5 +252,20 @@ public class NetworkStateManager {
 
     private static int checkSelfPermission(Context context, String permission) {
         return context.checkPermission(permission, Process.myPid(), Process.myUid());
+    }
+
+    @Override
+    public String generateCurrentNetworkId() {
+        return netType + "$" + sp;
+    }
+
+    @Override
+    public boolean isMobile() {
+        return netType != TYPE_UNKNOWN && netType != TYPE_WIFI;
+    }
+
+    @Override
+    public boolean isWifi() {
+        return netType == TYPE_WIFI;
     }
 }
