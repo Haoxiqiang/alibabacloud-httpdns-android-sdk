@@ -18,6 +18,7 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
         buildConfigField "String[]", "INIT_SERVER", INIT_SERVERS
+        buildConfigField "String[]", "IPV6_INIT_SERVER", IPV6_INIT_SERVERS
     }
     buildTypes {
         release {
@@ -46,6 +47,7 @@ android {
 
         end2end {
             buildConfigField "String[]", "INIT_SERVER", "{}"
+            buildConfigField "String[]", "IPV6_INIT_SERVER", "{}"
         }
     }
 

@@ -39,7 +39,7 @@ public class UpdateServerTask {
         });
         httpRequest = new HttpRequestWatcher<>(httpRequest, new HttpRequestFailWatcher(ReportManager.getReportManagerByAccount(config.getAccountId())));
         // 兼容ipv6only 环境
-        httpRequest = new HttpRequestWatcher<>(httpRequest, new Ipv6onlyWatcher());
+        httpRequest = new HttpRequestWatcher<>(httpRequest, new Ipv6onlyWatcher(config));
         // 增加切换ip，回到初始Ip的逻辑
         httpRequest = new HttpRequestWatcher<>(httpRequest, new ShiftServerWatcher(config));
         // 重试，当前服务Ip和初始服务ip个数

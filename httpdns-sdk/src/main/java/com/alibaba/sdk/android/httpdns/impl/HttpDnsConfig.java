@@ -22,6 +22,7 @@ public class HttpDnsConfig {
     private Context context;
     private boolean enabled = true;
     private String[] initServerIps = BuildConfig.INIT_SERVER;
+    private String[] ipv6InitServerIps = BuildConfig.IPV6_INIT_SERVER;
     private int[] initServerPorts = null;
     private String accountId;
     private String schema = HttpRequestConfig.HTTP_SCHEMA;
@@ -29,6 +30,7 @@ public class HttpDnsConfig {
     private int[] ports = null;
     private int lastOkServerIndex = 0;
     private int currentServerIndex = 0;
+    private int currentIpv6ServerIndex = 0;
     private String region = null;
     private long serverIpsLastUpdatedTime = 0;
     private int timeout = HttpRequestConfig.DEFAULT_TIMEOUT;
@@ -187,6 +189,27 @@ public class HttpDnsConfig {
             return 80;
         } else {
             return 443;
+        }
+    }
+
+    /**
+     * 获取ipv6的服务节点
+     *
+     * @return
+     */
+    public String getIpv6ServerIp() {
+        if (ipv6InitServerIps == null || currentIpv6ServerIndex >= ipv6InitServerIps.length) {
+            return null;
+        }
+        return ipv6InitServerIps[currentIpv6ServerIndex];
+    }
+
+    /**
+     * 切换ipv6服务节点
+     */
+    public void shiftIpv6Server() {
+        if (ipv6InitServerIps != null && ipv6InitServerIps.length > 0) {
+            currentIpv6ServerIndex = (currentIpv6ServerIndex + 1) % ipv6InitServerIps.length;
         }
     }
 
