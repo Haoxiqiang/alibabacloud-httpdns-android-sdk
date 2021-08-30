@@ -1,5 +1,8 @@
 package com.alibaba.sdk.android.httpdns;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import android.Manifest;
 import android.net.ConnectivityManager;
 
 import com.alibaba.sdk.android.httpdns.interpret.InterpretHostResponse;
@@ -21,14 +24,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.RuntimeEnvironment;
+import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowLog;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
-
-import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author zonglin.nzl
@@ -67,7 +71,8 @@ public class HttpDnsE2E {
         server3.start();
         server4.start();
         server5.start();
-
+        ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
+        application.grantPermissions(Manifest.permission.ACCESS_NETWORK_STATE);
         app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
         app1.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
     }
@@ -1369,5 +1374,87 @@ public class HttpDnsE2E {
             throwable.printStackTrace();
             MatcherAssert.assertThat("调用次数多，不应该崩溃", false);
         }
+    }
+
+    @Test
+    public void cleanHostCacheWillRemoveLocalCache() {
+
+        app.requestInterpretHost();
+        app.waitForAppThread();
+        // 再次请求，获取服务器返回的结果
+        String[] ips = app.requestInterpretHost();
+        MatcherAssert.assertThat("先解析域名确保有缓存", ips.length > 0 && !ips[0].isEmpty());
+
+        ArrayList<String> hosts = new ArrayList<>();
+        hosts.add(app.getRequestHost());
+        app.cleanHostCache(hosts);
+
+        ips = app.requestInterpretHost();
+        UnitTestUtil.assertIpsEmpty("清除缓存之后，请求会返回空", ips);
+    }
+
+    @Test
+    public void cleanHostCacheWithoutHostWillRemoveAllHostCache() {
+        String host1 = RandomValue.randomHost();
+        String host2 = RandomValue.randomHost();
+        app.requestInterpretHost(host1);
+        app.requestInterpretHost(host2);
+        app.waitForAppThread();
+
+        String[] ips1 = app.requestInterpretHost(host1);
+        String[] ips2 = app.requestInterpretHost(host2);
+        MatcherAssert.assertThat("当前 host1 host2 都有缓存", ips1.length > 0 && !ips1[0].isEmpty() && ips2.length > 0 && !ips2[0].isEmpty());
+
+        app.cleanHostCache(null);
+
+        ips1 = app.requestInterpretHost(host1);
+        ips2 = app.requestInterpretHost(host2);
+        UnitTestUtil.assertIpsEmpty("清除缓存之后，请求会返回空", ips1);
+        UnitTestUtil.assertIpsEmpty("清除缓存之后，请求会返回空", ips2);
+    }
+
+    @Test
+    public void cleanHostCacheWillCleanCacheInLocalDB() {
+        // 启动缓存
+        app.enableCache(false);
+        // 先发起一些请求，缓存一些Ip结果
+        app.requestInterpretHost();
+        app.waitForAppThread();
+        String[] ips1 = app.requestInterpretHost();
+
+        // 重置实例，确保下次读取的信息是从本地缓存来的
+        HttpDns.resetInstance();
+
+        // 重启应用，获取新的实例
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.enableCache(false);
+
+        // 读取缓存
+        String[] ips2 = app.requestInterpretHost();
+        UnitTestUtil.assertIpsEqual("确认缓存生效", ips1, ips2);
+
+        // 重置实例，
+        HttpDns.resetInstance();
+
+        // 重启应用，获取新的实例
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.enableCache(false);
+
+        String[] ips3 = app.requestInterpretHost();
+        UnitTestUtil.assertIpsEqual("确认缓存没有被清除，一直存在", ips3, ips2);
+
+        ArrayList<String> hosts = new ArrayList<>();
+        hosts.add(app.getRequestHost());
+        app.cleanHostCache(hosts);
+
+        // 重置实例，
+        HttpDns.resetInstance();
+
+        // 重启应用，获取新的实例
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.enableCache(false);
+
+        String[] ips4 = app.requestInterpretHost();
+        UnitTestUtil.assertIpsEmpty("清除缓存会把数据库缓存也清除", ips4);
     }
 }

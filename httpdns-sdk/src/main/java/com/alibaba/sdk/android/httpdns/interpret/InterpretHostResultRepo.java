@@ -6,8 +6,8 @@ import com.alibaba.sdk.android.httpdns.cache.HostRecord;
 import com.alibaba.sdk.android.httpdns.cache.RecordDBHelper;
 import com.alibaba.sdk.android.httpdns.impl.HttpDnsConfig;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
-import com.alibaba.sdk.android.httpdns.probe.ProbeService;
 import com.alibaba.sdk.android.httpdns.probe.ProbeCallback;
+import com.alibaba.sdk.android.httpdns.probe.ProbeService;
 import com.alibaba.sdk.android.httpdns.utils.CommonUtil;
 
 import java.util.ArrayList;
@@ -214,6 +214,29 @@ public class InterpretHostResultRepo {
             dbHelper.delete(new ArrayList<HostRecord>(interpretResults.values()));
         }
         interpretResults.clear();
+    }
+
+    public void clear(ArrayList<String> hosts) {
+        if (hosts == null || hosts.size() == 0) {
+            clear();
+            return;
+        }
+        ArrayList<String> hostKeys = new ArrayList<>(interpretResults.keySet());
+        ArrayList<HostRecord> recordsToBeDeleted = new ArrayList<>();
+        for (String hostKey : hostKeys) {
+            if (isTargetKey(hostKey, hosts)) {
+                HostRecord record = interpretResults.remove(hostKey);
+                recordsToBeDeleted.add(record);
+            }
+        }
+        if (recordsToBeDeleted.size() > 0 && enableCache) {
+            dbHelper.delete(recordsToBeDeleted);
+        }
+    }
+
+    private boolean isTargetKey(String hostKey, ArrayList<String> hosts) {
+        String host = CommonUtil.parseHost(hostKey);
+        return host != null && hosts.contains(host);
     }
 
     public HashMap<String, RequestIpType> getAllHost() {

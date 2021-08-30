@@ -7,6 +7,7 @@ import com.alibaba.sdk.android.httpdns.request.HttpRequestConfig;
 import com.alibaba.sdk.android.httpdns.request.HttpRequestFailWatcher;
 import com.alibaba.sdk.android.httpdns.request.HttpRequestTask;
 import com.alibaba.sdk.android.httpdns.request.HttpRequestWatcher;
+import com.alibaba.sdk.android.httpdns.request.Ipv6onlyWatcher;
 import com.alibaba.sdk.android.httpdns.request.RequestCallback;
 import com.alibaba.sdk.android.httpdns.serverip.ScheduleService;
 
@@ -40,6 +41,8 @@ public class SniffCategory implements InterpretHostCategory {
 
         HttpRequest<InterpretHostResponse> request = new HttpRequest<InterpretHostResponse>(requestConfig, new InterpretHostResponseTranslator());
         request = new HttpRequestWatcher<>(request, new HttpRequestFailWatcher(ReportManager.getReportManagerByAccount(config.getAccountId())));
+        // 兼容ipv6only 环境
+        request = new HttpRequestWatcher<>(request, new Ipv6onlyWatcher(config));
         // 切换服务IP，更新服务IP
         request = new HttpRequestWatcher<>(request, new ShiftServerWatcher(config, scheduleService, statusControl));
         config.getWorker().execute(new HttpRequestTask<InterpretHostResponse>(request, callback));

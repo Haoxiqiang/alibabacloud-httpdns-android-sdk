@@ -19,6 +19,22 @@ public class HttpDnsServiceTestImpl extends HttpDnsServiceImpl implements ApiFor
     }
 
     @Override
+    protected void reportSdkStart(Context context, String accountId) {
+        // do nothing for test
+    }
+
+    @Override
+    protected void initCrashDefend(Context context, HttpDnsConfig config) {
+        // do nothing for test
+        config.crashDefend(false);
+    }
+
+    @Override
+    protected void initBeacon(Context context, String accountId, HttpDnsConfig config) {
+        // do nothing for test
+    }
+
+    @Override
     public void setInitServer(String[] ips, int[] ports) {
         this.config.setInitServers(ips, ports);
     }

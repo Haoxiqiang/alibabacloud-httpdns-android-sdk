@@ -10,7 +10,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.support.v4.content.ContextCompat;
+import android.os.Process;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
@@ -19,9 +19,10 @@ import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import java.util.ArrayList;
 
 
-public class NetworkStateManager {
+public class NetworkStateManager implements INetworkHelper {
 
     // 4g/3g/2g/wifi
+    public final static String TYPE_5G = "5g";
     public final static String TYPE_4G = "4g";
     public final static String TYPE_3G = "3g";
     public final static String TYPE_2G = "2g";
@@ -32,7 +33,6 @@ public class NetworkStateManager {
     private Context context;
     private String netType;
     private String sp;
-    private String bssid;
     private String lastConnectedNetwork = NONE_NETWORK;
     private ArrayList<OnNetworkChange> listeners = new ArrayList<>();
 
@@ -66,9 +66,10 @@ public class NetworkStateManager {
                         return;
                     }
                     String action = intent.getAction();
-                    if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action)) {
+                    if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action) && hasNetInfoPermission(context)) {
                         updateNetworkStatus(context);
                         String currentNetwork = detectCurrentNetwork();
+                        Inet64Util.startIpStackDetect();
                         if (!currentNetwork.equals(NONE_NETWORK) && !currentNetwork.equalsIgnoreCase(lastConnectedNetwork)) {
                             for (OnNetworkChange onNetworkChange : listeners) {
                                 onNetworkChange.onNetworkChange(currentNetwork);
@@ -127,14 +128,16 @@ public class NetworkStateManager {
         listeners.clear();
         sp = TYPE_UNKNOWN;
         netType = TYPE_UNKNOWN;
-        bssid = null;
     }
 
     private void updateNetworkStatus(Context context) {
         sp = TYPE_UNKNOWN;
         netType = TYPE_UNKNOWN;
-        bssid = null;
         try {
+            if (!hasNetInfoPermission(context)) {
+                return;
+            }
+
             ConnectivityManager connectivity = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             if (connectivity == null) {
                 return;
@@ -150,7 +153,6 @@ public class NetworkStateManager {
             }
 
             if (activeNetInfo.getType() == ConnectivityManager.TYPE_WIFI) {
-                bssid = getBssid(context);
                 sp = getSsid(context);
                 netType = TYPE_WIFI;
                 return;
@@ -177,6 +179,9 @@ public class NetworkStateManager {
                     case TelephonyManager.NETWORK_TYPE_LTE:
                         netType = TYPE_4G;
                         return;
+                    case TelephonyManager.NETWORK_TYPE_NR:
+                        netType = TYPE_5G;
+                        return;
                     case TelephonyManager.NETWORK_TYPE_UNKNOWN:
                     default:
                         return;
@@ -199,7 +204,7 @@ public class NetworkStateManager {
 
     private static String getSsid(Context context) {
         try {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            if (checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 WifiManager wifiMgr = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 WifiInfo info = wifiMgr.getConnectionInfo();
                 return info != null ? info.getSSID() : null;
@@ -214,7 +219,7 @@ public class NetworkStateManager {
 
     private static String getCellSP(Context context) {
         try {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+            if (checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                 TelephonyManager telManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
                 String operator = telManager.getSimOperator();
                 if (!TextUtils.isEmpty(operator)) {
@@ -227,19 +232,13 @@ public class NetworkStateManager {
         return "UNKNOW";
     }
 
-    private String getBssid(Context context) {
+    private static boolean hasNetInfoPermission(Context context) {
         try {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                WifiManager wifiMgr = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                WifiInfo info = wifiMgr.getConnectionInfo();
-                return info != null ? info.getBSSID() : null;
-            } else {
-                return null;
-            }
+            return checkSelfPermission(context, Manifest.permission.ACCESS_NETWORK_STATE) == PackageManager.PERMISSION_GRANTED;
         } catch (Throwable e) {
-            HttpDnsLog.w("get bssid fail", e);
-            return null;
+            HttpDnsLog.w("check network info permission fail", e);
         }
+        return false;
     }
 
     public String getNetType() {
@@ -250,7 +249,23 @@ public class NetworkStateManager {
         return sp;
     }
 
-    public String getBssid() {
-        return bssid;
+
+    private static int checkSelfPermission(Context context, String permission) {
+        return context.checkPermission(permission, Process.myPid(), Process.myUid());
+    }
+
+    @Override
+    public String generateCurrentNetworkId() {
+        return netType + "$" + sp;
+    }
+
+    @Override
+    public boolean isMobile() {
+        return netType != TYPE_UNKNOWN && netType != TYPE_WIFI;
+    }
+
+    @Override
+    public boolean isWifi() {
+        return netType == TYPE_WIFI;
     }
 }

@@ -1,5 +1,14 @@
 package com.alibaba.sdk.android.httpdns.test.app;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -33,14 +42,6 @@ import org.robolectric.shadows.ShadowLooper;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 /**
  * 模拟业务app
@@ -232,6 +233,15 @@ public class BusinessApp {
     }
 
     /**
+     * 清除缓存
+     *
+     * @param hosts
+     */
+    public void cleanHostCache(ArrayList<String> hosts) {
+        httpDnsService.cleanHostCache(hosts);
+    }
+
+    /**
      * 设置更新服务IP的最小间隔
      *
      * @param timeInterval
@@ -321,6 +331,7 @@ public class BusinessApp {
         TestLogger.log("change network to " + netType);
     }
 
+    @SuppressLint("ApplySharedPref")
     public void changeServerIpUpdateTimeTo(long time) {
         SharedPreferences.Editor editor = RuntimeEnvironment.application.getSharedPreferences("httpdns_config_" + accountId, Context.MODE_PRIVATE).edit();
         editor.putLong("servers_last_updated_time", time);

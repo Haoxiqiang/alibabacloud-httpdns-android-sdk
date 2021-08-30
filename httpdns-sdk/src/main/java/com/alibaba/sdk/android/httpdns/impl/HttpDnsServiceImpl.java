@@ -20,6 +20,7 @@ import com.alibaba.sdk.android.httpdns.interpret.InterpretHostResultRepo;
 import com.alibaba.sdk.android.httpdns.interpret.InterpretHostService;
 import com.alibaba.sdk.android.httpdns.interpret.ResolveHostService;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
+import com.alibaba.sdk.android.httpdns.net.Inet64Util;
 import com.alibaba.sdk.android.httpdns.net.NetworkStateManager;
 import com.alibaba.sdk.android.httpdns.probe.IPProbeItem;
 import com.alibaba.sdk.android.httpdns.probe.ProbeService;
@@ -64,6 +65,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
                 return;
             }
             NetworkStateManager.getInstance().init(context);
+            Inet64Util.init(NetworkStateManager.getInstance());
             filter = new HostFilter();
             signService = new SignService(secret);
             ipProbeService = new ProbeService(this.config);
@@ -80,14 +82,18 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             ReportManager reportManager = ReportManager.getReportManagerByAccount(accountId);
             reportManager.setAccountId(accountId);
             reportSdkStart(context, accountId);
-            BeaconControl.initBeacon(context, accountId, config);
+            initBeacon(context, accountId, config);
             HttpDnsLog.d("httpdns service is inited " + accountId);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void initCrashDefend(Context context, final HttpDnsConfig config) {
+    protected void initBeacon(Context context, String accountId, HttpDnsConfig config) {
+        BeaconControl.initBeacon(context, accountId, config);
+    }
+
+    protected void initCrashDefend(Context context, final HttpDnsConfig config) {
         CrashDefendApi.registerCrashDefendSdk(context, "httpdns", BuildConfig.VERSION_NAME, 2, 7, new CrashDefendCallback() {
             @Override
             public void onSdkStart(int limitCount, int crashCount, int restoreCount) {
@@ -108,7 +114,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
         });
     }
 
-    private void reportSdkStart(Context context, String accountId) {
+    protected void reportSdkStart(Context context, String accountId) {
         try {
             HashMap<String, String> ext = new HashMap<>();
             ext.put("accountId", accountId);
@@ -482,5 +488,15 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             return interpretHostService.interpretHostAsync(host, type, null, null);
         }
         return interpretHostService.interpretHost(host, type, null, null);
+    }
+
+    public void cleanHostCache(ArrayList<String> hosts) {
+        if (hosts == null || hosts.size() == 0) {
+            // 清理所有host
+            repo.clear();
+        } else {
+            // 清理选中的host
+            repo.clear(hosts);
+        }
     }
 }

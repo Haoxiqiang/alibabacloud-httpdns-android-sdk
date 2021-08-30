@@ -10,6 +10,7 @@ import com.alibaba.sdk.android.httpdns.request.HttpRequestConfig;
 import com.alibaba.sdk.android.httpdns.request.HttpRequestFailWatcher;
 import com.alibaba.sdk.android.httpdns.request.HttpRequestTask;
 import com.alibaba.sdk.android.httpdns.request.HttpRequestWatcher;
+import com.alibaba.sdk.android.httpdns.request.Ipv6onlyWatcher;
 import com.alibaba.sdk.android.httpdns.request.RequestCallback;
 import com.alibaba.sdk.android.httpdns.request.RetryHttpRequest;
 import com.alibaba.sdk.android.httpdns.serverip.ScheduleService;
@@ -53,6 +54,8 @@ public class InterpretHostRequestHandler {
 
         HttpRequest<ResolveHostResponse> request = new HttpRequest<ResolveHostResponse>(requestConfig, new ResolveHostResponseTranslator());
         request = new HttpRequestWatcher<>(request, new HttpRequestFailWatcher(ReportManager.getReportManagerByAccount(config.getAccountId())));
+        // 兼容ipv6only 环境
+        request = new HttpRequestWatcher<>(request, new Ipv6onlyWatcher(config));
         // 切换服务IP，更新服务IP
         request = new HttpRequestWatcher<>(request, new ShiftServerWatcher(config, scheduleService, categoryController));
         // 重试一次
