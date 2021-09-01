@@ -35,3 +35,6 @@ Could not find :alicloud-android-httpdns-0.0.0.1-local-SNAPSHOT-end2end-forTest:
 // 2.0.0 为 版本号
 ./gradlew clean :httpdns-sdk:assembleNormalRelease -PVERSION_NAME=2.0.0
 ```
+
+## 感谢
+本项目中Inet64Util工具类 由[Shinelw](https://github.com/Shinelw)贡献支持，感谢。
