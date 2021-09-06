@@ -438,35 +438,40 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
         if (!config.isEnabled()) {
             return;
         }
-        HashMap<String, RequestIpType> allHost = repo.getAllHost();
-        HttpDnsLog.d("network change, clean record");
-        repo.clear();
-        if (resolveAfterNetworkChange && config.isEnabled()) {
-            ArrayList<String> v4List = new ArrayList<>();
-            ArrayList<String> v6List = new ArrayList<>();
-            ArrayList<String> bothList = new ArrayList<>();
-            for (Map.Entry<String, RequestIpType> entry : allHost.entrySet()) {
-                if (entry.getValue() == RequestIpType.v4) {
-                    v4List.add(entry.getKey());
-                } else if (entry.getValue() == RequestIpType.v6) {
-                    v6List.add(entry.getKey());
-                } else {
-                    bothList.add(entry.getKey());
+        config.getWorker().execute(new Runnable() {
+            @Override
+            public void run() {
+                HashMap<String, RequestIpType> allHost = repo.getAllHost();
+                HttpDnsLog.d("network change, clean record");
+                repo.clear();
+                if (resolveAfterNetworkChange && config.isEnabled()) {
+                    ArrayList<String> v4List = new ArrayList<>();
+                    ArrayList<String> v6List = new ArrayList<>();
+                    ArrayList<String> bothList = new ArrayList<>();
+                    for (Map.Entry<String, RequestIpType> entry : allHost.entrySet()) {
+                        if (entry.getValue() == RequestIpType.v4) {
+                            v4List.add(entry.getKey());
+                        } else if (entry.getValue() == RequestIpType.v6) {
+                            v6List.add(entry.getKey());
+                        } else {
+                            bothList.add(entry.getKey());
+                        }
+                    }
+                    if (v4List.size() > 0) {
+                        resolveHostService.resolveHostAsync(v4List, RequestIpType.v4);
+                    }
+                    if (v6List.size() > 0) {
+                        resolveHostService.resolveHostAsync(v6List, RequestIpType.v6);
+                    }
+                    if (bothList.size() > 0) {
+                        resolveHostService.resolveHostAsync(bothList, RequestIpType.both);
+                    }
+                    if (v4List.size() > 0 || v6List.size() > 0 || bothList.size() > 0) {
+                        HttpDnsLog.d("network change, resolve hosts");
+                    }
                 }
             }
-            if (v4List.size() > 0) {
-                resolveHostService.resolveHostAsync(v4List, RequestIpType.v4);
-            }
-            if (v6List.size() > 0) {
-                resolveHostService.resolveHostAsync(v6List, RequestIpType.v6);
-            }
-            if (bothList.size() > 0) {
-                resolveHostService.resolveHostAsync(bothList, RequestIpType.both);
-            }
-            if (v4List.size() > 0 || v6List.size() > 0 || bothList.size() > 0) {
-                HttpDnsLog.d("network change, resolve hosts");
-            }
-        }
+        });
     }
 
     @Override
