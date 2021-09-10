@@ -259,6 +259,7 @@ public class CommonUtil {
         Map<String, String> extras = new HashMap<>();
         if (extra != null) {
             try {
+                // 测试验证 服务返回的extra字段进行了url encode处理，所以此处 通过Html转化一下。
                 JSONObject jsonObjectExtra = new JSONObject((Html.fromHtml((Html.fromHtml(extra)).toString())).toString());
                 Iterator var2 = jsonObjectExtra.keys();
                 while (var2.hasNext()) {
