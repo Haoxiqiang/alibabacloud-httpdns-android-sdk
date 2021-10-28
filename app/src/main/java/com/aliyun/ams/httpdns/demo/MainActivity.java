@@ -63,7 +63,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private TextView tvConsole;
 
 
-    private static HttpDnsService httpdns;
+    public static HttpDnsService httpdns;
     private static ExecutorService pool = Executors.newSingleThreadExecutor();
 
     private Handler mHandler = null;
