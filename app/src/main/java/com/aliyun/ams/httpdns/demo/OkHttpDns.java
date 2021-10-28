@@ -5,8 +5,6 @@ import com.alibaba.sdk.android.httpdns.HttpDnsService;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.SyncService;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -24,9 +22,8 @@ import okhttp3.Dns;
 public class OkHttpDns implements Dns {
     private HttpDnsService service = MainActivity.httpdns;
 
-    @NotNull
     @Override
-    public List<InetAddress> lookup(@NotNull String s) throws UnknownHostException {
+    public List<InetAddress> lookup(String s) throws UnknownHostException {
         SyncService syncService = (SyncService) service;
 
         // 请求的ip类型根据 网络环境判断

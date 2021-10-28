@@ -54,7 +54,7 @@ dependencies {
 //    implementation project(':httpdns-sdk')
     implementation(name: "alicloud-android-httpdns-${httpdnsDebugVersion}-end2end-forTest", ext: 'aar')
 
-    implementation("com.squareup.okhttp3:okhttp:4.9.0")
+    implementation("com.squareup.okhttp3:okhttp:3.9.0")
 }
 
 afterEvaluate {
