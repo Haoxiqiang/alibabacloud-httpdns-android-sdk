@@ -15,8 +15,10 @@ import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
+import com.alibaba.sdk.android.httpdns.utils.ThreadUtil;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
 
 
 public class NetworkStateManager implements INetworkHelper {
@@ -35,6 +37,8 @@ public class NetworkStateManager implements INetworkHelper {
     private String sp;
     private String lastConnectedNetwork = NONE_NETWORK;
     private ArrayList<OnNetworkChange> listeners = new ArrayList<>();
+
+    private ExecutorService worker = ThreadUtil.createSingleThreadService("network");
 
     private static class Holder {
         private static final NetworkStateManager instance = new NetworkStateManager();
@@ -59,29 +63,34 @@ public class NetworkStateManager implements INetworkHelper {
         this.context = ctx.getApplicationContext();
         BroadcastReceiver bcReceiver = new BroadcastReceiver() {
             @Override
-            public void onReceive(Context context, Intent intent) {
+            public void onReceive(final Context context, final Intent intent) {
                 // onReceive()在主线程执行，SDK内部线程CrashHandler无法捕获，使用try/catch捕获
-                try {
-                    if (isInitialStickyBroadcast()) { // no need to handle initial sticky broadcast
-                        return;
-                    }
-                    String action = intent.getAction();
-                    if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action) && hasNetInfoPermission(context)) {
-                        updateNetworkStatus(context);
-                        String currentNetwork = detectCurrentNetwork();
-                        Inet64Util.startIpStackDetect();
-                        if (!currentNetwork.equals(NONE_NETWORK) && !currentNetwork.equalsIgnoreCase(lastConnectedNetwork)) {
-                            for (OnNetworkChange onNetworkChange : listeners) {
-                                onNetworkChange.onNetworkChange(currentNetwork);
+                worker.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            if (isInitialStickyBroadcast()) { // no need to handle initial sticky broadcast
+                                return;
                             }
-                        }
-                        if (!currentNetwork.equals(NONE_NETWORK)) {
-                            lastConnectedNetwork = currentNetwork;
+                            String action = intent.getAction();
+                            if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action) && hasNetInfoPermission(context)) {
+                                updateNetworkStatus(context);
+                                String currentNetwork = detectCurrentNetwork();
+                                Inet64Util.startIpStackDetect();
+                                if (!currentNetwork.equals(NONE_NETWORK) && !currentNetwork.equalsIgnoreCase(lastConnectedNetwork)) {
+                                    for (OnNetworkChange onNetworkChange : listeners) {
+                                        onNetworkChange.onNetworkChange(currentNetwork);
+                                    }
+                                }
+                                if (!currentNetwork.equals(NONE_NETWORK)) {
+                                    lastConnectedNetwork = currentNetwork;
+                                }
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                });
             }
         };
 

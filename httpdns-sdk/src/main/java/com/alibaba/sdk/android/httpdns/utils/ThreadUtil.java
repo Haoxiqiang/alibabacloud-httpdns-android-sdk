@@ -23,6 +23,19 @@ import java.util.concurrent.TimeoutException;
 public class ThreadUtil {
     private static int index = 0;
 
+    public static ExecutorService createSingleThreadService(final String tag) {
+        final ThreadPoolExecutor httpdnsThread = new ThreadPoolExecutor(0, 1, 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread thread = new Thread(r, tag + index++);
+                thread.setPriority(Thread.NORM_PRIORITY - 1);
+                thread.setUncaughtExceptionHandler(new HttpDnsUncaughtExceptionHandler());
+                return thread;
+            }
+        }, new ThreadPoolExecutor.AbortPolicy());
+        return new ExecutorServiceWrapper(httpdnsThread);
+    }
+
     public static ExecutorService createExecutorService() {
         final ThreadPoolExecutor httpdnsThread = new ThreadPoolExecutor(0, 10, 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
             @Override
@@ -33,110 +46,118 @@ public class ThreadUtil {
                 return thread;
             }
         }, new ThreadPoolExecutor.AbortPolicy());
-        return new ExecutorService() {
-            @Override
-            public void shutdown() {
-                httpdnsThread.shutdown();
-            }
+        return new ExecutorServiceWrapper(httpdnsThread);
+    }
 
-            @Override
-            public List<Runnable> shutdownNow() {
-                return httpdnsThread.shutdownNow();
-            }
+    private static class ExecutorServiceWrapper implements ExecutorService {
+        private final ThreadPoolExecutor httpdnsThread;
 
-            @Override
-            public boolean isShutdown() {
-                return httpdnsThread.isShutdown();
-            }
+        public ExecutorServiceWrapper(ThreadPoolExecutor httpdnsThread) {
+            this.httpdnsThread = httpdnsThread;
+        }
 
-            @Override
-            public boolean isTerminated() {
-                return httpdnsThread.isTerminated();
-            }
+        @Override
+        public void shutdown() {
+            httpdnsThread.shutdown();
+        }
 
-            @Override
-            public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
-                return httpdnsThread.awaitTermination(timeout, unit);
-            }
+        @Override
+        public List<Runnable> shutdownNow() {
+            return httpdnsThread.shutdownNow();
+        }
 
-            @Override
-            public <T> Future<T> submit(Callable<T> task) {
-                try {
-                    return httpdnsThread.submit(task);
-                } catch (RejectedExecutionException e) {
-                    HttpDnsLog.e("too many request ?", e);
-                    throw e;
-                }
-            }
+        @Override
+        public boolean isShutdown() {
+            return httpdnsThread.isShutdown();
+        }
 
-            @Override
-            public <T> Future<T> submit(Runnable task, T result) {
-                try {
-                    return httpdnsThread.submit(task, result);
-                } catch (RejectedExecutionException e) {
-                    HttpDnsLog.e("too many request ?", e);
-                    throw e;
-                }
-            }
+        @Override
+        public boolean isTerminated() {
+            return httpdnsThread.isTerminated();
+        }
 
-            @Override
-            public Future<?> submit(Runnable task) {
-                try {
-                    return httpdnsThread.submit(task);
-                } catch (RejectedExecutionException e) {
-                    HttpDnsLog.e("too many request ?", e);
-                    throw e;
-                }
-            }
+        @Override
+        public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+            return httpdnsThread.awaitTermination(timeout, unit);
+        }
 
-            @Override
-            public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
-                try {
-                    return httpdnsThread.invokeAll(tasks);
-                } catch (RejectedExecutionException e) {
-                    HttpDnsLog.e("too many request ?", e);
-                    throw e;
-                }
+        @Override
+        public <T> Future<T> submit(Callable<T> task) {
+            try {
+                return httpdnsThread.submit(task);
+            } catch (RejectedExecutionException e) {
+                HttpDnsLog.e("too many request ?", e);
+                throw e;
             }
+        }
 
-            @Override
-            public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
-                try {
-                    return httpdnsThread.invokeAll(tasks, timeout, unit);
-                } catch (RejectedExecutionException e) {
-                    HttpDnsLog.e("too many request ?", e);
-                    throw e;
-                }
+        @Override
+        public <T> Future<T> submit(Runnable task, T result) {
+            try {
+                return httpdnsThread.submit(task, result);
+            } catch (RejectedExecutionException e) {
+                HttpDnsLog.e("too many request ?", e);
+                throw e;
             }
+        }
 
-            @Override
-            public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws ExecutionException, InterruptedException {
-                try {
-                    return httpdnsThread.invokeAny(tasks);
-                } catch (RejectedExecutionException e) {
-                    HttpDnsLog.e("too many request ?", e);
-                    throw e;
-                }
+        @Override
+        public Future<?> submit(Runnable task) {
+            try {
+                return httpdnsThread.submit(task);
+            } catch (RejectedExecutionException e) {
+                HttpDnsLog.e("too many request ?", e);
+                throw e;
             }
+        }
 
-            @Override
-            public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws ExecutionException, InterruptedException, TimeoutException {
-                try {
-                    return httpdnsThread.invokeAny(tasks, timeout, unit);
-                } catch (RejectedExecutionException e) {
-                    HttpDnsLog.e("too many request ?", e);
-                    throw e;
-                }
+        @Override
+        public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
+            try {
+                return httpdnsThread.invokeAll(tasks);
+            } catch (RejectedExecutionException e) {
+                HttpDnsLog.e("too many request ?", e);
+                throw e;
             }
+        }
 
-            @Override
-            public void execute(Runnable command) {
-                try {
-                    httpdnsThread.execute(command);
-                } catch (Exception e) {
-                    HttpDnsLog.e("too many request ?", e);
-                }
+        @Override
+        public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
+            try {
+                return httpdnsThread.invokeAll(tasks, timeout, unit);
+            } catch (RejectedExecutionException e) {
+                HttpDnsLog.e("too many request ?", e);
+                throw e;
             }
-        };
+        }
+
+        @Override
+        public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws ExecutionException, InterruptedException {
+            try {
+                return httpdnsThread.invokeAny(tasks);
+            } catch (RejectedExecutionException e) {
+                HttpDnsLog.e("too many request ?", e);
+                throw e;
+            }
+        }
+
+        @Override
+        public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws ExecutionException, InterruptedException, TimeoutException {
+            try {
+                return httpdnsThread.invokeAny(tasks, timeout, unit);
+            } catch (RejectedExecutionException e) {
+                HttpDnsLog.e("too many request ?", e);
+                throw e;
+            }
+        }
+
+        @Override
+        public void execute(Runnable command) {
+            try {
+                httpdnsThread.execute(command);
+            } catch (Exception e) {
+                HttpDnsLog.e("too many request ?", e);
+            }
+        }
     }
 }
