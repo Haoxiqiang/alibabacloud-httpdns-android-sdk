@@ -8,15 +8,15 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
 import com.alibaba.sdk.android.httpdns.HttpDnsService;
+import com.alibaba.sdk.android.httpdns.RequestIpType;
 
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author zonglin.nzl
@@ -145,10 +145,6 @@ public class MultiTheadActivity extends Activity {
                 }
 
                 final CountDownLatch testLatch = new CountDownLatch(threadCount);
-                final AtomicInteger slowCount = new AtomicInteger(0);
-                final AtomicLong maxTime = new AtomicLong(0);
-                final AtomicLong avgMaxTime = new AtomicLong(0);
-                final AtomicInteger allCount = new AtomicInteger(0);
                 ExecutorService service = Executors.newFixedThreadPool(threadCount);
                 final CountDownLatch countDownLatch = new CountDownLatch(threadCount);
                 for (int i = 0; i < threadCount; i++) {
@@ -165,54 +161,42 @@ public class MultiTheadActivity extends Activity {
                             Random random = new Random(Thread.currentThread().getId());
                             int all = 0;
                             int slow = 0;
-                            int nullCount = 0;
+                            int nill = 0;
+                            int empty = 0;
                             long maxSlow = 0;
-                            long avgSlow = 0;
+                            long subSlow = 0;
                             long begin = System.currentTimeMillis();
                             while (System.currentTimeMillis() - begin < executeTime) {
                                 String host = hosts.get(random.nextInt(hostCount));
                                 long start = System.currentTimeMillis();
-                                String[] ips = httpdns.getIpsByHostAsync(host);
+                                HTTPDNSResult ips = httpdns.getIpsByHostAsync(host, RequestIpType.v4, null, null);
                                 long end = System.currentTimeMillis();
                                 if (end - start > 100) {
                                     slow++;
-                                    avgSlow += end - start;
+                                    subSlow += end - start;
                                     if (maxSlow < end - start) {
                                         maxSlow = end - start;
                                     }
                                 }
-                                if (ips == null || ips.length == 0) {
-                                    nullCount++;
+                                if (ips == null) {
+                                    nill++;
+                                } else if (ips.getIps() == 0) {
+                                    empty++;
                                 }
                                 all++;
                             }
 
-                            try {
-                                postLog(Thread.currentThread().getId() + " all: " + all + ", slow: " + slow + ", null: " + nullCount + ", max : " + maxSlow + ", avgMax: " + (slow == 0 ? 0 : avgSlow / slow));
-                                slowCount.addAndGet(slow);
-                                allCount.addAndGet(all);
-                                if (maxTime.get() < maxSlow) {
-                                    maxTime.set(maxSlow);
-                                }
-                                avgMaxTime.addAndGet(avgSlow);
-                            } catch (Exception e) {
-                                postLog(e.getMessage());
-                                postLog("== all: " + all + ", slow: " + slow + ", null: " + nullCount + ", max : " + maxSlow);
-                            }
+                            postLog(Thread.currentThread().getId() + " all: " + all + ", slow: " + slow + ", null: " + nill + ", empty: " + empty + ", max : " + maxSlow + ", avgMax: " + (slow == 0 ? 0 : subSlow / slow));
                             testLatch.countDown();
                         }
                     });
                 }
+
                 try {
-                    try {
-                        testLatch.await();
-                    } catch (InterruptedException e) {
-                    }
-                    postLog(Thread.currentThread().getId() + " all: " + allCount.get() + ", slow: " + slowCount.get() + ", max: " + maxTime.get() + ", avgMax: " + (slowCount.get() == 0 ? 0 : avgMaxTime.get() / slowCount.get()));
-                } catch (Exception e) {
-                    postLog(e.getMessage());
-                    postLog("=== all: " + allCount.get() + ", slow: " + slowCount.get() + ", max: " + maxTime.get());
+                    testLatch.await();
+                } catch (InterruptedException e) {
                 }
+                postLog(Thread.currentThread().getId() + " done ");
             }
         }).start();
     }

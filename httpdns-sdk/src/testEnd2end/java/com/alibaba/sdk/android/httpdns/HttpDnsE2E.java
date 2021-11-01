@@ -2,7 +2,6 @@ package com.alibaba.sdk.android.httpdns;
 
 import android.Manifest;
 import android.net.ConnectivityManager;
-import android.os.SystemClock;
 
 import com.alibaba.sdk.android.httpdns.interpret.InterpretHostResponse;
 import com.alibaba.sdk.android.httpdns.interpret.ResolveHostResponse;
@@ -14,14 +13,12 @@ import com.alibaba.sdk.android.httpdns.test.server.HttpDnsServer;
 import com.alibaba.sdk.android.httpdns.test.server.MockSpeedTestServer;
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
 import com.alibaba.sdk.android.httpdns.test.utils.ShadowNetworkInfo;
-import com.alibaba.sdk.android.httpdns.test.utils.TestLogger;
 import com.alibaba.sdk.android.httpdns.test.utils.UnitTestUtil;
 
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -44,7 +41,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author zonglin.nzl
  * @date 2020/10/15
  */
-@Config(manifest=Config.NONE)
+@Config(manifest = Config.NONE)
 @RunWith(RobolectricTestRunner.class)
 public class HttpDnsE2E {
 
@@ -1466,7 +1463,6 @@ public class HttpDnsE2E {
     }
 
     @Test
-    @Ignore
     public void multiThreadTest() {
         HttpDnsLog.removeLogger(logger);
         app.setTimeout(10 * 1000);
@@ -1510,6 +1506,7 @@ public class HttpDnsE2E {
                     int all = 0;
                     int slow = 0;
                     int nullCount = 0;
+                    int emptyCount = 0;
                     long maxSlot = 0;
                     long begin = System.currentTimeMillis();
                     while (System.currentTimeMillis() - begin < time) {
@@ -1523,12 +1520,14 @@ public class HttpDnsE2E {
                                 maxSlot = end - start;
                             }
                         }
-                        if (ips == null || ips.length == 0) {
+                        if (ips == null) {
                             nullCount++;
+                        } else if (ips.length == 0) {
+                            emptyCount++;
                         }
                         all++;
                     }
-                    System.out.println(Thread.currentThread().getId() + " all: " + all + ", slow: " + slow + ", null: " + nullCount +", max : "+maxSlot);
+                    System.out.println(Thread.currentThread().getId() + " all: " + all + ", slow: " + slow + ", null: " + nullCount + ", empty: " + emptyCount + ", max : " + maxSlot);
                     slowCount.addAndGet(slow);
                     testLatch.countDown();
                 }
