@@ -1,9 +1,8 @@
 package com.alibaba.sdk.android.httpdns;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-
 import android.Manifest;
 import android.net.ConnectivityManager;
+import android.os.SystemClock;
 
 import com.alibaba.sdk.android.httpdns.interpret.InterpretHostResponse;
 import com.alibaba.sdk.android.httpdns.interpret.ResolveHostResponse;
@@ -15,12 +14,14 @@ import com.alibaba.sdk.android.httpdns.test.server.HttpDnsServer;
 import com.alibaba.sdk.android.httpdns.test.server.MockSpeedTestServer;
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
 import com.alibaba.sdk.android.httpdns.test.utils.ShadowNetworkInfo;
+import com.alibaba.sdk.android.httpdns.test.utils.TestLogger;
 import com.alibaba.sdk.android.httpdns.test.utils.UnitTestUtil;
 
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -33,11 +34,17 @@ import org.robolectric.shadows.ShadowLog;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author zonglin.nzl
  * @date 2020/10/15
  */
+@Config(manifest=Config.NONE)
 @RunWith(RobolectricTestRunner.class)
 public class HttpDnsE2E {
 
@@ -1456,5 +1463,81 @@ public class HttpDnsE2E {
 
         String[] ips4 = app.requestInterpretHost();
         UnitTestUtil.assertIpsEmpty("清除缓存会把数据库缓存也清除", ips4);
+    }
+
+    @Test
+    @Ignore
+    public void multiThreadTest() {
+        HttpDnsLog.removeLogger(logger);
+        app.setTimeout(10 * 1000);
+        HttpDnsLog.enable(false);
+
+        final int hostCount = 10;
+        final int timeoutCount = 3;
+        final String timeoutPrefix = "TIMEOUT";
+        final ArrayList<String> hosts = new ArrayList<>(hostCount);
+        for (int i = 0; i < hostCount - timeoutCount; i++) {
+            hosts.add(RandomValue.randomHost());
+        }
+        for (int i = 0; i < timeoutCount; i++) {
+            hosts.add(timeoutPrefix + RandomValue.randomHost());
+        }
+        for (int i = 0; i < hostCount; i++) {
+            if (hosts.get(i).startsWith(timeoutPrefix)) {
+                server.getInterpretHostServer().preSetRequestTimeout(hosts.get(i), -1);
+            } else {
+                // random response
+            }
+        }
+
+        final int count = 10;
+        final int time = 5 * 60 * 1000;
+        final CountDownLatch testLatch = new CountDownLatch(count);
+        final AtomicInteger slowCount = new AtomicInteger(0);
+        ExecutorService service = Executors.newFixedThreadPool(count);
+        final CountDownLatch countDownLatch = new CountDownLatch(count);
+        for (int i = 0; i < count; i++) {
+            service.execute(new Runnable() {
+                @Override
+                public void run() {
+                    countDownLatch.countDown();
+                    try {
+                        countDownLatch.await();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    System.out.println(Thread.currentThread().getId() + " begin");
+                    int all = 0;
+                    int slow = 0;
+                    int nullCount = 0;
+                    long maxSlot = 0;
+                    long begin = System.currentTimeMillis();
+                    while (System.currentTimeMillis() - begin < time) {
+                        String host = hosts.get(RandomValue.randomInt(hostCount));
+                        long start = System.currentTimeMillis();
+                        String[] ips = app.requestInterpretHost(host);
+                        long end = System.currentTimeMillis();
+                        if (end - start > 100) {
+                            slow++;
+                            if (maxSlot < end - start) {
+                                maxSlot = end - start;
+                            }
+                        }
+                        if (ips == null || ips.length == 0) {
+                            nullCount++;
+                        }
+                        all++;
+                    }
+                    System.out.println(Thread.currentThread().getId() + " all: " + all + ", slow: " + slow + ", null: " + nullCount +", max : "+maxSlot);
+                    slowCount.addAndGet(slow);
+                    testLatch.countDown();
+                }
+            });
+        }
+        try {
+            testLatch.await();
+        } catch (InterruptedException e) {
+        }
+        MatcherAssert.assertThat("返回慢的调用应该为0", slowCount.get(), Matchers.is(Matchers.equalTo(0)));
     }
 }

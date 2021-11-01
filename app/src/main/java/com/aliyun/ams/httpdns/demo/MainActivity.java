@@ -1,6 +1,7 @@
 package com.aliyun.ams.httpdns.demo;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -162,6 +163,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
                         }
                     });
                 }
+            }
+        });
+
+        findViewById(R.id.btnMultiRequest).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, MultiTheadActivity.class));
             }
         });
 

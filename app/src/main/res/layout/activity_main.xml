@@ -163,6 +163,14 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:text="@string/multi_sync_request" />
+
+            <Button
+                android:id="@+id/btnMultiRequest"
+                style="@style/button_allgrade_content"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="@string/multi_request" />
         </TableRow>
     </TableLayout>
 
