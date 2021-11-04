@@ -69,12 +69,12 @@ public class MultiTheadActivity extends Activity {
         });
     }
 
-    private void postLog(String msg) {
+    private void postLog(final String msg) {
         Log.w(TAG, msg);
-        sb.append(msg).append("\n");
         handler.post(new Runnable() {
             @Override
             public void run() {
+                sb.append(msg).append("\n");
                 TextView logView = findViewById(R.id.tvLog);
                 logView.setText(sb.toString());
             }
@@ -178,9 +178,9 @@ public class MultiTheadActivity extends Activity {
                                         maxSlow = end - start;
                                     }
                                 }
-                                if (ips == null) {
+                                if (ips == null || ips.getIps() == null) {
                                     nill++;
-                                } else if (ips.getIps() == 0) {
+                                } else if (ips.getIps().length == 0) {
                                     empty++;
                                 }
                                 all++;
