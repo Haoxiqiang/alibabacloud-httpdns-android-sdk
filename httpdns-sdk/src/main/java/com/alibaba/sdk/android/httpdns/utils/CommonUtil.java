@@ -256,8 +256,8 @@ public class CommonUtil {
 
     // 从旧代码中获取，逻辑待确定
     public static Map<String, String> toMap(String extra) {
-        Map<String, String> extras = new HashMap<>();
-        if (extra != null) {
+        if (extra != null && !extra.isEmpty()) {
+            Map<String, String> extras = new HashMap<>();
             try {
                 // 测试验证 服务返回的extra字段进行了url encode处理，所以此处 通过Html转化一下。
                 JSONObject jsonObjectExtra = new JSONObject((Html.fromHtml((Html.fromHtml(extra)).toString())).toString());
@@ -269,7 +269,9 @@ public class CommonUtil {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            return extras;
+        } else {
+            return Constants.NO_EXTRA;
         }
-        return extras;
     }
 }
