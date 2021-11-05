@@ -9,6 +9,7 @@ import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import com.alibaba.sdk.android.httpdns.probe.ProbeCallback;
 import com.alibaba.sdk.android.httpdns.probe.ProbeService;
 import com.alibaba.sdk.android.httpdns.utils.CommonUtil;
+import com.alibaba.sdk.android.httpdns.utils.Constants;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -187,7 +188,7 @@ public class InterpretHostResultRepo {
                 if (record == null) {
                     return null;
                 }
-                return new HTTPDNSResult(host, record.getIps(), new String[0], CommonUtil.toMap(record.getExtra()), record.isExpired(), record.isFromDB());
+                return new HTTPDNSResult(host, record.getIps(), Constants.NO_IPS, CommonUtil.toMap(record.getExtra()), record.isExpired(), record.isFromDB());
             default:
                 key = CommonUtil.formKey(host, RequestIpType.v4, cacheKey);
                 String keyv6 = CommonUtil.formKey(host, RequestIpType.v6, cacheKey);
