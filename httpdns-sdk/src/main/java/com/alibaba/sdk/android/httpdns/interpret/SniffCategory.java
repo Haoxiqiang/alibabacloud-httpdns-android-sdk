@@ -10,6 +10,7 @@ import com.alibaba.sdk.android.httpdns.request.HttpRequestWatcher;
 import com.alibaba.sdk.android.httpdns.request.Ipv6onlyWatcher;
 import com.alibaba.sdk.android.httpdns.request.RequestCallback;
 import com.alibaba.sdk.android.httpdns.serverip.ScheduleService;
+import com.alibaba.sdk.android.httpdns.utils.Constants;
 
 /**
  * 嗅探模式
@@ -34,7 +35,7 @@ public class SniffCategory implements InterpretHostCategory {
         long currentTimeMillis = System.currentTimeMillis();
         // 请求间隔 不小于timeInterval
         if (currentTimeMillis - lastRequestTime < timeInterval) {
-            callback.onFail(new SniffException("sniff too often"));
+            callback.onFail(Constants.sniff_too_often);
             return;
         }
         lastRequestTime = currentTimeMillis;

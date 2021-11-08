@@ -1,6 +1,7 @@
 package com.alibaba.sdk.android.httpdns.utils;
 
 import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
+import com.alibaba.sdk.android.httpdns.interpret.SniffException;
 
 import java.util.HashMap;
 
@@ -15,4 +16,5 @@ public class Constants {
 
     public static final HTTPDNSResult EMPTY = new HTTPDNSResult("", NO_IPS, NO_IPS, NO_EXTRA, false, false);
 
+    public static SniffException sniff_too_often = new SniffException("sniff too often");
 }
