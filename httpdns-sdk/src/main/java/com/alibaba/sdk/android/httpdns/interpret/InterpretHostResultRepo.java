@@ -72,9 +72,17 @@ public class InterpretHostResultRepo {
         InterpretHostCache cache = cacheGroup.getCache(cacheKey);
         HostRecord record = cache.updateIps(host, type, ips);
         if (enableCache) {
-            ArrayList<HostRecord> records = new ArrayList<>();
+            final ArrayList<HostRecord> records = new ArrayList<>();
             records.add(record);
-            dbHelper.insertOrUpdate(records);
+            try {
+                config.getWorker().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        dbHelper.insertOrUpdate(records);
+                    }
+                });
+            } catch (Exception e) {
+            }
         }
     }
 
@@ -86,7 +94,7 @@ public class InterpretHostResultRepo {
      * @param response
      */
     public void save(String host, RequestIpType type, String extra, String cacheKey, InterpretHostResponse response) {
-        ArrayList<HostRecord> records = new ArrayList<>();
+        final ArrayList<HostRecord> records = new ArrayList<>();
         switch (type) {
             case v4:
                 records.add(save(host, RequestIpType.v4, extra, cacheKey, response.getIps(), response.getTtl()));
@@ -102,12 +110,20 @@ public class InterpretHostResultRepo {
                 break;
         }
         if (enableCache) {
-            dbHelper.insertOrUpdate(records);
+            try {
+                config.getWorker().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        dbHelper.insertOrUpdate(records);
+                    }
+                });
+            } catch (Exception e) {
+            }
         }
     }
 
     public void save(RequestIpType type, ResolveHostResponse resolveHostResponse) {
-        ArrayList<HostRecord> records = new ArrayList<>();
+        final ArrayList<HostRecord> records = new ArrayList<>();
         for (String host : resolveHostResponse.getHosts()) {
             switch (type) {
                 case v4:
@@ -123,7 +139,15 @@ public class InterpretHostResultRepo {
             }
         }
         if (enableCache) {
-            dbHelper.insertOrUpdate(records);
+            try {
+                config.getWorker().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        dbHelper.insertOrUpdate(records);
+                    }
+                });
+            } catch (Exception e) {
+            }
         }
     }
 
@@ -167,9 +191,17 @@ public class InterpretHostResultRepo {
      * 清除已解析的结果
      */
     public void clear() {
-        List<HostRecord> recordsToBeDeleted = cacheGroup.clearAll();
+        final List<HostRecord> recordsToBeDeleted = cacheGroup.clearAll();
         if (enableCache && recordsToBeDeleted.size() > 0) {
-            dbHelper.delete(recordsToBeDeleted);
+            try {
+                config.getWorker().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        dbHelper.delete(recordsToBeDeleted);
+                    }
+                });
+            } catch (Exception e) {
+            }
         }
     }
 
@@ -178,9 +210,17 @@ public class InterpretHostResultRepo {
             clear();
             return;
         }
-        List<HostRecord> recordsToBeDeleted = cacheGroup.clearAll(hosts);
+        final List<HostRecord> recordsToBeDeleted = cacheGroup.clearAll(hosts);
         if (recordsToBeDeleted.size() > 0 && enableCache) {
-            dbHelper.delete(recordsToBeDeleted);
+            try {
+                config.getWorker().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        dbHelper.delete(recordsToBeDeleted);
+                    }
+                });
+            } catch (Exception e) {
+            }
         }
     }
 
