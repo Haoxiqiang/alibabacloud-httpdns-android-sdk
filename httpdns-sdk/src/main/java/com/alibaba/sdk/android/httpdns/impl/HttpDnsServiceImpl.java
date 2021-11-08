@@ -10,6 +10,7 @@ import com.alibaba.sdk.android.httpdns.BuildConfig;
 import com.alibaba.sdk.android.httpdns.DegradationFilter;
 import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
 import com.alibaba.sdk.android.httpdns.HttpDnsService;
+import com.alibaba.sdk.android.httpdns.HttpDnsSettings;
 import com.alibaba.sdk.android.httpdns.ILogger;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.SyncService;
@@ -67,7 +68,9 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
                 return;
             }
             NetworkStateManager.getInstance().init(context);
-            Inet64Util.init(NetworkStateManager.getInstance());
+            if (HttpDnsSettings.isCheckNetwork()) {
+                Inet64Util.init(NetworkStateManager.getInstance());
+            }
             filter = new HostFilter();
             signService = new SignService(secret);
             ipProbeService = new ProbeService(this.config);
@@ -119,20 +122,22 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
     }
 
     protected void reportSdkStart(Context context, String accountId) {
-        try {
-            HashMap<String, String> ext = new HashMap<>();
-            ext.put("accountId", accountId);
-            SdkInfo sdkInfo = new SdkInfo();
-            sdkInfo.setSdkId("httpdns");
-            sdkInfo.setSdkVersion(BuildConfig.VERSION_NAME);
-            sdkInfo.setExt(ext);
-            if (context.getApplicationContext() instanceof Application) {
-                AlicloudSender.asyncSend((Application) context.getApplicationContext(), sdkInfo);
-            } else {
-                AlicloudSender.asyncSend(context.getApplicationContext(), sdkInfo);
+        if (HttpDnsSettings.isDailyReport()) {
+            try {
+                HashMap<String, String> ext = new HashMap<>();
+                ext.put("accountId", accountId);
+                SdkInfo sdkInfo = new SdkInfo();
+                sdkInfo.setSdkId("httpdns");
+                sdkInfo.setSdkVersion(BuildConfig.VERSION_NAME);
+                sdkInfo.setExt(ext);
+                if (context.getApplicationContext() instanceof Application) {
+                    AlicloudSender.asyncSend((Application) context.getApplicationContext(), sdkInfo);
+                } else {
+                    AlicloudSender.asyncSend(context.getApplicationContext(), sdkInfo);
+                }
+            } catch (Throwable ignore) {
+                ignore.printStackTrace();
             }
-        } catch (Throwable ignore) {
-            ignore.printStackTrace();
         }
     }
 

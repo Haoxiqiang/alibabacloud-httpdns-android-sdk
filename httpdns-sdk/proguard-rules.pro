@@ -40,3 +40,7 @@
     public static *** enable(***);
 }
 -keep class com.alibaba.sdk.android.httpdns.HTTPDNSResult{*;}
+-keepclasseswithmembers class com.alibaba.sdk.android.httpdns.HttpDnsSettings {
+    public static *** setCheckNetwork(***);
+    public static *** setDailyReport(***);
+}

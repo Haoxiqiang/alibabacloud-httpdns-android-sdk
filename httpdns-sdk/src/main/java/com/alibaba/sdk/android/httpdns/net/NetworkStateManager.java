@@ -14,6 +14,7 @@ import android.os.Process;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
+import com.alibaba.sdk.android.httpdns.HttpDnsSettings;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import com.alibaba.sdk.android.httpdns.utils.ThreadUtil;
 
@@ -76,7 +77,9 @@ public class NetworkStateManager implements INetworkHelper {
                             if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action) && hasNetInfoPermission(context)) {
                                 updateNetworkStatus(context);
                                 String currentNetwork = detectCurrentNetwork();
-                                Inet64Util.startIpStackDetect();
+                                if (HttpDnsSettings.isCheckNetwork()) {
+                                    Inet64Util.startIpStackDetect();
+                                }
                                 if (!currentNetwork.equals(NONE_NETWORK) && !currentNetwork.equalsIgnoreCase(lastConnectedNetwork)) {
                                     for (OnNetworkChange onNetworkChange : listeners) {
                                         onNetworkChange.onNetworkChange(currentNetwork);
@@ -144,6 +147,9 @@ public class NetworkStateManager implements INetworkHelper {
     private void updateNetworkStatus(Context context) {
         sp = TYPE_UNKNOWN;
         netType = TYPE_UNKNOWN;
+        if (!HttpDnsSettings.isCheckNetwork()) {
+            return;
+        }
         try {
             if (!hasNetInfoPermission(context)) {
                 return;
