@@ -49,6 +49,19 @@ public class ThreadUtil {
         return new ExecutorServiceWrapper(httpdnsThread);
     }
 
+    public static ExecutorService createDBExecutorService() {
+        final ThreadPoolExecutor httpdnsThread = new ThreadPoolExecutor(0, 2, 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread thread = new Thread(r, "httpdns_db" + index++);
+                thread.setPriority(Thread.NORM_PRIORITY - 1);
+                thread.setUncaughtExceptionHandler(new HttpDnsUncaughtExceptionHandler());
+                return thread;
+            }
+        }, new ThreadPoolExecutor.AbortPolicy());
+        return new ExecutorServiceWrapper(httpdnsThread);
+    }
+
     private static class ExecutorServiceWrapper implements ExecutorService {
         private final ThreadPoolExecutor httpdnsThread;
 

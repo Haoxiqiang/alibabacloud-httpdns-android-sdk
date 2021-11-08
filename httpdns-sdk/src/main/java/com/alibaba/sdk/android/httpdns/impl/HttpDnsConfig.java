@@ -40,6 +40,7 @@ public class HttpDnsConfig {
 
 
     protected ExecutorService worker = ThreadUtil.createExecutorService();
+    protected ExecutorService dbWorker = ThreadUtil.createDBExecutorService();
 
     private HttpDnsConfig() {
     }
@@ -134,8 +135,14 @@ public class HttpDnsConfig {
         return worker;
     }
 
+    public ExecutorService getDbWorker() {
+        return dbWorker;
+    }
+
     public void setWorker(ExecutorService worker) {
+        // 给测试使用
         this.worker = worker;
+        this.dbWorker = worker;
     }
 
     /**

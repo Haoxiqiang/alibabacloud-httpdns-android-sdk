@@ -75,7 +75,7 @@ public class InterpretHostResultRepo {
             final ArrayList<HostRecord> records = new ArrayList<>();
             records.add(record);
             try {
-                config.getWorker().execute(new Runnable() {
+                config.getDbWorker().execute(new Runnable() {
                     @Override
                     public void run() {
                         dbHelper.insertOrUpdate(records);
@@ -111,7 +111,7 @@ public class InterpretHostResultRepo {
         }
         if (enableCache) {
             try {
-                config.getWorker().execute(new Runnable() {
+                config.getDbWorker().execute(new Runnable() {
                     @Override
                     public void run() {
                         dbHelper.insertOrUpdate(records);
@@ -140,7 +140,7 @@ public class InterpretHostResultRepo {
         }
         if (enableCache) {
             try {
-                config.getWorker().execute(new Runnable() {
+                config.getDbWorker().execute(new Runnable() {
                     @Override
                     public void run() {
                         dbHelper.insertOrUpdate(records);
@@ -194,7 +194,7 @@ public class InterpretHostResultRepo {
         final List<HostRecord> recordsToBeDeleted = cacheGroup.clearAll();
         if (enableCache && recordsToBeDeleted.size() > 0) {
             try {
-                config.getWorker().execute(new Runnable() {
+                config.getDbWorker().execute(new Runnable() {
                     @Override
                     public void run() {
                         dbHelper.delete(recordsToBeDeleted);
@@ -213,7 +213,7 @@ public class InterpretHostResultRepo {
         final List<HostRecord> recordsToBeDeleted = cacheGroup.clearAll(hosts);
         if (recordsToBeDeleted.size() > 0 && enableCache) {
             try {
-                config.getWorker().execute(new Runnable() {
+                config.getDbWorker().execute(new Runnable() {
                     @Override
                     public void run() {
                         dbHelper.delete(recordsToBeDeleted);
@@ -231,7 +231,7 @@ public class InterpretHostResultRepo {
     public void setCachedIPEnabled(boolean enable, final boolean autoCleanCacheAfterLoad) {
         enableCache = enable;
         try {
-            config.getWorker().execute(new Runnable() {
+            config.getDbWorker().execute(new Runnable() {
                 @Override
                 public void run() {
                     readFromDB(autoCleanCacheAfterLoad);
