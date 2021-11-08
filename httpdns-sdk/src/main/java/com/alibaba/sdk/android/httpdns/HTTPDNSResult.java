@@ -1,7 +1,12 @@
 package com.alibaba.sdk.android.httpdns;
 
+import com.alibaba.sdk.android.httpdns.cache.HostRecord;
+import com.alibaba.sdk.android.httpdns.utils.CommonUtil;
+import com.alibaba.sdk.android.httpdns.utils.Constants;
+
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -12,20 +17,88 @@ public class HTTPDNSResult {
     String[] ips;
     String[] ipv6s;
     Map<String, String> extra;
-    boolean expired = false;
+    long queryTime;
+    int ttl;
     boolean fromDB = false;
+
+    public HTTPDNSResult(String host) {
+        this.host = host;
+        this.ips = Constants.NO_IPS;
+        this.ipv6s = Constants.NO_IPS;
+        this.extra = Constants.NO_EXTRA;
+        queryTime = System.currentTimeMillis();
+        ttl = 60;
+        fromDB = false;
+    }
 
     public HTTPDNSResult(String host, String[] ips, String[] ipv6s, Map<String, String> extra, boolean expired, boolean isFromDB) {
         this.host = host;
         this.ips = ips;
         this.ipv6s = ipv6s;
         this.extra = extra;
-        this.expired = expired;
+        this.queryTime = System.currentTimeMillis();
+        this.ttl = 60;
         this.fromDB = isFromDB;
     }
 
     public static HTTPDNSResult empty(String host) {
         return new HTTPDNSResult(host, new String[0], new String[0], new HashMap<String, String>(), false, false);
+    }
+
+    public void update(HostRecord record) {
+        if (record.getHost().equals(host)) {
+            if (record.getType() == RequestIpType.v4.ordinal()) {
+                ips = record.getIps();
+            } else if (record.getType() == RequestIpType.v6.ordinal()) {
+                ipv6s = record.getIps();
+            }
+            extra = CommonUtil.toMap(record.getExtra());
+            queryTime = record.getQueryTime();
+            ttl = record.getTtl();
+            fromDB = record.isFromDB();
+        }
+    }
+
+    public void udpateIps(String[] ips, RequestIpType type) {
+        switch (type) {
+            case v4:
+                this.ips = ips;
+                break;
+            case v6:
+                this.ipv6s = ips;
+                break;
+        }
+    }
+
+    public void update(List<HostRecord> records) {
+        String extra = null;
+        long queryTime = System.currentTimeMillis();
+        int ttl = Integer.MAX_VALUE;
+        boolean fromDB = false;
+
+        for (HostRecord record : records) {
+            if (record.getHost().equals(host)) {
+                if (record.getType() == RequestIpType.v4.ordinal()) {
+                    ips = record.getIps();
+                } else if (record.getType() == RequestIpType.v6.ordinal()) {
+                    ipv6s = record.getIps();
+                }
+                if (record.getExtra() != null && !record.getExtra().isEmpty()) {
+                    extra = record.getExtra();
+                }
+                if (queryTime > record.getQueryTime()) {
+                    queryTime = record.getQueryTime();
+                }
+                if (ttl > record.getTtl()) {
+                    ttl = record.getTtl();
+                }
+                fromDB |= record.isFromDB();
+            }
+        }
+        this.extra = CommonUtil.toMap(extra);
+        this.queryTime = queryTime;
+        this.ttl = ttl;
+        this.fromDB = fromDB;
     }
 
     @Override
@@ -40,7 +113,7 @@ public class HTTPDNSResult {
         sb.append(", extras:");
         sb.append(extra);
         sb.append(", expired:");
-        sb.append(expired);
+        sb.append(isExpired());
         sb.append(", fromDB:");
         sb.append(fromDB);
         return sb.toString();
@@ -63,7 +136,7 @@ public class HTTPDNSResult {
     }
 
     public boolean isExpired() {
-        return expired;
+        return System.currentTimeMillis() > queryTime + ttl * 1000;
     }
 
     public boolean isFromDB() {

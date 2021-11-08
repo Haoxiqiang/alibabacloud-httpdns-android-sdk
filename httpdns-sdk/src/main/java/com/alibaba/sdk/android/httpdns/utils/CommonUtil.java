@@ -219,9 +219,10 @@ public class CommonUtil {
     }
 
     public static String formKey(String host, RequestIpType type, String cacheKey) {
-        if (type == RequestIpType.both) {
-            throw new IllegalArgumentException("type can not be both");
-        }
+//        if (type == RequestIpType.both) {
+//            throw new IllegalArgumentException("type can not be both");
+//        }
+        // TODO remove this
         return formKeyForAllType(host, type, cacheKey);
     }
 

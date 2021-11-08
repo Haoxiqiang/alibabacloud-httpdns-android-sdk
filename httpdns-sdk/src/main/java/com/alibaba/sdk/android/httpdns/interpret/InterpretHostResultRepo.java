@@ -9,7 +9,6 @@ import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import com.alibaba.sdk.android.httpdns.probe.ProbeCallback;
 import com.alibaba.sdk.android.httpdns.probe.ProbeService;
 import com.alibaba.sdk.android.httpdns.utils.CommonUtil;
-import com.alibaba.sdk.android.httpdns.utils.Constants;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class InterpretHostResultRepo {
 
     private ConcurrentHashMap<String, HostRecord> interpretResults = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, HTTPDNSResult> httpDnsResults = new ConcurrentHashMap<>();
     private RecordDBHelper dbHelper;
     private boolean enableCache = false;
     private HttpDnsConfig config;
@@ -93,6 +93,16 @@ public class InterpretHostResultRepo {
             records.add(record);
             dbHelper.insertOrUpdate(records);
         }
+        HTTPDNSResult result = httpDnsResults.get(key);
+        if (result != null) {
+            result.udpateIps(ips, type);
+        }
+
+        key = CommonUtil.formKey(host, RequestIpType.both, cacheKey);
+        result = httpDnsResults.get(key);
+        if (result != null) {
+            result.udpateIps(ips, type);
+        }
     }
 
     /**
@@ -104,17 +114,46 @@ public class InterpretHostResultRepo {
      */
     public void save(String host, RequestIpType type, String extra, String cacheKey, InterpretHostResponse response) {
         ArrayList<HostRecord> records = new ArrayList<>();
+        String keyboth;
+        HTTPDNSResult bothResult;
         switch (type) {
             case v4:
                 records.add(save(host, RequestIpType.v4, extra, cacheKey, response.getIps(), response.getTtl()));
+                keyboth = CommonUtil.formKey(host, RequestIpType.both, cacheKey);
+                bothResult = httpDnsResults.get(keyboth);
+                if (bothResult != null) {
+                    bothResult.update(records);
+                }
                 break;
             case v6:
                 records.add(save(host, RequestIpType.v6, extra, cacheKey, response.getIpsv6(), response.getTtl()));
+                keyboth = CommonUtil.formKey(host, RequestIpType.both, cacheKey);
+                bothResult = httpDnsResults.get(keyboth);
+                if (bothResult != null) {
+                    bothResult.update(records);
+                }
                 break;
             case both:
-                records.add(save(host, RequestIpType.v4, extra, cacheKey, response.getIps(), response.getTtl()));
-                records.add(save(host, RequestIpType.v6, extra, cacheKey, response.getIpsv6(), response.getTtl()));
+                HostRecord v4Record = save(host, RequestIpType.v4, extra, cacheKey, response.getIps(), response.getTtl());
+                records.add(v4Record);
+                String v4key = CommonUtil.formKey(host, RequestIpType.v4, cacheKey);
+                HTTPDNSResult v4Result = httpDnsResults.get(v4key);
+                if (v4Result != null) {
+                    v4Result.update(v4Record);
+                }
+                HostRecord v6Record = save(host, RequestIpType.v6, extra, cacheKey, response.getIpsv6(), response.getTtl());
+                records.add(v6Record);
+                String v6key = CommonUtil.formKey(host, RequestIpType.v6, cacheKey);
+                HTTPDNSResult v6Result = httpDnsResults.get(v6key);
+                if (v6Result != null) {
+                    v6Result.update(v6Record);
+                }
                 break;
+        }
+        String key = CommonUtil.formKey(host, type, cacheKey);
+        HTTPDNSResult result = httpDnsResults.get(key);
+        if (result != null) {
+            result.update(records);
         }
         if (enableCache) {
             dbHelper.insertOrUpdate(records);
@@ -172,39 +211,54 @@ public class InterpretHostResultRepo {
      * @return
      */
     public HTTPDNSResult getIps(String host, RequestIpType type, String cacheKey) {
+        String key = CommonUtil.formKey(host, type, cacheKey);
+        HTTPDNSResult result = httpDnsResults.get(key);
+        if (result == null) {
+            result = buildHttpResult(host, type, cacheKey);
+            if (result != null) {
+                httpDnsResults.put(key, result);
+            }
+        }
+        return result;
+    }
 
+    private HTTPDNSResult buildHttpResult(String host, RequestIpType type, String cacheKey) {
         String key;
         HostRecord record;
+        HTTPDNSResult result = null;
         switch (type) {
             case v6:
                 key = CommonUtil.formKey(host, RequestIpType.v6, cacheKey);
                 record = interpretResults.get(key);
-                if (record == null) {
-                    return null;
+                if (record != null) {
+                    result = new HTTPDNSResult(host);
+                    result.update(record);
                 }
-                return new HTTPDNSResult(host, new String[0], record.getIps(), CommonUtil.toMap(record.getExtra()), record.isExpired(), record.isFromDB());
+                break;
             case v4:
                 key = CommonUtil.formKey(host, RequestIpType.v4, cacheKey);
                 record = interpretResults.get(key);
-                if (record == null) {
-                    return null;
+                if (record != null) {
+                    result = new HTTPDNSResult(host);
+                    result.update(record);
                 }
-                return new HTTPDNSResult(host, record.getIps(), Constants.NO_IPS, CommonUtil.toMap(record.getExtra()), record.isExpired(), record.isFromDB());
+                break;
             default:
                 key = CommonUtil.formKey(host, RequestIpType.v4, cacheKey);
                 String keyv6 = CommonUtil.formKey(host, RequestIpType.v6, cacheKey);
                 record = interpretResults.get(key);
                 HostRecord recordv6 = interpretResults.get(keyv6);
                 if (record == null || recordv6 == null) {
-                    return null;
+                    return result;
                 }
-                if (!CommonUtil.equals(record.getExtra(), recordv6.getExtra())) {
-                    HttpDnsLog.w("extra is not same for v4 and v6");
-                }
-                String extra = record.getExtra() != null ? record.getExtra() : recordv6.getExtra();
-                boolean expired = record.isExpired() || recordv6.isExpired();
-                return new HTTPDNSResult(host, record.getIps(), recordv6.getIps(), CommonUtil.toMap(extra), expired, record.isFromDB() || recordv6.isFromDB());
+                result = new HTTPDNSResult(host);
+                ArrayList<HostRecord> records = new ArrayList<>();
+                records.add(record);
+                records.add(recordv6);
+                result.update(records);
+                break;
         }
+        return result;
     }
 
 
@@ -216,6 +270,7 @@ public class InterpretHostResultRepo {
             dbHelper.delete(new ArrayList<HostRecord>(interpretResults.values()));
         }
         interpretResults.clear();
+        httpDnsResults.clear();
     }
 
     public void clear(ArrayList<String> hosts) {
@@ -233,6 +288,13 @@ public class InterpretHostResultRepo {
         }
         if (recordsToBeDeleted.size() > 0 && enableCache) {
             dbHelper.delete(recordsToBeDeleted);
+        }
+
+        hostKeys = new ArrayList<>(httpDnsResults.keySet());
+        for (String hostKey : hostKeys) {
+            if (isTargetKey(hostKey, hosts)) {
+                httpDnsResults.remove(hostKey);
+            }
         }
     }
 
