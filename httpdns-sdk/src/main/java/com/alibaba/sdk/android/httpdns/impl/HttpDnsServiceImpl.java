@@ -56,7 +56,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
     protected ResolveHostService resolveHostService;
     private HostFilter filter;
     private SignService signService;
-    private boolean resolveAfterNetworkChange;
+    private boolean resolveAfterNetworkChange = true;
     private HostInterpretRecorder recorder = new HostInterpretRecorder();
 
     public HttpDnsServiceImpl(Context context, final String accountId, String secret) {

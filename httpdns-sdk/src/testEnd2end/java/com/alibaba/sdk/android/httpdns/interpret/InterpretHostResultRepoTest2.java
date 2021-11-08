@@ -92,7 +92,7 @@ public class InterpretHostResultRepoTest2 {
 
         MatcherAssert.assertThat("在ttl时间内，不过期", result.isExpired(), Matchers.is(false));
 
-        Thread.sleep(1000);
+        Thread.sleep(1100);
 
         result = repo.getIps(host, RequestIpType.v4, null);
         MatcherAssert.assertThat("超过ttl时间过期", result.isExpired(), Matchers.is(true));

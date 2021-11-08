@@ -855,6 +855,7 @@ public class HttpDnsE2E {
 
     @Test
     public void testIpTtl() throws InterruptedException {
+        app.enableExpiredIp(false);
         InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(app.getRequestHost(), 1);
         server.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), response, -1);
         // 请求域名解析，并返回空结果，因为是接口是异步的，所以第一次请求一个域名返回是空
@@ -881,7 +882,7 @@ public class HttpDnsE2E {
 
     @Test
     public void testEnableExpiredIp() throws InterruptedException {
-        app.enableExpiredIp();
+        app.enableExpiredIp(true);
         InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(app.getRequestHost(), 1);
         InterpretHostResponse response1 = ServerHelper.randomInterpretHostResponse(app.getRequestHost());
         server.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), response, 1);
@@ -1039,6 +1040,7 @@ public class HttpDnsE2E {
     @Test
     public void testIpCacheWhenExpired() throws InterruptedException {
         app.enableCache(false);
+        app.enableExpiredIp(false);
         // 先发起一些请求，缓存一些Ip结果
         InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(app.getRequestHost(), 1);
         InterpretHostResponse response1 = ServerHelper.randomInterpretHostResponse(app.getRequestHost(), 1);
@@ -1059,6 +1061,7 @@ public class HttpDnsE2E {
         // 重启应用，获取新的实例
         app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
         app.enableCache(false);
+        app.enableExpiredIp(false);
 
         ips = app.requestInterpretHost();
         ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("本地缓存过期时，会触发网络请求", app, server, response1);

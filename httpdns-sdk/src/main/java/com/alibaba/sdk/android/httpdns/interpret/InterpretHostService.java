@@ -25,7 +25,7 @@ public class InterpretHostService {
     private InterpretHostRequestHandler requestHandler;
     private ProbeService ipProbeService;
     private HostFilter filter;
-    private boolean enableExpiredIp = false;
+    private boolean enableExpiredIp = true;
     private HostInterpretRecorder recorder;
     private HostInterpretLocker locker;
 
