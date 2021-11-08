@@ -184,8 +184,19 @@ public class CommonUtil {
         }
     }
 
+    private static HashMap<String, Boolean> hostCheckResult = new HashMap<>();
 
     public static boolean isAHost(String host) {
+        Boolean result = hostCheckResult.get(host);
+        if (result != null) {
+            return result;
+        }
+        result = checkIsAHost(host);
+        hostCheckResult.put(host, result);
+        return result;
+    }
+
+    private static boolean checkIsAHost(String host) {
         try {
             if (host != null) {
                 char[] bytes = host.toCharArray();
@@ -212,9 +223,16 @@ public class CommonUtil {
             + "(1\\d{2}|2[0-4]\\d|25[0-5]|[1-9]\\d|\\d)$";
     private static Pattern pattern = Pattern.compile(rex);
 
+    private static HashMap<String, Boolean> ipCheckResult = new HashMap<>();
 
     public static boolean isAnIP(String ip) {
-        return !(ip == null || ip.length() < 7 || ip.length() > 15 || ip.equals("")) && pattern.matcher(ip).matches();
+        Boolean result = ipCheckResult.get(ip);
+        if (result != null) {
+            return result;
+        }
+        result = !(ip == null || ip.length() < 7 || ip.length() > 15 || ip.equals("")) && pattern.matcher(ip).matches();
+        ipCheckResult.put(ip, result);
+        return result;
     }
 
     // 从旧代码中获取，逻辑待确定
@@ -236,5 +254,10 @@ public class CommonUtil {
         } else {
             return Constants.NO_EXTRA;
         }
+    }
+
+    public static void cleanCache() {
+        hostCheckResult.clear();
+        ipCheckResult.clear();
     }
 }
