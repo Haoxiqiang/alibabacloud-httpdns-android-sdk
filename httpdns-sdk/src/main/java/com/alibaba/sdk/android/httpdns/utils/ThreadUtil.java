@@ -9,6 +9,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
@@ -24,7 +25,7 @@ public class ThreadUtil {
     private static int index = 0;
 
     public static ExecutorService createSingleThreadService(final String tag) {
-        final ThreadPoolExecutor httpdnsThread = new ThreadPoolExecutor(0, 1, 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+        final ThreadPoolExecutor httpdnsThread = new ThreadPoolExecutor(0, 1, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(4), new ThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {
                 Thread thread = new Thread(r, tag + index++);
@@ -50,7 +51,7 @@ public class ThreadUtil {
     }
 
     public static ExecutorService createDBExecutorService() {
-        final ThreadPoolExecutor httpdnsThread = new ThreadPoolExecutor(0, 2, 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+        final ThreadPoolExecutor httpdnsThread = new ThreadPoolExecutor(0, 1, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(4), new ThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {
                 Thread thread = new Thread(r, "httpdns_db" + index++);
