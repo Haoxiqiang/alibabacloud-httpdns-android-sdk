@@ -33,8 +33,8 @@ public class NetworkStateManager implements INetworkHelper {
 
     public static final String NONE_NETWORK = "None_Network";
     private Context context;
-    private String netType;
-    private String sp;
+    private String netType = NONE_NETWORK;
+    private String sp = TYPE_UNKNOWN;
     private String lastConnectedNetwork = NONE_NETWORK;
     private ArrayList<OnNetworkChange> listeners = new ArrayList<>();
 
@@ -163,6 +163,9 @@ public class NetworkStateManager implements INetworkHelper {
 
             if (activeNetInfo.getType() == ConnectivityManager.TYPE_WIFI) {
                 sp = getSsid(context);
+                if (sp == null) {
+                    sp = TYPE_UNKNOWN;
+                }
                 netType = TYPE_WIFI;
                 return;
 
@@ -238,7 +241,7 @@ public class NetworkStateManager implements INetworkHelper {
         } catch (Throwable e) {
             HttpDnsLog.w("getCellSP fail", e);
         }
-        return "UNKNOW";
+        return TYPE_UNKNOWN;
     }
 
     private static boolean hasNetInfoPermission(Context context) {
