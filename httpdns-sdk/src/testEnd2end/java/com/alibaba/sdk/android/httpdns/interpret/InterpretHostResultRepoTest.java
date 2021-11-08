@@ -23,7 +23,7 @@ import org.robolectric.RuntimeEnvironment;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -46,7 +46,7 @@ public class InterpretHostResultRepoTest {
 
     @Before
     public void setUp() {
-        worker = new TestExecutorService(new ThreadPoolExecutor(0, 10, 0, TimeUnit.SECONDS, new SynchronousQueue<Runnable>()));
+        worker = new TestExecutorService(new ThreadPoolExecutor(0, 10, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>()));
         config = new HttpDnsConfig(RuntimeEnvironment.application, accountId);
         config.setWorker(worker);
         dbHelper = new RecordDBHelper(config.getContext(), config.getAccountId());
