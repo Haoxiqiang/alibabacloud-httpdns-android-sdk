@@ -4,7 +4,6 @@ import android.content.Context;
 import android.text.Html;
 import android.util.Pair;
 
-import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 
 import org.json.JSONObject;
@@ -216,26 +215,6 @@ public class CommonUtil {
 
     public static boolean isAnIP(String ip) {
         return !(ip == null || ip.length() < 7 || ip.length() > 15 || ip.equals("")) && pattern.matcher(ip).matches();
-    }
-
-    public static String formKeyForAllType(String host, RequestIpType type, String cacheKey) {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(host);
-        switch (type) {
-            case v4:
-                stringBuilder.append(":").append("v4");
-                break;
-            case v6:
-                stringBuilder.append(":").append("v6");
-                break;
-            default:
-                stringBuilder.append(":").append("both");
-                break;
-        }
-        if (cacheKey != null) {
-            stringBuilder.append(":").append(cacheKey);
-        }
-        return stringBuilder.toString();
     }
 
     // 从旧代码中获取，逻辑待确定

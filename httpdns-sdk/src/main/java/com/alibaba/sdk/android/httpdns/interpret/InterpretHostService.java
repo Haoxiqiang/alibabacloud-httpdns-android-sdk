@@ -129,11 +129,14 @@ public class InterpretHostService {
                 });
             }
 
-            HttpDnsLog.d("wait for request finish");
-            try {
-                locker.await(host, type, cacheKey, 15, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            if (result == null || !enableExpiredIp) {
+                // 有结果，但是过期了，不允许返回过期结果，等请求结束
+                HttpDnsLog.d("wait for request finish");
+                try {
+                    locker.await(host, type, cacheKey, 15, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
 
         } else {
