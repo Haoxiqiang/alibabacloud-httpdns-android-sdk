@@ -46,15 +46,19 @@ public class ProbeService {
                 return;
             }
             probingHosts.add(host);
-            config.getWorker().execute(new ProbeTask(socketFactory, host, ips, ipProbeItem, new ProbeCallback() {
-                @Override
-                public void onResult(String host, String[] sortedIps) {
-                    probingHosts.remove(host);
-                    if (probeCallback != null) {
-                        probeCallback.onResult(host, sortedIps);
+            try {
+                config.getWorker().execute(new ProbeTask(socketFactory, host, ips, ipProbeItem, new ProbeCallback() {
+                    @Override
+                    public void onResult(String host, String[] sortedIps) {
+                        probingHosts.remove(host);
+                        if (probeCallback != null) {
+                            probeCallback.onResult(host, sortedIps);
+                        }
                     }
-                }
-            }));
+                }));
+            } catch (Exception e) {
+                probingHosts.remove(host);
+            }
         }
     }
 

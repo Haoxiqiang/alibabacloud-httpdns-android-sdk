@@ -64,7 +64,11 @@ public class InterpretHostRequestHandler {
         request = new HttpRequestWatcher<>(request, new ShiftServerWatcher(config, scheduleService, categoryController));
         // 重试一次
         request = new RetryHttpRequest<>(request, 1);
-        config.getWorker().execute(new HttpRequestTask<ResolveHostResponse>(request, callback));
+        try {
+            config.getWorker().execute(new HttpRequestTask<ResolveHostResponse>(request, callback));
+        } catch (Throwable e) {
+            callback.onFail(e);
+        }
     }
 
 

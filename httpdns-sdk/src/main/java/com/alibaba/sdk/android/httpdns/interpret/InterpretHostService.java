@@ -9,6 +9,7 @@ import com.alibaba.sdk.android.httpdns.probe.ProbeCallback;
 import com.alibaba.sdk.android.httpdns.probe.ProbeService;
 import com.alibaba.sdk.android.httpdns.request.RequestCallback;
 import com.alibaba.sdk.android.httpdns.utils.CommonUtil;
+import com.alibaba.sdk.android.httpdns.utils.Constants;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -49,7 +50,7 @@ public class InterpretHostService {
             if (HttpDnsLog.isPrint()) {
                 HttpDnsLog.d("request host " + host + ", which is filtered");
             }
-            return HTTPDNSResult.empty(host);
+            return Constants.EMPTY;
         }
         if (HttpDnsLog.isPrint()) {
             HttpDnsLog.d("request host " + host + " with type " + type + " extras : " + CommonUtil.toString(extras) + " cacheKey " + cacheKey);
@@ -96,7 +97,7 @@ public class InterpretHostService {
             if (HttpDnsLog.isPrint()) {
                 HttpDnsLog.i("request host " + host + " and return empty immediately");
             }
-            return HTTPDNSResult.empty(host);
+            return Constants.EMPTY;
         }
     }
 
@@ -109,7 +110,7 @@ public class InterpretHostService {
     public HTTPDNSResult interpretHost(final String host, final RequestIpType type, final Map<String, String> extras, final String cacheKey) {
         if (filter.isFiltered(host)) {
             HttpDnsLog.d("request host " + host + ", which is filtered");
-            return HTTPDNSResult.empty(host);
+            return Constants.EMPTY;
         }
         if (HttpDnsLog.isPrint()) {
             HttpDnsLog.d("request host " + host + " sync with type " + type + " extras : " + CommonUtil.toString(extras) + " cacheKey " + cacheKey);
@@ -180,7 +181,7 @@ public class InterpretHostService {
             if (HttpDnsLog.isPrint()) {
                 HttpDnsLog.i("request host " + host + " and return empty after request");
             }
-            return HTTPDNSResult.empty(host);
+            return Constants.EMPTY;
         }
     }
 

@@ -45,7 +45,11 @@ public class SniffCategory implements InterpretHostCategory {
         request = new HttpRequestWatcher<>(request, new Ipv6onlyWatcher(config));
         // 切换服务IP，更新服务IP
         request = new HttpRequestWatcher<>(request, new ShiftServerWatcher(config, scheduleService, statusControl));
-        config.getWorker().execute(new HttpRequestTask<InterpretHostResponse>(request, callback));
+        try {
+            config.getWorker().execute(new HttpRequestTask<InterpretHostResponse>(request, callback));
+        } catch (Throwable tr) {
+            callback.onFail(tr);
+        }
     }
 
     public void setInterval(int timeMs) {

@@ -157,6 +157,7 @@ public class ThreadUtil {
                 httpdnsThread.execute(command);
             } catch (Exception e) {
                 HttpDnsLog.e("too many request ?", e);
+                throw e;
             }
         }
     }

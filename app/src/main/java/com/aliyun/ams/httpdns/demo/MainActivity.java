@@ -191,10 +191,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private void initHttpDns() {
         // 初始化httpdns
         SenderLog.setLevel(LogLevel.DEBUG);
-        HttpDnsLog.enable(true);
+        HttpDnsLog.enable(false);
 //        HttpDns.enableIPv6Service(this,(true);
         httpdns = HttpDns.getService(getApplicationContext(), accountID);
-        httpdns.setLogEnabled(true);
+        httpdns.setLogEnabled(false);
         httpdns.setLogger(new ILogger() {
             @Override
             public void log(String msg) {

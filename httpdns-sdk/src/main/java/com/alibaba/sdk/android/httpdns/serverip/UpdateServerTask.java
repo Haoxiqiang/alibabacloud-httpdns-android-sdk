@@ -1,8 +1,5 @@
 package com.alibaba.sdk.android.httpdns.serverip;
 
-import static com.alibaba.sdk.android.httpdns.interpret.InterpretHostHelper.getNetType;
-import static com.alibaba.sdk.android.httpdns.interpret.InterpretHostHelper.getSid;
-
 import android.text.TextUtils;
 
 import com.alibaba.sdk.android.httpdns.BuildConfig;
@@ -17,6 +14,9 @@ import com.alibaba.sdk.android.httpdns.request.Ipv6onlyWatcher;
 import com.alibaba.sdk.android.httpdns.request.RequestCallback;
 import com.alibaba.sdk.android.httpdns.request.ResponseTranslator;
 import com.alibaba.sdk.android.httpdns.request.RetryHttpRequest;
+
+import static com.alibaba.sdk.android.httpdns.interpret.InterpretHostHelper.getNetType;
+import static com.alibaba.sdk.android.httpdns.interpret.InterpretHostHelper.getSid;
 
 /**
  * @author zonglin.nzl
@@ -44,6 +44,11 @@ public class UpdateServerTask {
         httpRequest = new HttpRequestWatcher<>(httpRequest, new ShiftServerWatcher(config));
         // 重试，当前服务Ip和初始服务ip个数
         httpRequest = new RetryHttpRequest<>(httpRequest, config.getServerIps().length + config.getInitServerSize() - 1);
-        config.getWorker().execute(new HttpRequestTask<>(httpRequest, callback));
+
+        try {
+            config.getWorker().execute(new HttpRequestTask<>(httpRequest, callback));
+        } catch (Throwable e) {
+            callback.onFail(e);
+        }
     }
 }

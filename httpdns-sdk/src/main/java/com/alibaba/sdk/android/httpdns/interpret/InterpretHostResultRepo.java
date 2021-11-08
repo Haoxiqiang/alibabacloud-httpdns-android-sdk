@@ -190,12 +190,14 @@ public class InterpretHostResultRepo {
 
     public void setCachedIPEnabled(boolean enable, final boolean autoCleanCacheAfterLoad) {
         enableCache = enable;
-        config.getWorker().execute(new Runnable() {
-            @Override
-            public void run() {
-                readFromDB(autoCleanCacheAfterLoad);
-            }
-        });
-
+        try {
+            config.getWorker().execute(new Runnable() {
+                @Override
+                public void run() {
+                    readFromDB(autoCleanCacheAfterLoad);
+                }
+            });
+        } catch (Throwable tr) {
+        }
     }
 }

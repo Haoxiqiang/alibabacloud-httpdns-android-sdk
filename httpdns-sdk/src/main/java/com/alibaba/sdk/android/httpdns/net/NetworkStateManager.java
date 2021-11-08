@@ -65,35 +65,38 @@ public class NetworkStateManager implements INetworkHelper {
         BroadcastReceiver bcReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(final Context context, final Intent intent) {
-                // onReceive()在主线程执行，SDK内部线程CrashHandler无法捕获，使用try/catch捕获
-                worker.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            if (isInitialStickyBroadcast()) { // no need to handle initial sticky broadcast
-                                return;
-                            }
-                            String action = intent.getAction();
-                            if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action) && hasNetInfoPermission(context)) {
-                                updateNetworkStatus(context);
-                                String currentNetwork = detectCurrentNetwork();
-                                if (HttpDnsSettings.isCheckNetwork()) {
-                                    Inet64Util.startIpStackDetect();
+                try {
+                    worker.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            // onReceive()在主线程执行，SDK内部线程CrashHandler无法捕获，使用try/catch捕获
+                            try {
+                                if (isInitialStickyBroadcast()) { // no need to handle initial sticky broadcast
+                                    return;
                                 }
-                                if (!currentNetwork.equals(NONE_NETWORK) && !currentNetwork.equalsIgnoreCase(lastConnectedNetwork)) {
-                                    for (OnNetworkChange onNetworkChange : listeners) {
-                                        onNetworkChange.onNetworkChange(currentNetwork);
+                                String action = intent.getAction();
+                                if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action) && hasNetInfoPermission(context)) {
+                                    updateNetworkStatus(context);
+                                    String currentNetwork = detectCurrentNetwork();
+                                    if (HttpDnsSettings.isCheckNetwork()) {
+                                        Inet64Util.startIpStackDetect();
+                                    }
+                                    if (!currentNetwork.equals(NONE_NETWORK) && !currentNetwork.equalsIgnoreCase(lastConnectedNetwork)) {
+                                        for (OnNetworkChange onNetworkChange : listeners) {
+                                            onNetworkChange.onNetworkChange(currentNetwork);
+                                        }
+                                    }
+                                    if (!currentNetwork.equals(NONE_NETWORK)) {
+                                        lastConnectedNetwork = currentNetwork;
                                     }
                                 }
-                                if (!currentNetwork.equals(NONE_NETWORK)) {
-                                    lastConnectedNetwork = currentNetwork;
-                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
                             }
-                        } catch (Exception e) {
-                            e.printStackTrace();
                         }
-                    }
-                });
+                    });
+                } catch (Exception e) {
+                }
             }
         };
 

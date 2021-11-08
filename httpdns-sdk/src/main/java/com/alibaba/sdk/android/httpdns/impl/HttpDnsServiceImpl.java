@@ -31,6 +31,7 @@ import com.alibaba.sdk.android.httpdns.report.ReportManager;
 import com.alibaba.sdk.android.httpdns.serverip.ScheduleService;
 import com.alibaba.sdk.android.httpdns.track.SessionTrackMgr;
 import com.alibaba.sdk.android.httpdns.utils.CommonUtil;
+import com.alibaba.sdk.android.httpdns.utils.Constants;
 import com.alibaba.sdk.android.sender.AlicloudSender;
 import com.alibaba.sdk.android.sender.SdkInfo;
 
@@ -256,15 +257,15 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
     public HTTPDNSResult getAllByHostAsync(String host) {
         if (!config.isEnabled()) {
             HttpDnsLog.i("service is disabled");
-            return HTTPDNSResult.empty(host);
+            return Constants.EMPTY;
         }
         if (!CommonUtil.isAHost(host)) {
             HttpDnsLog.i("host is invalid. " + host);
-            return HTTPDNSResult.empty(host);
+            return Constants.EMPTY;
         }
         if (CommonUtil.isAnIP(host)) {
             HttpDnsLog.i("host is ip. " + host);
-            return HTTPDNSResult.empty(host);
+            return Constants.EMPTY;
         }
         return interpretHostService.interpretHostAsync(host, RequestIpType.both, null, null);
     }
@@ -361,15 +362,15 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
     public HTTPDNSResult getIpsByHostAsync(String host, Map<String, String> params, String cacheKey) {
         if (!config.isEnabled()) {
             HttpDnsLog.i("service is disabled");
-            return HTTPDNSResult.empty(host);
+            return Constants.EMPTY;
         }
         if (!CommonUtil.isAHost(host)) {
             HttpDnsLog.i("host is invalid. " + host);
-            return HTTPDNSResult.empty(host);
+            return Constants.EMPTY;
         }
         if (CommonUtil.isAnIP(host)) {
             HttpDnsLog.i("host is ip. " + host);
-            return HTTPDNSResult.empty(host);
+            return Constants.EMPTY;
         }
         return interpretHostService.interpretHostAsync(host, RequestIpType.v4, params, cacheKey);
     }
@@ -378,15 +379,15 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
     public HTTPDNSResult getIpsByHostAsync(String host, RequestIpType type, Map<String, String> params, String cacheKey) {
         if (!config.isEnabled()) {
             HttpDnsLog.i("service is disabled");
-            return HTTPDNSResult.empty(host);
+            return Constants.EMPTY;
         }
         if (!CommonUtil.isAHost(host)) {
             HttpDnsLog.i("host is invalid. " + host);
-            return HTTPDNSResult.empty(host);
+            return Constants.EMPTY;
         }
         if (CommonUtil.isAnIP(host)) {
             HttpDnsLog.i("host is ip. " + host);
-            return HTTPDNSResult.empty(host);
+            return Constants.EMPTY;
         }
         return interpretHostService.interpretHostAsync(host, type, params, cacheKey);
     }
@@ -447,55 +448,58 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
         if (!config.isEnabled()) {
             return;
         }
-        config.getWorker().execute(new Runnable() {
-            @Override
-            public void run() {
-                HashMap<String, RequestIpType> allHost = repo.getAllHost();
-                HttpDnsLog.d("network change, clean record");
-                repo.clear();
-                if (resolveAfterNetworkChange && config.isEnabled()) {
-                    ArrayList<String> v4List = new ArrayList<>();
-                    ArrayList<String> v6List = new ArrayList<>();
-                    ArrayList<String> bothList = new ArrayList<>();
-                    for (Map.Entry<String, RequestIpType> entry : allHost.entrySet()) {
-                        if (entry.getValue() == RequestIpType.v4) {
-                            v4List.add(entry.getKey());
-                        } else if (entry.getValue() == RequestIpType.v6) {
-                            v6List.add(entry.getKey());
-                        } else {
-                            bothList.add(entry.getKey());
+        try {
+            config.getWorker().execute(new Runnable() {
+                @Override
+                public void run() {
+                    HashMap<String, RequestIpType> allHost = repo.getAllHost();
+                    HttpDnsLog.d("network change, clean record");
+                    repo.clear();
+                    if (resolveAfterNetworkChange && config.isEnabled()) {
+                        ArrayList<String> v4List = new ArrayList<>();
+                        ArrayList<String> v6List = new ArrayList<>();
+                        ArrayList<String> bothList = new ArrayList<>();
+                        for (Map.Entry<String, RequestIpType> entry : allHost.entrySet()) {
+                            if (entry.getValue() == RequestIpType.v4) {
+                                v4List.add(entry.getKey());
+                            } else if (entry.getValue() == RequestIpType.v6) {
+                                v6List.add(entry.getKey());
+                            } else {
+                                bothList.add(entry.getKey());
+                            }
+                        }
+                        if (v4List.size() > 0) {
+                            resolveHostService.resolveHostAsync(v4List, RequestIpType.v4);
+                        }
+                        if (v6List.size() > 0) {
+                            resolveHostService.resolveHostAsync(v6List, RequestIpType.v6);
+                        }
+                        if (bothList.size() > 0) {
+                            resolveHostService.resolveHostAsync(bothList, RequestIpType.both);
+                        }
+                        if (v4List.size() > 0 || v6List.size() > 0 || bothList.size() > 0) {
+                            HttpDnsLog.d("network change, resolve hosts");
                         }
                     }
-                    if (v4List.size() > 0) {
-                        resolveHostService.resolveHostAsync(v4List, RequestIpType.v4);
-                    }
-                    if (v6List.size() > 0) {
-                        resolveHostService.resolveHostAsync(v6List, RequestIpType.v6);
-                    }
-                    if (bothList.size() > 0) {
-                        resolveHostService.resolveHostAsync(bothList, RequestIpType.both);
-                    }
-                    if (v4List.size() > 0 || v6List.size() > 0 || bothList.size() > 0) {
-                        HttpDnsLog.d("network change, resolve hosts");
-                    }
                 }
-            }
-        });
+            });
+        } catch (Exception e) {
+        }
     }
 
     @Override
     public HTTPDNSResult getByHost(String host, RequestIpType type) {
         if (!config.isEnabled()) {
             HttpDnsLog.i("service is disabled");
-            return HTTPDNSResult.empty(host);
+            return Constants.EMPTY;
         }
         if (!CommonUtil.isAHost(host)) {
             HttpDnsLog.i("host is invalid. " + host);
-            return HTTPDNSResult.empty(host);
+            return Constants.EMPTY;
         }
         if (CommonUtil.isAnIP(host)) {
             HttpDnsLog.i("host is ip. " + host);
-            return HTTPDNSResult.empty(host);
+            return Constants.EMPTY;
         }
         if (Looper.getMainLooper() == Looper.myLooper()) {
             if (HttpDnsLog.isPrint()) {

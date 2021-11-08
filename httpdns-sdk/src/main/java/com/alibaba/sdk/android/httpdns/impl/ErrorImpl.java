@@ -8,6 +8,7 @@ import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.SyncService;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import com.alibaba.sdk.android.httpdns.probe.IPProbeItem;
+import com.alibaba.sdk.android.httpdns.utils.Constants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +55,7 @@ public class ErrorImpl implements HttpDnsService, SyncService {
     @Override
     public HTTPDNSResult getAllByHostAsync(String host) {
         HttpDnsLog.w("init error");
-        return HTTPDNSResult.empty(host);
+        return Constants.EMPTY;
     }
 
     @Override
@@ -115,13 +116,13 @@ public class ErrorImpl implements HttpDnsService, SyncService {
     @Override
     public HTTPDNSResult getIpsByHostAsync(String host, Map<String, String> params, String cacheKey) {
         HttpDnsLog.w("init error");
-        return HTTPDNSResult.empty(host);
+        return Constants.EMPTY;
     }
 
     @Override
     public HTTPDNSResult getIpsByHostAsync(String host, RequestIpType type, Map<String, String> params, String cacheKey) {
         HttpDnsLog.w("init error");
-        return HTTPDNSResult.empty(host);
+        return Constants.EMPTY;
     }
 
     @Override
@@ -153,7 +154,7 @@ public class ErrorImpl implements HttpDnsService, SyncService {
     @Override
     public HTTPDNSResult getByHost(String host, RequestIpType type) {
         HttpDnsLog.w("init error");
-        return HTTPDNSResult.empty(host);
+        return Constants.EMPTY;
     }
 
     @Override

@@ -38,7 +38,11 @@ public class NormalCategory implements InterpretHostCategory {
         request = new HttpRequestWatcher<>(request, new ShiftServerWatcher(config, scheduleService, statusControl));
         // 重试一次
         request = new RetryHttpRequest<>(request, 1);
-        config.getWorker().execute(new HttpRequestTask<InterpretHostResponse>(request, callback));
+        try {
+            config.getWorker().execute(new HttpRequestTask<InterpretHostResponse>(request, callback));
+        } catch (Throwable e) {
+            callback.onFail(e);
+        }
     }
 
 }
