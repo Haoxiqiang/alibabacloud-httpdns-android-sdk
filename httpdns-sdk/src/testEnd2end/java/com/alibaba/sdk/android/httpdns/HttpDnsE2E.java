@@ -19,6 +19,7 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -1462,7 +1463,11 @@ public class HttpDnsE2E {
         UnitTestUtil.assertIpsEmpty("清除缓存会把数据库缓存也清除", ips4);
     }
 
+    /**
+     * 这个应该手动执行，耗时太长
+     */
     @Test
+    @Ignore("耗时太长，需要手动执行")
     public void multiThreadTest() {
         HttpDnsLog.removeLogger(logger);
         app.setTimeout(10 * 1000);
