@@ -19,7 +19,9 @@ public class Ipv6onlyWatcher implements HttpRequestWatcher.Watcher {
             originIp = config.getIp();
             changed = true;
             String ipv6 = this.config.getIpv6ServerIp();
-            HttpDnsLog.d("origin ip is " + originIp + " change to " + ipv6);
+            if (HttpDnsLog.isPrint()) {
+                HttpDnsLog.d("origin ip is " + originIp + " change to " + ipv6);
+            }
             config.setIp("[" + ipv6 + "]");
         }
     }

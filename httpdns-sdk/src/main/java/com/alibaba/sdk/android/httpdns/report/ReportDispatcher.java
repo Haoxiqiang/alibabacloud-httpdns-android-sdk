@@ -42,7 +42,9 @@ final class ReportDispatcher {
         @Override
         public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
             super.rejectedExecution(r, e);
-            HttpDnsLog.d("too many report? drop it!");
+            if (HttpDnsLog.isPrint()) {
+                HttpDnsLog.d("too many report? drop it!");
+            }
         }
     }
 

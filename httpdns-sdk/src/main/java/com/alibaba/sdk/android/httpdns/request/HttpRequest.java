@@ -53,7 +53,9 @@ public class HttpRequest<T> {
 
         long start = System.currentTimeMillis();
         String url = requestConfig.url();
-        HttpDnsLog.d("request url " + url);
+        if (HttpDnsLog.isPrint()) {
+            HttpDnsLog.d("request url " + url);
+        }
         try {
             conn = (HttpURLConnection) new URL(url).openConnection();
             conn.setReadTimeout(requestConfig.getTimeout());
@@ -75,7 +77,9 @@ public class HttpRequest<T> {
                 in = conn.getInputStream();
                 streamReader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
                 String responseStr = readStringFrom(streamReader).toString();
-                HttpDnsLog.d("request success " + responseStr);
+                if (HttpDnsLog.isPrint()) {
+                    HttpDnsLog.d("request success " + responseStr);
+                }
                 return translator.translate(responseStr);
             }
         } catch (Throwable e) {

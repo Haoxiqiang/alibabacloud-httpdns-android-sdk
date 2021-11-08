@@ -50,6 +50,10 @@ public class HttpDnsLog {
         HttpDnsLog.printToLogcat = enable;
     }
 
+    public static boolean isPrint() {
+        return HttpDnsLog.printToLogcat;
+    }
+
     public static void e(String errLog) {
         if (HttpDnsLog.printToLogcat) {
             Log.e(TAG, errLog);

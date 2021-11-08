@@ -103,7 +103,9 @@ public class NetworkStateManager implements INetworkHelper {
         }
 
         updateNetworkStatus(this.context);
-        HttpDnsLog.i("NetworkStateManager init " + getSp());
+        if (HttpDnsLog.isPrint()) {
+            HttpDnsLog.i("NetworkStateManager init " + getSp());
+        }
     }
 
     private String detectCurrentNetwork() {

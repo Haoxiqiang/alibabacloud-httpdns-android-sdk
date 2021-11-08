@@ -85,7 +85,9 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             reportManager.setAccountId(accountId);
             reportSdkStart(context, accountId);
             initBeacon(context, accountId, config);
-            HttpDnsLog.d("httpdns service is inited " + accountId);
+            if (HttpDnsLog.isPrint()) {
+                HttpDnsLog.d("httpdns service is inited " + accountId);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -491,7 +493,9 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             return HTTPDNSResult.empty(host);
         }
         if (Looper.getMainLooper() == Looper.myLooper()) {
-            HttpDnsLog.d("request in main thread, use async request");
+            if (HttpDnsLog.isPrint()) {
+                HttpDnsLog.d("request in main thread, use async request");
+            }
             return interpretHostService.interpretHostAsync(host, type, null, null);
         }
         return interpretHostService.interpretHost(host, type, null, null);

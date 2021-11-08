@@ -31,7 +31,9 @@ public class ScheduleService {
      */
     public void updateServerIps(final String newRegion, boolean force) {
         if (!force && CommonUtil.regionEquals(this.config.getRegion(), newRegion)) {
-            HttpDnsLog.d("region " + newRegion + " is same, do not update serverIps");
+            if (HttpDnsLog.isPrint()) {
+                HttpDnsLog.d("region " + newRegion + " is same, do not update serverIps");
+            }
             return;
         }
         String[] serverIps = repo.getServerIps(newRegion);

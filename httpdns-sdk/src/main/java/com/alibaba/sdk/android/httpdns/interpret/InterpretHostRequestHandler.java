@@ -43,14 +43,18 @@ public class InterpretHostRequestHandler {
 
     public void requestInterpretHost(final String host, final RequestIpType type, Map<String, String> extras, final String cacheKey, RequestCallback<InterpretHostResponse> callback) {
         HttpRequestConfig requestConfig = InterpretHostHelper.getConfig(config, host, type, extras, cacheKey, globalParams, signService);
-        HttpDnsLog.d("start async ip request for " + host + " " + type);
+        if (HttpDnsLog.isPrint()) {
+            HttpDnsLog.d("start async ip request for " + host + " " + type);
+        }
         categoryController.getCategory().interpret(config, requestConfig, callback);
     }
 
 
     public void requestResolveHost(final ArrayList<String> hostList, final RequestIpType type, RequestCallback<ResolveHostResponse> callback) {
         HttpRequestConfig requestConfig = InterpretHostHelper.getConfig(config, hostList, type, signService);
-        HttpDnsLog.d("start resolve hosts async for " + hostList.toString() + " " + type);
+        if (HttpDnsLog.isPrint()) {
+            HttpDnsLog.d("start resolve hosts async for " + hostList.toString() + " " + type);
+        }
 
         HttpRequest<ResolveHostResponse> request = new HttpRequest<ResolveHostResponse>(requestConfig, new ResolveHostResponseTranslator());
         request = new HttpRequestWatcher<>(request, new HttpRequestFailWatcher(ReportManager.getReportManagerByAccount(config.getAccountId())));

@@ -46,23 +46,33 @@ public class InterpretHostService {
      */
     public HTTPDNSResult interpretHostAsync(final String host, final RequestIpType type, final Map<String, String> extras, final String cacheKey) {
         if (filter.isFiltered(host)) {
-            HttpDnsLog.d("request host " + host + ", which is filtered");
+            if (HttpDnsLog.isPrint()) {
+                HttpDnsLog.d("request host " + host + ", which is filtered");
+            }
             return HTTPDNSResult.empty(host);
         }
-        HttpDnsLog.d("request host " + host + " with type " + type + " extras : " + CommonUtil.toString(extras) + " cacheKey " + cacheKey);
+        if (HttpDnsLog.isPrint()) {
+            HttpDnsLog.d("request host " + host + " with type " + type + " extras : " + CommonUtil.toString(extras) + " cacheKey " + cacheKey);
+        }
         HTTPDNSResult result = repo.getIps(host, type, cacheKey);
-        HttpDnsLog.d("host " + host + " result is " + CommonUtil.toString(result));
+        if (HttpDnsLog.isPrint()) {
+            HttpDnsLog.d("host " + host + " result is " + CommonUtil.toString(result));
+        }
         if ((result == null || result.isExpired()) && recorder.beginInterpret(host, type, cacheKey)) {
             requestHandler.requestInterpretHost(host, type, extras, cacheKey, new RequestCallback<InterpretHostResponse>() {
                 @Override
                 public void onSuccess(final InterpretHostResponse interpretHostResponse) {
-                    HttpDnsLog.i("ip request for " + host + " " + type + " return " + interpretHostResponse.toString());
+                    if (HttpDnsLog.isPrint()) {
+                        HttpDnsLog.i("ip request for " + host + " " + type + " return " + interpretHostResponse.toString());
+                    }
                     repo.save(host, type, interpretHostResponse.getExtras(), cacheKey, interpretHostResponse);
                     if (type == RequestIpType.v4 || type == RequestIpType.both) {
                         ipProbeService.probleIpv4(host, interpretHostResponse.getIps(), new ProbeCallback() {
                             @Override
                             public void onResult(String host, String[] sortedIps) {
-                                HttpDnsLog.i("ip probe for " + host + " " + type + " return " + CommonUtil.translateStringArray(sortedIps));
+                                if (HttpDnsLog.isPrint()) {
+                                    HttpDnsLog.i("ip probe for " + host + " " + type + " return " + CommonUtil.translateStringArray(sortedIps));
+                                }
                                 repo.update(host, RequestIpType.v4, cacheKey, sortedIps);
                             }
                         });
@@ -78,10 +88,14 @@ public class InterpretHostService {
             });
         }
         if (result != null && (!result.isExpired() || enableExpiredIp || result.isFromDB())) {
-            HttpDnsLog.i("request host " + host + " for " + type + " and return " + result.toString() + " immediately");
+            if (HttpDnsLog.isPrint()) {
+                HttpDnsLog.i("request host " + host + " for " + type + " and return " + result.toString() + " immediately");
+            }
             return result;
         } else {
-            HttpDnsLog.i("request host " + host + " and return empty immediately");
+            if (HttpDnsLog.isPrint()) {
+                HttpDnsLog.i("request host " + host + " and return empty immediately");
+            }
             return HTTPDNSResult.empty(host);
         }
     }
@@ -97,9 +111,13 @@ public class InterpretHostService {
             HttpDnsLog.d("request host " + host + ", which is filtered");
             return HTTPDNSResult.empty(host);
         }
-        HttpDnsLog.d("request host " + host + " sync with type " + type + " extras : " + CommonUtil.toString(extras) + " cacheKey " + cacheKey);
+        if (HttpDnsLog.isPrint()) {
+            HttpDnsLog.d("request host " + host + " sync with type " + type + " extras : " + CommonUtil.toString(extras) + " cacheKey " + cacheKey);
+        }
         HTTPDNSResult result = repo.getIps(host, type, cacheKey);
-        HttpDnsLog.d("host " + host + " result is " + CommonUtil.toString(result));
+        if (HttpDnsLog.isPrint()) {
+            HttpDnsLog.d("host " + host + " result is " + CommonUtil.toString(result));
+        }
         if ((result == null || result.isExpired())) {
             // 没有缓存，或者缓存过期，需要解析
             if (locker.beginInterpret(host, type, cacheKey)) {
@@ -107,13 +125,17 @@ public class InterpretHostService {
                 requestHandler.requestInterpretHost(host, type, extras, cacheKey, new RequestCallback<InterpretHostResponse>() {
                     @Override
                     public void onSuccess(final InterpretHostResponse interpretHostResponse) {
-                        HttpDnsLog.i("ip request for " + host + " " + type + " return " + interpretHostResponse.toString());
+                        if (HttpDnsLog.isPrint()) {
+                            HttpDnsLog.i("ip request for " + host + " " + type + " return " + interpretHostResponse.toString());
+                        }
                         repo.save(host, type, interpretHostResponse.getExtras(), cacheKey, interpretHostResponse);
                         if (type == RequestIpType.v4 || type == RequestIpType.both) {
                             ipProbeService.probleIpv4(host, interpretHostResponse.getIps(), new ProbeCallback() {
                                 @Override
                                 public void onResult(String host, String[] sortedIps) {
-                                    HttpDnsLog.i("ip probe for " + host + " " + type + " return " + CommonUtil.translateStringArray(sortedIps));
+                                    if (HttpDnsLog.isPrint()) {
+                                        HttpDnsLog.i("ip probe for " + host + " " + type + " return " + CommonUtil.translateStringArray(sortedIps));
+                                    }
                                     repo.update(host, RequestIpType.v4, cacheKey, sortedIps);
                                 }
                             });
@@ -131,7 +153,9 @@ public class InterpretHostService {
 
             if (result == null || !enableExpiredIp) {
                 // 有结果，但是过期了，不允许返回过期结果，等请求结束
-                HttpDnsLog.d("wait for request finish");
+                if (HttpDnsLog.isPrint()) {
+                    HttpDnsLog.d("wait for request finish");
+                }
                 try {
                     locker.await(host, type, cacheKey, 15, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
@@ -140,16 +164,22 @@ public class InterpretHostService {
             }
 
         } else {
-            HttpDnsLog.i("request host " + host + " for " + type + " and return " + result.toString() + " immediately");
+            if (HttpDnsLog.isPrint()) {
+                HttpDnsLog.i("request host " + host + " for " + type + " and return " + result.toString() + " immediately");
+            }
             return result;
         }
 
         result = repo.getIps(host, type, cacheKey);
         if (result != null && (!result.isExpired() || enableExpiredIp || result.isFromDB())) {
-            HttpDnsLog.i("request host " + host + " for " + type + " and return " + result.toString() + " after request");
+            if (HttpDnsLog.isPrint()) {
+                HttpDnsLog.i("request host " + host + " for " + type + " and return " + result.toString() + " after request");
+            }
             return result;
         } else {
-            HttpDnsLog.i("request host " + host + " and return empty after request");
+            if (HttpDnsLog.isPrint()) {
+                HttpDnsLog.i("request host " + host + " and return empty after request");
+            }
             return HTTPDNSResult.empty(host);
         }
     }
