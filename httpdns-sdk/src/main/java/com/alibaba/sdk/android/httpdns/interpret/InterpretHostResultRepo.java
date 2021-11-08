@@ -30,10 +30,11 @@ public class InterpretHostResultRepo {
     private HttpDnsConfig config;
     private ProbeService ipProbeService;
 
-    public InterpretHostResultRepo(HttpDnsConfig config, ProbeService ipProbeService) {
+    public InterpretHostResultRepo(HttpDnsConfig config, ProbeService ipProbeService, RecordDBHelper dbHelper) {
         dbHelper = new RecordDBHelper(config.getContext(), config.getAccountId());
         this.config = config;
         this.ipProbeService = ipProbeService;
+        this.dbHelper = dbHelper;
     }
 
     private void readFromDB(boolean cleanCache) {

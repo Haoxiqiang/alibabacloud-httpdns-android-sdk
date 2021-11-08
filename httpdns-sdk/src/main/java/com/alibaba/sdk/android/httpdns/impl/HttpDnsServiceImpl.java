@@ -14,6 +14,7 @@ import com.alibaba.sdk.android.httpdns.ILogger;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.SyncService;
 import com.alibaba.sdk.android.httpdns.beacon.BeaconControl;
+import com.alibaba.sdk.android.httpdns.cache.RecordDBHelper;
 import com.alibaba.sdk.android.httpdns.interpret.HostFilter;
 import com.alibaba.sdk.android.httpdns.interpret.InterpretHostRequestHandler;
 import com.alibaba.sdk.android.httpdns.interpret.InterpretHostResultRepo;
@@ -69,7 +70,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             filter = new HostFilter();
             signService = new SignService(secret);
             ipProbeService = new ProbeService(this.config);
-            repo = new InterpretHostResultRepo(this.config, this.ipProbeService);
+            repo = new InterpretHostResultRepo(this.config, this.ipProbeService, new RecordDBHelper(this.config.getContext(), this.config.getAccountId()));
             scheduleService = new ScheduleService(this.config, this);
             requestHandler = new InterpretHostRequestHandler(config, scheduleService, signService);
             interpretHostService = new InterpretHostService(ipProbeService, requestHandler, repo, filter, recorder);

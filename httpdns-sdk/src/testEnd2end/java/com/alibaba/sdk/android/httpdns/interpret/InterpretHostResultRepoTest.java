@@ -2,6 +2,7 @@ package com.alibaba.sdk.android.httpdns.interpret;
 
 import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
+import com.alibaba.sdk.android.httpdns.cache.RecordDBHelper;
 import com.alibaba.sdk.android.httpdns.impl.HttpDnsConfig;
 import com.alibaba.sdk.android.httpdns.probe.ProbeService;
 import com.alibaba.sdk.android.httpdns.test.helper.ServerHelper;
@@ -41,13 +42,15 @@ public class InterpretHostResultRepoTest {
     private ProbeService ipProbeService = Mockito.mock(ProbeService.class);
     private HttpDnsConfig config;
     private TestExecutorService worker;
+    private RecordDBHelper dbHelper;
 
     @Before
     public void setUp() {
         worker = new TestExecutorService(new ThreadPoolExecutor(0, 10, 0, TimeUnit.SECONDS, new SynchronousQueue<Runnable>()));
         config = new HttpDnsConfig(RuntimeEnvironment.application, accountId);
         config.setWorker(worker);
-        repo = new InterpretHostResultRepo(config, ipProbeService);
+        dbHelper = new RecordDBHelper(config.getContext(), config.getAccountId());
+        repo = new InterpretHostResultRepo(config, ipProbeService, dbHelper);
     }
 
 
@@ -160,7 +163,7 @@ public class InterpretHostResultRepoTest {
             }
         }
 
-        InterpretHostResultRepo anotherRepo = new InterpretHostResultRepo(config, ipProbeService);
+        InterpretHostResultRepo anotherRepo = new InterpretHostResultRepo(config, ipProbeService, dbHelper);
         anotherRepo.setCachedIPEnabled(true, false);
         try {
             worker.await();
