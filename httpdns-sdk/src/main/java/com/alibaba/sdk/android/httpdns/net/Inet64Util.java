@@ -37,7 +37,7 @@ public class Inet64Util {
     public final static int IPV6_ONLY = 2;
     public final static int IP_DUAL_STACK = 3;
 
-    static volatile String networkId = null;
+    static volatile String networkId = "";
     static Nat64Prefix defaultNatPrefix = null;
     static ConcurrentHashMap<String, Nat64Prefix> nat64PrefixMap = new ConcurrentHashMap<String, Nat64Prefix>();
     static ConcurrentHashMap<String, Integer> ipStackMap = new ConcurrentHashMap<String, Integer>();
