@@ -101,11 +101,14 @@ public class RecordDBHelper extends SQLiteOpenHelper {
             } catch (Exception e) {
                 HttpDnsLog.w("read from db fail " + accountId, e);
             } finally {
-                if (cursor != null) {
-                    cursor.close();
-                }
-                if (db != null) {
-                    db.close();
+                try {
+                    if (cursor != null) {
+                        cursor.close();
+                    }
+                    if (db != null) {
+                        db.close();
+                    }
+                } catch (Exception e) {
                 }
             }
             return hosts;
@@ -130,9 +133,12 @@ public class RecordDBHelper extends SQLiteOpenHelper {
             } catch (Exception e) {
                 HttpDnsLog.w("delete record fail " + accountId, e);
             } finally {
-                if (db != null) {
-                    db.endTransaction();
-                    db.close();
+                try {
+                    if (db != null) {
+                        db.endTransaction();
+                        db.close();
+                    }
+                } catch (Exception e) {
                 }
             }
         }
@@ -172,9 +178,12 @@ public class RecordDBHelper extends SQLiteOpenHelper {
             } catch (Exception e) {
                 HttpDnsLog.w("delete record fail " + accountId, e);
             } finally {
-                if (db != null) {
-                    db.endTransaction();
-                    db.close();
+                try {
+                    if (db != null) {
+                        db.endTransaction();
+                        db.close();
+                    }
+                } catch (Exception e) {
                 }
             }
         }
