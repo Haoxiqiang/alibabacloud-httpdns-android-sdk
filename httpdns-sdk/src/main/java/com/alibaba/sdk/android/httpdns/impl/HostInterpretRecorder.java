@@ -1,8 +1,8 @@
 package com.alibaba.sdk.android.httpdns.impl;
 
 import com.alibaba.sdk.android.httpdns.RequestIpType;
-import com.alibaba.sdk.android.httpdns.utils.CommonUtil;
 
+import java.util.HashMap;
 import java.util.HashSet;
 
 /**
@@ -11,8 +11,77 @@ import java.util.HashSet;
  */
 public class HostInterpretRecorder {
 
+    private static class Recorder {
+        private HashSet<String> v4ResolvingHost = new HashSet<>();
+        private HashSet<String> v6ResolvingHost = new HashSet<>();
+        private HashSet<String> bothResolvingHost = new HashSet<>();
+        private Object lock = new Object();
+
+        public boolean beginInterpret(String host, RequestIpType type) {
+
+            if (type == RequestIpType.both) {
+                if (bothResolvingHost.contains(host) || (v4ResolvingHost.contains(host) && v6ResolvingHost.contains(host))) {
+                    // 正在解析
+                    return false;
+                } else {
+                    synchronized (lock) {
+                        if (bothResolvingHost.contains(host) || (v4ResolvingHost.contains(host) && v6ResolvingHost.contains(host))) {
+                            // 正在解析
+                            return false;
+                        } else {
+                            bothResolvingHost.add(host);
+                            return true;
+                        }
+                    }
+                }
+            } else if (type == RequestIpType.v4) {
+                if (v4ResolvingHost.contains(host) || bothResolvingHost.contains(host)) {
+                    return false;
+                } else {
+                    synchronized (lock) {
+                        if (v4ResolvingHost.contains(host) || bothResolvingHost.contains(host)) {
+                            return false;
+                        } else {
+                            v4ResolvingHost.add(host);
+                            return true;
+                        }
+                    }
+                }
+            } else if (type == RequestIpType.v6) {
+                if (v6ResolvingHost.contains(host) || bothResolvingHost.contains(host)) {
+                    return false;
+                } else {
+                    synchronized (lock) {
+                        if (v6ResolvingHost.contains(host) || bothResolvingHost.contains(host)) {
+                            return false;
+                        } else {
+                            v6ResolvingHost.add(host);
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        public void endInterpret(String host, RequestIpType type) {
+            switch (type) {
+                case v4:
+                    v4ResolvingHost.remove(host);
+                    break;
+                case v6:
+                    v6ResolvingHost.remove(host);
+                    break;
+                case both:
+                    bothResolvingHost.remove(host);
+                    break;
+            }
+        }
+    }
+
     private Object lock = new Object();
-    private HashSet<String> resolvingHost = new HashSet<>();
+    private Recorder defaultRecorder = new Recorder();
+    private HashMap<String, Recorder> recorders = new HashMap<>();
 
     public boolean beginInterpret(String host, RequestIpType type) {
         return beginInterpret(host, type, null);
@@ -23,43 +92,31 @@ public class HostInterpretRecorder {
     }
 
     public boolean beginInterpret(String host, RequestIpType type, String cacheKey) {
-        String key = CommonUtil.formKeyForAllType(host, type, cacheKey);
-        if (type == RequestIpType.both) {
-            String v4Key = CommonUtil.formKeyForAllType(host, RequestIpType.v4, cacheKey);
-            String v6Key = CommonUtil.formKeyForAllType(host, RequestIpType.v6, cacheKey);
-            if (resolvingHost.contains(key) || (resolvingHost.contains(v4Key) && resolvingHost.contains(v6Key))) {
-                // 正在解析
-                return false;
-            } else {
-                synchronized (lock) {
-                    if (resolvingHost.contains(key) || (resolvingHost.contains(v4Key) && resolvingHost.contains(v6Key))) {
-                        // 正在解析
-                        return false;
-                    } else {
-                        resolvingHost.add(key);
-                        return true;
-                    }
-                }
-            }
+        Recorder recorder = getRecorder(cacheKey);
+        return recorder.beginInterpret(host, type);
+    }
+
+    private Recorder getRecorder(String cacheKey) {
+        Recorder recorder = null;
+        if (cacheKey == null || cacheKey.isEmpty()) {
+            recorder = defaultRecorder;
         } else {
-            String bothKey = CommonUtil.formKeyForAllType(host, RequestIpType.both, cacheKey);
-            if (resolvingHost.contains(key) || resolvingHost.contains(bothKey)) {
-                return false;
-            } else {
+            recorder = recorders.get(cacheKey);
+            if (recorder == null) {
                 synchronized (lock) {
-                    if (resolvingHost.contains(key) || resolvingHost.contains(bothKey)) {
-                        return false;
-                    } else {
-                        resolvingHost.add(key);
-                        return true;
+                    recorder = recorders.get(cacheKey);
+                    if (recorder == null) {
+                        recorder = new Recorder();
+                        recorders.put(cacheKey, recorder);
                     }
                 }
             }
         }
+        return recorder;
     }
 
     public void endInterpret(String host, RequestIpType type, String cacheKey) {
-        String key = CommonUtil.formKeyForAllType(host, type, cacheKey);
-        resolvingHost.remove(key);
+        Recorder recorder = getRecorder(cacheKey);
+        recorder.endInterpret(host, type);
     }
 }
