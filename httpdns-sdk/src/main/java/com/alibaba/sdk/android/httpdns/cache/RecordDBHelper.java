@@ -61,10 +61,32 @@ public class RecordDBHelper extends SQLiteOpenHelper {
 
     private String accountId;
     private Object lock = new Object();
+    private SQLiteDatabase db;
 
     public RecordDBHelper(Context context, String accountId) {
         super(context, DB_NAME + accountId + ".db", null, DB_VERSION);
         this.accountId = accountId;
+    }
+
+    private SQLiteDatabase getDB() {
+        if (db == null) {
+            try {
+                db = getWritableDatabase();
+            } catch (Exception e) {
+            }
+        }
+        return db;
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        if (db != null) {
+            try {
+                db.close();
+            } catch (Exception e) {
+            }
+        }
+        super.finalize();
     }
 
     /**
@@ -80,7 +102,7 @@ public class RecordDBHelper extends SQLiteOpenHelper {
             Cursor cursor = null;
             String sp = NetworkStateManager.getInstance().getSp();
             try {
-                db = getReadableDatabase();
+                db = getDB();
                 cursor = db.query(HOST.TABLE_NAME, null, HOST.COL_SP + " = ?", new String[]{sp}, null, null, null);
                 if (cursor != null && cursor.getCount() > 0) {
                     cursor.moveToFirst();
@@ -105,9 +127,6 @@ public class RecordDBHelper extends SQLiteOpenHelper {
                     if (cursor != null) {
                         cursor.close();
                     }
-                    if (db != null) {
-                        db.close();
-                    }
                 } catch (Exception e) {
                 }
             }
@@ -124,7 +143,7 @@ public class RecordDBHelper extends SQLiteOpenHelper {
         synchronized (lock) {
             SQLiteDatabase db = null;
             try {
-                db = getWritableDatabase();
+                db = getDB();
                 db.beginTransaction();
                 for (HostRecord record : records) {
                     db.delete(HOST.TABLE_NAME, HOST.COL_ID + " = ? ", new String[]{String.valueOf(record.getId())});
@@ -133,12 +152,11 @@ public class RecordDBHelper extends SQLiteOpenHelper {
             } catch (Exception e) {
                 HttpDnsLog.w("delete record fail " + accountId, e);
             } finally {
-                try {
-                    if (db != null) {
+                if (db != null) {
+                    try {
                         db.endTransaction();
-                        db.close();
+                    } catch (Exception e) {
                     }
-                } catch (Exception e) {
                 }
             }
         }
@@ -154,7 +172,7 @@ public class RecordDBHelper extends SQLiteOpenHelper {
             SQLiteDatabase db = null;
             String sp = NetworkStateManager.getInstance().getSp();
             try {
-                db = getWritableDatabase();
+                db = getDB();
                 db.beginTransaction();
                 for (HostRecord record : records) {
                     ContentValues cv = new ContentValues();
@@ -176,14 +194,13 @@ public class RecordDBHelper extends SQLiteOpenHelper {
                 }
                 db.setTransactionSuccessful();
             } catch (Exception e) {
-                HttpDnsLog.w("delete record fail " + accountId, e);
+                HttpDnsLog.w("insertOrUpdate record fail " + accountId, e);
             } finally {
-                try {
-                    if (db != null) {
+                if (db != null) {
+                    try {
                         db.endTransaction();
-                        db.close();
+                    } catch (Exception e) {
                     }
-                } catch (Exception e) {
                 }
             }
         }
