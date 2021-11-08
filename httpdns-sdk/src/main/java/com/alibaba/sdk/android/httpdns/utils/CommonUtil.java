@@ -218,14 +218,6 @@ public class CommonUtil {
         return !(ip == null || ip.length() < 7 || ip.length() > 15 || ip.equals("")) && pattern.matcher(ip).matches();
     }
 
-    public static String formKey(String host, RequestIpType type, String cacheKey) {
-//        if (type == RequestIpType.both) {
-//            throw new IllegalArgumentException("type can not be both");
-//        }
-        // TODO remove this
-        return formKeyForAllType(host, type, cacheKey);
-    }
-
     public static String formKeyForAllType(String host, RequestIpType type, String cacheKey) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(host);
@@ -244,15 +236,6 @@ public class CommonUtil {
             stringBuilder.append(":").append(cacheKey);
         }
         return stringBuilder.toString();
-    }
-
-    public static String parseHost(String key) {
-        if (key != null && !key.isEmpty()) {
-            String[] tmp = key.split(":");
-            return tmp[0];
-        } else {
-            return null;
-        }
     }
 
     // 从旧代码中获取，逻辑待确定

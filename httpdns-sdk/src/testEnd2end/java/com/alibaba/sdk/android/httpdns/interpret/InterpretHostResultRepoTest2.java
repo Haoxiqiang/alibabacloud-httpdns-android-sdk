@@ -45,7 +45,7 @@ public class InterpretHostResultRepoTest2 {
         dbHelper = Mockito.mock(RecordDBHelper.class);
         HttpDnsConfig config = new HttpDnsConfig(RuntimeEnvironment.application, "aaa");
         config.setWorker(worker);
-        repo = new InterpretHostResultRepo(config, Mockito.mock(ProbeService.class), dbHelper);
+        repo = new InterpretHostResultRepo(config, Mockito.mock(ProbeService.class), dbHelper, new InterpretHostCacheGroup());
     }
 
     @Test

@@ -59,7 +59,7 @@ public class HTTPDNSResult {
         }
     }
 
-    public void udpateIps(String[] ips, RequestIpType type) {
+    public void updateIps(String[] ips, RequestIpType type) {
         switch (type) {
             case v4:
                 this.ips = ips;

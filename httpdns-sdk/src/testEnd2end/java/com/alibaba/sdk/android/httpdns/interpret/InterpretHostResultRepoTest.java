@@ -50,7 +50,7 @@ public class InterpretHostResultRepoTest {
         config = new HttpDnsConfig(RuntimeEnvironment.application, accountId);
         config.setWorker(worker);
         dbHelper = new RecordDBHelper(config.getContext(), config.getAccountId());
-        repo = new InterpretHostResultRepo(config, ipProbeService, dbHelper);
+        repo = new InterpretHostResultRepo(config, ipProbeService, dbHelper, new InterpretHostCacheGroup());
     }
 
 
@@ -163,7 +163,7 @@ public class InterpretHostResultRepoTest {
             }
         }
 
-        InterpretHostResultRepo anotherRepo = new InterpretHostResultRepo(config, ipProbeService, dbHelper);
+        InterpretHostResultRepo anotherRepo = new InterpretHostResultRepo(config, ipProbeService, dbHelper, new InterpretHostCacheGroup());
         anotherRepo.setCachedIPEnabled(true, false);
         try {
             worker.await();
