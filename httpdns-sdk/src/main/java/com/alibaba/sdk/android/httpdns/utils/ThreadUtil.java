@@ -170,7 +170,9 @@ public class ThreadUtil {
             try {
                 httpdnsThread.execute(command);
             } catch (Exception e) {
-                HttpDnsLog.e("too many request ?", e);
+                if (HttpDnsLog.isPrint()) {
+                    HttpDnsLog.e("too many request ?", e);
+                }
                 throw e;
             }
         }
