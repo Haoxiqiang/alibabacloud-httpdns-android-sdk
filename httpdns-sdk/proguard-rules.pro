@@ -30,7 +30,6 @@
 -keep class com.alibaba.sdk.android.httpdns.SyncService{*;}
 -keep class com.alibaba.sdk.android.httpdns.RequestIpType{*;}
 -keep class com.alibaba.sdk.android.httpdns.net64.Net64Service{*;}
--keep class com.alibaba.sdk.android.httpdns.net.Inet64Util{*;}
 -keep class com.alibaba.sdk.android.httpdns.DegradationFilter{*;}
 -keep class com.alibaba.sdk.android.httpdns.probe.IPProbeItem{*;}
 -keep class com.alibaba.sdk.android.httpdns.ILogger{*;}
@@ -41,6 +40,8 @@
 }
 -keep class com.alibaba.sdk.android.httpdns.HTTPDNSResult{*;}
 -keepclasseswithmembers class com.alibaba.sdk.android.httpdns.HttpDnsSettings {
-    public static *** setCheckNetwork(***);
     public static *** setDailyReport(***);
+    public static *** setNetworkChecker(***);
 }
+
+-keep interface com.alibaba.sdk.android.httpdns.HttpDnsSettings$NetworkChecker{*;}

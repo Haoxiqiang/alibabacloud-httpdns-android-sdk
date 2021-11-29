@@ -5,7 +5,6 @@ import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.impl.HttpDnsConfig;
 import com.alibaba.sdk.android.httpdns.impl.SignService;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
-import com.alibaba.sdk.android.httpdns.net.NetworkStateManager;
 import com.alibaba.sdk.android.httpdns.request.HttpRequestConfig;
 import com.alibaba.sdk.android.httpdns.track.SessionTrackMgr;
 
@@ -75,7 +74,7 @@ public class InterpretHostHelper {
         if (params != null && params.keySet().contains("s")) {
             service = "sign_d";
         }
-        return "/" + config.getAccountId() + "/" + service + "?host=" + host + "&sdk=android_" + BuildConfig.VERSION_NAME + query + getSid() + getNetType() + extra + urlParams;
+        return "/" + config.getAccountId() + "/" + service + "?host=" + host + "&sdk=android_" + BuildConfig.VERSION_NAME + query + getSid() + extra + urlParams;
     }
 
     private static String toUrlParams(HashMap<String, String> params) {
@@ -168,7 +167,7 @@ public class InterpretHostHelper {
         if (signs != null && signs.keySet().contains("s")) {
             service = "sign_resolve";
         }
-        String path = "/" + config.getAccountId() + "/" + service + "?host=" + host + "&sdk=android_" + BuildConfig.VERSION_NAME + query + getSid() + getNetType() + toUrlParams(signs);
+        String path = "/" + config.getAccountId() + "/" + service + "?host=" + host + "&sdk=android_" + BuildConfig.VERSION_NAME + query + getSid() + toUrlParams(signs);
         return new HttpRequestConfig(config.getSchema(), config.getServerIp(), config.getPort(), path, config.getTimeout());
     }
 
@@ -179,15 +178,6 @@ public class InterpretHostHelper {
             return "";
         } else {
             return "&sid=" + sessionId;
-        }
-    }
-
-    public static String getNetType() {
-        String netType = NetworkStateManager.getInstance().getNetType();
-        if (netType == null) {
-            return "";
-        } else {
-            return "&net=" + netType;
         }
     }
 }

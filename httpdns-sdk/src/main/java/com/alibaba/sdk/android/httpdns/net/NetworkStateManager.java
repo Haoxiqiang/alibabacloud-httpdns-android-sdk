@@ -8,13 +8,8 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Process;
-import android.telephony.TelephonyManager;
-import android.text.TextUtils;
 
-import com.alibaba.sdk.android.httpdns.HttpDnsSettings;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import com.alibaba.sdk.android.httpdns.utils.ThreadUtil;
 
@@ -22,20 +17,12 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 
 
-public class NetworkStateManager implements INetworkHelper {
+public class NetworkStateManager {
 
-    // 4g/3g/2g/wifi
-    public final static String TYPE_5G = "5g";
-    public final static String TYPE_4G = "4g";
-    public final static String TYPE_3G = "3g";
-    public final static String TYPE_2G = "2g";
-    public final static String TYPE_WIFI = "wifi";
     public final static String TYPE_UNKNOWN = "unknown";
 
     public static final String NONE_NETWORK = "None_Network";
     private Context context;
-    private String netType = NONE_NETWORK;
-    private String sp = TYPE_UNKNOWN;
     private String lastConnectedNetwork = NONE_NETWORK;
     private ArrayList<OnNetworkChange> listeners = new ArrayList<>();
 
@@ -69,18 +56,13 @@ public class NetworkStateManager implements INetworkHelper {
                     worker.execute(new Runnable() {
                         @Override
                         public void run() {
-                            // onReceive()在主线程执行，SDK内部线程CrashHandler无法捕获，使用try/catch捕获
                             try {
                                 if (isInitialStickyBroadcast()) { // no need to handle initial sticky broadcast
                                     return;
                                 }
                                 String action = intent.getAction();
                                 if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action) && hasNetInfoPermission(context)) {
-                                    updateNetworkStatus(context);
                                     String currentNetwork = detectCurrentNetwork();
-                                    if (HttpDnsSettings.isCheckNetwork()) {
-                                        Inet64Util.startIpStackDetect();
-                                    }
                                     if (!currentNetwork.equals(NONE_NETWORK) && !currentNetwork.equalsIgnoreCase(lastConnectedNetwork)) {
                                         for (OnNetworkChange onNetworkChange : listeners) {
                                             onNetworkChange.onNetworkChange(currentNetwork);
@@ -101,16 +83,13 @@ public class NetworkStateManager implements INetworkHelper {
         };
 
         try {
-            IntentFilter mFilter = new IntentFilter();
-            mFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-            context.registerReceiver(bcReceiver, mFilter);
+            if (hasNetInfoPermission(context)) {
+                IntentFilter mFilter = new IntentFilter();
+                mFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+                context.registerReceiver(bcReceiver, mFilter);
+            }
         } catch (Exception e) {
             e.printStackTrace();
-        }
-
-        updateNetworkStatus(this.context);
-        if (HttpDnsLog.isPrint()) {
-            HttpDnsLog.i("NetworkStateManager init " + getSp());
         }
     }
 
@@ -119,7 +98,7 @@ public class NetworkStateManager implements INetworkHelper {
             ConnectivityManager connectivityManager = (ConnectivityManager) context
                     .getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo info = connectivityManager.getActiveNetworkInfo();
-            if (info != null && info.isAvailable()) {
+            if (info != null && info.isAvailable() && info.isConnected()) {
                 String name = info.getTypeName();
                 HttpDnsLog.d("[detectCurrentNetwork] - Network name:" + name + " subType name: " + info.getSubtypeName());
                 return name == null ? NONE_NETWORK : name;
@@ -143,116 +122,6 @@ public class NetworkStateManager implements INetworkHelper {
         context = null;
         lastConnectedNetwork = NONE_NETWORK;
         listeners.clear();
-        sp = TYPE_UNKNOWN;
-        netType = TYPE_UNKNOWN;
-    }
-
-    private void updateNetworkStatus(Context context) {
-        sp = TYPE_UNKNOWN;
-        netType = TYPE_UNKNOWN;
-        if (!HttpDnsSettings.isCheckNetwork()) {
-            return;
-        }
-        try {
-            if (!hasNetInfoPermission(context)) {
-                return;
-            }
-
-            ConnectivityManager connectivity = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (connectivity == null) {
-                return;
-            }
-
-            NetworkInfo activeNetInfo = connectivity.getActiveNetworkInfo();
-            if (activeNetInfo == null) {
-                return;
-            }
-
-            if (!activeNetInfo.isAvailable() || !activeNetInfo.isConnected()) {
-                return;
-            }
-
-            if (activeNetInfo.getType() == ConnectivityManager.TYPE_WIFI) {
-                sp = getSsid(context);
-                if (sp == null) {
-                    sp = TYPE_UNKNOWN;
-                }
-                netType = TYPE_WIFI;
-                return;
-
-            } else if (activeNetInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
-                sp = getCellSP(context);
-                switch (activeNetInfo.getSubtype()) {
-                    case TelephonyManager.NETWORK_TYPE_CDMA:
-                    case TelephonyManager.NETWORK_TYPE_IDEN:
-                    case TelephonyManager.NETWORK_TYPE_1xRTT:
-                    case TelephonyManager.NETWORK_TYPE_EDGE:
-                    case TelephonyManager.NETWORK_TYPE_GPRS:
-                        netType = TYPE_2G;
-                        return;
-                    case TelephonyManager.NETWORK_TYPE_EVDO_0:
-                    case TelephonyManager.NETWORK_TYPE_UMTS:
-                    case TelephonyManager.NETWORK_TYPE_EVDO_A:
-                    case TelephonyManager.NETWORK_TYPE_HSPA:
-                    case TelephonyManager.NETWORK_TYPE_HSUPA:
-                    case TelephonyManager.NETWORK_TYPE_HSDPA:
-                    case TelephonyManager.NETWORK_TYPE_HSPAP:
-                        netType = TYPE_3G;
-                        return;
-                    case TelephonyManager.NETWORK_TYPE_LTE:
-                        netType = TYPE_4G;
-                        return;
-                    case TelephonyManager.NETWORK_TYPE_NR:
-                        netType = TYPE_5G;
-                        return;
-                    case TelephonyManager.NETWORK_TYPE_UNKNOWN:
-                    default:
-                        return;
-                }
-            } else {
-                return;
-            }
-        } catch (Throwable e) {
-            HttpDnsLog.w("getNetType fail", e);
-        } finally {
-            if (sp == null) {
-                sp = TYPE_UNKNOWN;
-            }
-            if (netType == null) {
-                netType = TYPE_UNKNOWN;
-            }
-        }
-        return;
-    }
-
-    private static String getSsid(Context context) {
-        try {
-            if (checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                WifiManager wifiMgr = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                WifiInfo info = wifiMgr.getConnectionInfo();
-                return info != null ? info.getSSID() : null;
-            } else {
-                return null;
-            }
-        } catch (Throwable e) {
-            HttpDnsLog.w("get ssid fail", e);
-            return null;
-        }
-    }
-
-    private static String getCellSP(Context context) {
-        try {
-            if (checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                TelephonyManager telManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-                String operator = telManager.getSimOperator();
-                if (!TextUtils.isEmpty(operator)) {
-                    return operator;
-                }
-            }
-        } catch (Throwable e) {
-            HttpDnsLog.w("getCellSP fail", e);
-        }
-        return TYPE_UNKNOWN;
     }
 
     private static boolean hasNetInfoPermission(Context context) {
@@ -264,31 +133,12 @@ public class NetworkStateManager implements INetworkHelper {
         return false;
     }
 
-    public String getNetType() {
-        return netType;
-    }
-
     public String getSp() {
-        return sp;
+        return TYPE_UNKNOWN;
     }
 
 
     private static int checkSelfPermission(Context context, String permission) {
         return context.checkPermission(permission, Process.myPid(), Process.myUid());
-    }
-
-    @Override
-    public String generateCurrentNetworkId() {
-        return netType + "$" + sp;
-    }
-
-    @Override
-    public boolean isMobile() {
-        return netType != TYPE_UNKNOWN && netType != TYPE_WIFI;
-    }
-
-    @Override
-    public boolean isWifi() {
-        return netType == TYPE_WIFI;
     }
 }

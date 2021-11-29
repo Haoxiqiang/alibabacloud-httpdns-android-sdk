@@ -16,13 +16,20 @@ public class HttpDnsSettings {
         return dailyReport;
     }
 
-    private static boolean checkNetwork = true;
+    private static NetworkChecker checker;
 
-    public static boolean isCheckNetwork() {
-        return checkNetwork;
+    public static void setNetworkChecker(NetworkChecker checker) {
+        HttpDnsSettings.checker = checker;
     }
 
-    public static void setCheckNetwork(boolean checkNetwork) {
-        HttpDnsSettings.checkNetwork = checkNetwork;
+    public static NetworkChecker getChecker() {
+        return checker;
+    }
+
+    /**
+     * 需要外部注入的一些网络环境判断
+     */
+    public interface NetworkChecker {
+        boolean isIpv6Only();
     }
 }

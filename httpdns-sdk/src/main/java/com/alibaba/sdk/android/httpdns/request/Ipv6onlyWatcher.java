@@ -1,8 +1,8 @@
 package com.alibaba.sdk.android.httpdns.request;
 
+import com.alibaba.sdk.android.httpdns.HttpDnsSettings;
 import com.alibaba.sdk.android.httpdns.impl.HttpDnsConfig;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
-import com.alibaba.sdk.android.httpdns.net.Inet64Util;
 
 public class Ipv6onlyWatcher implements HttpRequestWatcher.Watcher {
     private HttpDnsConfig config;
@@ -15,7 +15,8 @@ public class Ipv6onlyWatcher implements HttpRequestWatcher.Watcher {
 
     @Override
     public void onStart(HttpRequestConfig config) {
-        if (Inet64Util.isIPv6OnlyNetwork()) {
+        HttpDnsSettings.NetworkChecker checker = HttpDnsSettings.getChecker();
+        if (checker != null && checker.isIpv6Only()) {
             originIp = config.getIp();
             changed = true;
             String ipv6 = this.config.getIpv6ServerIp();

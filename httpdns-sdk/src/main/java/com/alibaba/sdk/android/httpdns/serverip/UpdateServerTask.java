@@ -15,7 +15,6 @@ import com.alibaba.sdk.android.httpdns.request.RequestCallback;
 import com.alibaba.sdk.android.httpdns.request.ResponseTranslator;
 import com.alibaba.sdk.android.httpdns.request.RetryHttpRequest;
 
-import static com.alibaba.sdk.android.httpdns.interpret.InterpretHostHelper.getNetType;
 import static com.alibaba.sdk.android.httpdns.interpret.InterpretHostHelper.getSid;
 
 /**
@@ -28,8 +27,7 @@ public class UpdateServerTask {
         String path = "/" + config.getAccountId() + "/ss?"
                 + "platform=android&sdk_version=" + BuildConfig.VERSION_NAME
                 + (TextUtils.isEmpty(region) ? "" : ("&region=" + region)
-                + getSid()
-                + getNetType());
+                + getSid());
         HttpRequestConfig requestConfig = new HttpRequestConfig(config.getSchema(), config.getServerIp(), config.getPort(), path, config.getTimeout());
         HttpRequest<UpdateServerResponse> httpRequest = new HttpRequest<>(requestConfig, new ResponseTranslator<UpdateServerResponse>() {
             @Override

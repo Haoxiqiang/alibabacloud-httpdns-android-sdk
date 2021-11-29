@@ -93,6 +93,7 @@ dependencies {
     implementation "com.aliyun.ams:alicloud-android-crashdefend:${crashDefendVersion}"
     implementation "com.aliyun.ams:alicloud-android-utdid:${utdidVersion}"
     implementation "com.aliyun.ams:alicloud-android-beacon:${beaconVersion}"
+    implementation "com.aliyun.ams:alicloud-android-rest:${restVersion}"
 }
 
 task copyAARForApp(type: Copy) {
