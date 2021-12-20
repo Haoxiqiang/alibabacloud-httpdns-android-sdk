@@ -19,3 +19,4 @@ target/
 # Android
 local.properties
 nohup.out
+/scripts/maven/gitlab.properties

@@ -4,6 +4,28 @@
 
 ## 注意
 
+This A Prune Build Version. Remove Deps.
+Only deps implementation "com.aliyun.ams:alicloud-android-beacon:1.0.5"
+
+You should add your custom class and imp the getUtdid.
+```java
+package com.ta.utdid2.device;
+
+import android.content.Context;
+
+public class UTDevice {
+    public UTDevice() {
+    }
+
+    @Deprecated
+    public static String getUtdid(Context context) {
+        // TODO use a custom did
+        return "ffffffffffffffffffffffff";
+    }
+}
+```
+
+
 ### 配置初始IP
 请在gradle.properties中配置你所使用账号的初始服务IP，否则无法请求
 ```gradle

@@ -4,8 +4,6 @@ import android.app.Application;
 import android.content.Context;
 import android.os.Looper;
 
-import com.alibaba.sdk.android.crashdefend.CrashDefendApi;
-import com.alibaba.sdk.android.crashdefend.CrashDefendCallback;
 import com.alibaba.sdk.android.httpdns.BuildConfig;
 import com.alibaba.sdk.android.httpdns.DegradationFilter;
 import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
@@ -31,8 +29,6 @@ import com.alibaba.sdk.android.httpdns.serverip.ScheduleService;
 import com.alibaba.sdk.android.httpdns.track.SessionTrackMgr;
 import com.alibaba.sdk.android.httpdns.utils.CommonUtil;
 import com.alibaba.sdk.android.httpdns.utils.Constants;
-import com.alibaba.sdk.android.sender.AlicloudSender;
-import com.alibaba.sdk.android.sender.SdkInfo;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -62,7 +58,6 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
     public HttpDnsServiceImpl(Context context, final String accountId, String secret) {
         try {
             config = new HttpDnsConfig(context, accountId);
-            initCrashDefend(context, config);
             if (!config.isEnabled()) {
                 HttpDnsLog.w("init fail, crashdefend");
                 return;
@@ -83,7 +78,6 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             ReportManager.init(context);
             ReportManager reportManager = ReportManager.getReportManagerByAccount(accountId);
             reportManager.setAccountId(accountId);
-            reportSdkStart(context, accountId);
             initBeacon(context, accountId, config);
             if (HttpDnsLog.isPrint()) {
                 HttpDnsLog.d("httpdns service is inited " + accountId);
@@ -95,47 +89,6 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
 
     protected void initBeacon(Context context, String accountId, HttpDnsConfig config) {
         BeaconControl.initBeacon(context, accountId, config);
-    }
-
-    protected void initCrashDefend(Context context, final HttpDnsConfig config) {
-        CrashDefendApi.registerCrashDefendSdk(context, "httpdns", BuildConfig.VERSION_NAME, 2, 7, new CrashDefendCallback() {
-            @Override
-            public void onSdkStart(int limitCount, int crashCount, int restoreCount) {
-                config.crashDefend(false);
-            }
-
-            @Override
-            public void onSdkStop(int limitCount, int crashCount, int restoreCount, long nextRestoreInterval) {
-                config.crashDefend(true);
-                HttpDnsLog.w("sdk is not safe to run");
-            }
-
-            @Override
-            public void onSdkClosed(int restoreCount) {
-                config.crashDefend(true);
-                HttpDnsLog.e("sdk will not run any more");
-            }
-        });
-    }
-
-    protected void reportSdkStart(Context context, String accountId) {
-        if (HttpDnsSettings.isDailyReport()) {
-            try {
-                HashMap<String, String> ext = new HashMap<>();
-                ext.put("accountId", accountId);
-                SdkInfo sdkInfo = new SdkInfo();
-                sdkInfo.setSdkId("httpdns");
-                sdkInfo.setSdkVersion(BuildConfig.VERSION_NAME);
-                sdkInfo.setExt(ext);
-                if (context.getApplicationContext() instanceof Application) {
-                    AlicloudSender.asyncSend((Application) context.getApplicationContext(), sdkInfo);
-                } else {
-                    AlicloudSender.asyncSend(context.getApplicationContext(), sdkInfo);
-                }
-            } catch (Throwable ignore) {
-                ignore.printStackTrace();
-            }
-        }
     }
 
     public void setSecret(String secret) {

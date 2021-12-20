@@ -1,8 +1,43 @@
 apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
+
+// ./gradlew -q :httpdns-sdk:publish -PVERSION_NAME=2.0.0-prune
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
+                // Applies the component for the release build variant.
+                groupId = "com.aliyun.ams"
+                artifactId = "httpdns"
+                version = "2.1.1-prune"
+
+                from components.release
+
+                repositories {
+                    maven {
+                        def gitlabPropertiesFile = rootProject.file("scripts/maven/gitlab.properties")
+                        def gitlabProperties = new Properties()
+
+                        if (gitlabPropertiesFile.exists()) {
+                            gitlabProperties.load(new FileInputStream(gitlabPropertiesFile))
+                        }
+
+                        credentials {
+                            username = gitlabProperties.getProperty("gpr.usr")
+                            password = gitlabProperties.getProperty("gpr.key")
+                        }
+                        url = gitlabProperties.getProperty("gpr.url")
+                    }
+                }
+            }
+        }
+    }
+}
 
 android {
     compileSdkVersion 30
-    buildToolsVersion "30.0.2"
+    buildToolsVersion "30.0.3"
     defaultConfig {
         minSdkVersion 9
         targetSdkVersion 30
@@ -17,6 +52,7 @@ android {
         setProperty("archivesBaseName", "alicloud-android-httpdns-$versionName")
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
+        buildConfigField "String", "VERSION_NAME", "\"2.1.1\""
         buildConfigField "String[]", "INIT_SERVER", INIT_SERVERS
         buildConfigField "String[]", "IPV6_INIT_SERVER", IPV6_INIT_SERVERS
     }
@@ -30,39 +66,8 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile("proguard-android.txt"), 'proguard-rules.pro'
         }
-
-        forTest {
-            initWith release
-            debuggable true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules-for-test.pro'
-        }
     }
 
-    flavorDimensions "version"
-
-    productFlavors {
-        normal {
-
-        }
-
-        end2end {
-            buildConfigField "String[]", "INIT_SERVER", "{}"
-            buildConfigField "String[]", "IPV6_INIT_SERVER", "{}"
-        }
-    }
-
-    variantFilter { variant ->
-        def names = variant.flavors*.name
-        def type = variant.buildType.name
-        // To check for a certain build type, use variant.buildType.name == "<buildType>"
-        if ((names.contains("normal") && type.contains("forTest"))
-                || (names.contains("end2end") && type.contains("release"))
-                || (names.contains("end2end") && type.contains("debug"))
-        ) {
-            // Gradle ignores any variants that satisfy the conditions above.
-            setIgnore(true)
-        }
-    }
 
     testOptions {
         unitTests {
@@ -76,30 +81,35 @@ android {
     lintOptions {
         abortOnError false
     }
+    configurations.all {
+        exclude group: "com.aliyun.ams", module: "alicloud-android-utdid"
+    }
 }
 
 dependencies {
 
     //noinspection GradleDependency 高版本 jdk和androidx有一些依赖，暂时不升级
-    end2endImplementation "org.robolectric:robolectric:3.8"
+    //end2endImplementation "org.robolectric:robolectric:3.8"
     //noinspection GradleDependency
-    end2endImplementation 'junit:junit:4.12'
+    //end2endImplementation 'junit:junit:4.12'
     //noinspection GradleDependency
-    end2endImplementation 'org.mockito:mockito-core:2.15.0'
-    end2endImplementation 'com.squareup.okhttp3:mockwebserver:3.9.0'
+    //end2endImplementation 'org.mockito:mockito-core:2.15.0'
+    //end2endImplementation 'com.squareup.okhttp3:mockwebserver:3.12.13'
 
-    implementation "com.aliyun.ams:alicloud-android-logger:1.0.2"
-    implementation "com.aliyun.ams:alicloud-android-sender:${senderVersion}"
-    implementation "com.aliyun.ams:alicloud-android-crashdefend:${crashDefendVersion}"
-    implementation "com.aliyun.ams:alicloud-android-utdid:${utdidVersion}"
-    implementation "com.aliyun.ams:alicloud-android-beacon:${beaconVersion}"
-    implementation "com.aliyun.ams:alicloud-android-rest:${restVersion}"
+    api("com.aliyun.ams:alicloud-android-beacon:1.0.5")
+    compileOnly("com.aliyun.ams:alicloud-android-utdid:2.5.2")
+
+    //implementation "com.aliyun.ams:alicloud-android-logger:1.0.2"
+    //implementation "com.aliyun.ams:alicloud-android-sender:${senderVersion}"
+    //implementation "com.aliyun.ams:alicloud-android-utdid:${utdidVersion}"
+    //implementation "com.aliyun.ams:alicloud-android-crashdefend:${crashDefendVersion}"
+    //implementation "com.aliyun.ams:alicloud-android-rest:${restVersion}"
 }
 
-task copyAARForApp(type: Copy) {
-    dependsOn 'assembleEnd2endForTest'
-    from('build/outputs/aar')
-    into('../app/libs')
-    include("alicloud-android-httpdns-${httpdnsDebugVersion}-end2end-forTest.aar")
-}
+//task copyAARForApp(type: Copy) {
+//    dependsOn 'assembleEnd2endForTest'
+//    from('build/outputs/aar')
+//    into('../app/libs')
+//    include("alicloud-android-httpdns-${httpdnsDebugVersion}-end2end-forTest.aar")
+//}
 
