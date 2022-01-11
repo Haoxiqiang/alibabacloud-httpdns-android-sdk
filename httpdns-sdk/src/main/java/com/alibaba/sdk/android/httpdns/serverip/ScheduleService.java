@@ -27,15 +27,8 @@ public class ScheduleService {
      * 修改region
      *
      * @param newRegion
-     * @param force
      */
-    public void updateServerIps(final String newRegion, boolean force) {
-        if (!force && CommonUtil.regionEquals(this.config.getRegion(), newRegion)) {
-            if (HttpDnsLog.isPrint()) {
-                HttpDnsLog.d("region " + newRegion + " is same, do not update serverIps");
-            }
-            return;
-        }
+    public void updateServerIps(final String newRegion) {
         String[] serverIps = repo.getServerIps(newRegion);
         int[] ports = repo.getPorts(newRegion);
         if (serverIps != null) {
@@ -69,7 +62,7 @@ public class ScheduleService {
     }
 
     private void updateServerConfig(String newRegion, String[] serverIps, int[] serverPorts) {
-        boolean regionUpdated = !CommonUtil.regionEquals(this.config.getRegion(), newRegion);
+        boolean regionUpdated = !CommonUtil.regionEquals(this.config.getCurrentServerRegion(), newRegion);
         boolean updated = config.setServerIps(newRegion, serverIps, serverPorts);
         if (updated && onServerIpUpdate != null) {
             onServerIpUpdate.serverIpUpdated(regionUpdated);
@@ -80,7 +73,7 @@ public class ScheduleService {
      * 更新服务ip
      */
     public void updateServerIps() {
-        updateServerIps(this.config.getRegion(), true);
+        updateServerIps(this.config.getRegion());
     }
 
     /**

@@ -16,5 +16,7 @@ public class Constants {
 
     public static final HTTPDNSResult EMPTY = new HTTPDNSResult("", NO_IPS, NO_IPS, NO_EXTRA, false, false);
 
-    public static SniffException sniff_too_often = new SniffException("sniff too often");
+    public static final SniffException sniff_too_often = new SniffException("sniff too often");
+
+    public static final Exception region_not_match = new Exception("region not match");
 }

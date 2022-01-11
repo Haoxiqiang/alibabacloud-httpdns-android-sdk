@@ -410,7 +410,14 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             HttpDnsLog.i("service is disabled");
             return;
         }
-        scheduleService.updateServerIps(region, false);
+        if (CommonUtil.regionEquals(this.config.getRegion(), region)) {
+            if (HttpDnsLog.isPrint()) {
+                HttpDnsLog.d("region " + region + " is same, do not update serverIps");
+            }
+            return;
+        }
+        config.setRegion(region);
+        scheduleService.updateServerIps(region);
     }
 
     @Override

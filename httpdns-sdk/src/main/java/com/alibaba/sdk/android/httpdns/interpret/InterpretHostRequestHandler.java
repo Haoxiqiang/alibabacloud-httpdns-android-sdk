@@ -14,6 +14,7 @@ import com.alibaba.sdk.android.httpdns.request.Ipv6onlyWatcher;
 import com.alibaba.sdk.android.httpdns.request.RequestCallback;
 import com.alibaba.sdk.android.httpdns.request.RetryHttpRequest;
 import com.alibaba.sdk.android.httpdns.serverip.ScheduleService;
+import com.alibaba.sdk.android.httpdns.utils.Constants;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,6 +43,13 @@ public class InterpretHostRequestHandler {
     }
 
     public void requestInterpretHost(final String host, final RequestIpType type, Map<String, String> extras, final String cacheKey, RequestCallback<InterpretHostResponse> callback) {
+        if (!config.isRegionMatch()) {
+            if (HttpDnsLog.isPrint()) {
+                HttpDnsLog.w("requestInterpretHost region miss match [" + config.getRegion() + "] [" + config.getCurrentServerRegion() + "]");
+            }
+            callback.onFail(Constants.region_not_match);
+            return;
+        }
         HttpRequestConfig requestConfig = InterpretHostHelper.getConfig(config, host, type, extras, cacheKey, globalParams, signService);
         if (HttpDnsLog.isPrint()) {
             HttpDnsLog.d("start async ip request for " + host + " " + type);
@@ -51,6 +59,13 @@ public class InterpretHostRequestHandler {
 
 
     public void requestResolveHost(final ArrayList<String> hostList, final RequestIpType type, RequestCallback<ResolveHostResponse> callback) {
+        if (!config.isRegionMatch()) {
+            if (HttpDnsLog.isPrint()) {
+                HttpDnsLog.w("requestResolveHost region miss match [" + config.getRegion() + "] [" + config.getCurrentServerRegion() + "]");
+            }
+            callback.onFail(Constants.region_not_match);
+            return;
+        }
         HttpRequestConfig requestConfig = InterpretHostHelper.getConfig(config, hostList, type, signService);
         if (HttpDnsLog.isPrint()) {
             HttpDnsLog.d("start resolve hosts async for " + hostList.toString() + " " + type);

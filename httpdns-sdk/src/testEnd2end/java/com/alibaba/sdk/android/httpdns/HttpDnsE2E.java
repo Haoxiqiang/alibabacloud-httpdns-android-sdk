@@ -190,6 +190,7 @@ public class HttpDnsE2E {
     }
 
     private void prepareUpdateServerResponseForGroup2(String defaultRegion) {
+        // 给 group2（服务3、4、5） 设置 defaultRegion的服务IP是 服务 0 1 2
         String anotherUpdateServerResponse = ServerHelper.createUpdateServerResponse(new String[]{server.getServerIp(), server1.getServerIp(), server2.getServerIp()}, RandomValue.randomIpv6s(), new int[]{server.getPort(), server1.getPort(), server2.getPort()}, RandomValue.randomPorts());
         server3.getServerIpsServer().preSetRequestResponse(defaultRegion, 200, anotherUpdateServerResponse, -1);
         server4.getServerIpsServer().preSetRequestResponse(defaultRegion, 200, anotherUpdateServerResponse, -1);
@@ -197,6 +198,7 @@ public class HttpDnsE2E {
     }
 
     private void prepareUpdateServerResponseForGroup1(String anotherRegion) {
+        // 给 group1（服务0、1、2） 设置 anotherRegion的服务IP是 服务 3 4 5
         String updateServerResponse = ServerHelper.createUpdateServerResponse(new String[]{server3.getServerIp(), server4.getServerIp(), server5.getServerIp()}, RandomValue.randomIpv6s(), new int[]{server3.getPort(), server4.getPort(), server5.getPort()}, RandomValue.randomPorts());
         server.getServerIpsServer().preSetRequestResponse(anotherRegion, 200, updateServerResponse, -1);
         server1.getServerIpsServer().preSetRequestResponse(anotherRegion, 200, updateServerResponse, -1);
@@ -1546,5 +1548,31 @@ public class HttpDnsE2E {
         } catch (InterruptedException e) {
         }
         MatcherAssert.assertThat("返回慢的调用应该为0", slowCount.get(), Matchers.is(Matchers.equalTo(0)));
+    }
+
+
+    /**
+     * https://aone.alibaba-inc.com/req/38989131
+     * <p>
+     * 服务IP不是当前region的服务IP时，不能用于域名解析
+     */
+    @Test
+    public void stopInterpretHostWhenServerIpDoNotBelongCurrentRegion() {
+        final String defaultRegion = "";
+        final String hkRegion = "hk";
+
+        // 设置不同region对应的服务信息
+        prepareUpdateServerResponse(defaultRegion, hkRegion);
+
+        // 修改region
+        app.changeRegionTo(hkRegion);
+
+        // 修改region之后马上请求解析域名
+        app.requestInterpretHost();
+
+        // 此时 region应该还没有切换完成，域名解析时应该会发现当前服务IP不属于我们设置的region
+        // 所以应该 当前服务IP没有接收到解析请求，region更新之后的服务IP也没有接收到解析请求
+        ServerStatusHelper.hasNotReceiveAppInterpretHostRequest("服务IP和region不匹配, 应该停止解析，直接返回，不应该请求当前服务IP进行解析", app, server);
+        ServerStatusHelper.hasNotReceiveAppInterpretHostRequest("region更新还未完成，应该不会请求到新的服务IP", app, server3);
     }
 }
