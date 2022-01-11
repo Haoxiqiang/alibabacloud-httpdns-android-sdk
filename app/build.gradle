@@ -21,7 +21,11 @@ android {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-
+        }
+        forTest {
+            initWith release
+            debuggable true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
 
@@ -31,6 +35,30 @@ android {
                 jvmArgs '-noverify'
                 systemProperty 'robolectric.logging.enable', true
             }
+        }
+    }
+
+    flavorDimensions "version"
+
+    productFlavors {
+        normal {
+
+        }
+
+        end2end {
+        }
+    }
+
+    variantFilter { variant ->
+        def names = variant.flavors*.name
+        def type = variant.buildType.name
+        // To check for a certain build type, use variant.buildType.name == "<buildType>"
+        if ((names.contains("normal") && type.contains("forTest"))
+                || (names.contains("end2end") && type.contains("release"))
+                || (names.contains("end2end") && type.contains("debug"))
+        ) {
+            // Gradle ignores any variants that satisfy the conditions above.
+            setIgnore(true)
         }
     }
 }
@@ -51,14 +79,8 @@ dependencies {
     implementation "com.aliyun.ams:alicloud-android-crashdefend:${crashDefendVersion}"
     implementation "com.aliyun.ams:alicloud-android-beacon:${beaconVersion}"
     implementation "com.aliyun.ams:alicloud-android-utdid:${utdidVersion}"
-//    implementation project(':httpdns-sdk')
-    implementation(name: "alicloud-android-httpdns-${httpdnsDebugVersion}-end2end-forTest", ext: 'aar')
+    implementation project(':httpdns-sdk')
+//    implementation(name: "alicloud-android-httpdns-${httpdnsDebugVersion}-end2end-forTest", ext: 'aar')
 
     implementation("com.squareup.okhttp3:okhttp:3.9.0")
-}
-
-afterEvaluate {
-    // 依赖编译后的aar，模拟sdk从编译到正式使用的情况
-    preBuild.dependsOn(":httpdns-sdk:copyAARForApp")
-    testDebugUnitTest.mustRunAfter ":httpdns-sdk:copyAARForApp"
 }

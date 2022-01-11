@@ -95,11 +95,3 @@ dependencies {
     implementation "com.aliyun.ams:alicloud-android-beacon:${beaconVersion}"
     implementation "com.aliyun.ams:alicloud-android-rest:${restVersion}"
 }
-
-task copyAARForApp(type: Copy) {
-    dependsOn 'assembleEnd2endForTest'
-    from('build/outputs/aar')
-    into('../app/libs')
-    include("alicloud-android-httpdns-${httpdnsDebugVersion}-end2end-forTest.aar")
-}
-
