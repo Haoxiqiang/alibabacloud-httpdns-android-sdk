@@ -77,7 +77,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             interpretHostService = new InterpretHostService(ipProbeService, requestHandler, repo, filter, recorder);
             resolveHostService = new ResolveHostService(repo, requestHandler, ipProbeService, filter, recorder);
             NetworkStateManager.getInstance().addListener(this);
-            if (config.shouldUpdateServerIp()) {
+            if (config.getServerConfig().shouldUpdateServerIp()) {
                 scheduleService.updateServerIps();
             }
             ReportManager.init(context);
@@ -330,7 +330,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
         config.setHTTPSRequestEnabled(enabled);
         if (enabled) {
             // 避免应用禁止http请求，导致初始化时的服务更新请求失败
-            if (config.shouldUpdateServerIp()) {
+            if (config.getServerConfig().shouldUpdateServerIp()) {
                 scheduleService.updateServerIps();
             }
         }

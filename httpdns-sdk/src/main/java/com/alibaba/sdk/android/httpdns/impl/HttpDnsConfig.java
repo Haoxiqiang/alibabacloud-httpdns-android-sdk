@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.alibaba.sdk.android.httpdns.BuildConfig;
+import com.alibaba.sdk.android.httpdns.config.ServerConfig;
 import com.alibaba.sdk.android.httpdns.request.HttpRequestConfig;
 import com.alibaba.sdk.android.httpdns.utils.CommonUtil;
 import com.alibaba.sdk.android.httpdns.utils.ThreadUtil;
@@ -22,18 +23,21 @@ public class HttpDnsConfig {
     private Context context;
     private boolean enabled = true;
     private String[] initServerIps = BuildConfig.INIT_SERVER;
+    /**
+     * ipv6的初始服务IP
+     * 目前仅用于一些ipv6only的环境，避免httpdns完全失效
+     */
     private String[] ipv6InitServerIps = BuildConfig.IPV6_INIT_SERVER;
+    /**
+     * 初始服务端口，下标和{@link #initServerIps}对应
+     * 线上httpdns服务并没有使用定制的端口，此处是用于在测试环境中指定端口
+     */
     private int[] initServerPorts = null;
     private String accountId;
     private String schema = HttpRequestConfig.HTTP_SCHEMA;
-    private String[] serverIps = BuildConfig.INIT_SERVER;
-    private int[] ports = null;
-    private int lastOkServerIndex = 0;
-    private int currentServerIndex = 0;
+    private ServerConfig serverConfig = new ServerConfig();
     private int currentIpv6ServerIndex = 0;
     private String region = null;
-    private String currentServerRegion = null;
-    private long serverIpsLastUpdatedTime = 0;
     private int timeout = HttpRequestConfig.DEFAULT_TIMEOUT;
     private boolean crashDefend;
     private boolean remoteDisabled = false;
@@ -50,6 +54,7 @@ public class HttpDnsConfig {
         this.context = context;
         this.accountId = accountId;
         readFromCache(context, this);
+        this.serverConfig.init(this);
     }
 
     public Context getContext() {
@@ -60,71 +65,30 @@ public class HttpDnsConfig {
         return accountId;
     }
 
-    public boolean isRegionMatch() {
-        if (region != null && currentServerRegion != null) {
-            // 都不是null， 相等匹配
-            return region.equals(currentServerRegion);
-        } else {
-            // region 不是 null 但是空， currentServerRegion是null 匹配
-            // 反之亦然
-            // 都是null，匹配
-            return (region != null && region.isEmpty())
-                    || (currentServerRegion != null && currentServerRegion.isEmpty())
-                    || (region == null && currentServerRegion == null);
-        }
+    public ServerConfig getServerConfig() {
+        return serverConfig;
     }
 
-    public String[] getServerIps() {
-        return serverIps;
+    public boolean isCurrentRegionMatch() {
+        return CommonUtil.regionEquals(region, serverConfig.getCurrentServerRegion());
     }
 
     public String getRegion() {
         return region;
     }
 
-    public String getCurrentServerRegion() {
-        return currentServerRegion;
-    }
-
     public boolean isEnabled() {
         return enabled && !crashDefend && !remoteDisabled;
     }
 
+    /**
+     * 是否启用httpdns
+     *
+     * @param enabled
+     */
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
         saveToCache(context, this);
-    }
-
-    /**
-     * 设置服务IP
-     *
-     * @param serverIps
-     * @param ports
-     * @return false 表示 前后服务一直，没有更新
-     */
-    public boolean setServerIps(String region, String[] serverIps, int[] ports) {
-        if (isSameServer(this.serverIps, this.ports, serverIps, ports)) {
-            return false;
-        }
-        this.currentServerRegion = region;
-        this.serverIps = serverIps;
-        this.ports = ports;
-        this.lastOkServerIndex = 0;
-        this.currentServerIndex = 0;
-        if (!Arrays.equals(serverIps, initServerIps)) {
-            // 非初始化IP，才认为是真正的更新了服务IP
-            this.serverIpsLastUpdatedTime = System.currentTimeMillis();
-        }
-        saveToCache(context, this);
-        return true;
-    }
-
-    private boolean isSameServer(String[] oldServerIps, int[] oldPorts, String[] newServerIps, int[] newPorts) {
-        return Arrays.equals(oldServerIps, newServerIps) && Arrays.equals(oldPorts, newPorts);
-    }
-
-    public int[] getPorts() {
-        return ports;
     }
 
     public int getTimeout() {
@@ -154,15 +118,6 @@ public class HttpDnsConfig {
     }
 
     /**
-     * 是否应该更新服务IP
-     *
-     * @return
-     */
-    public boolean shouldUpdateServerIp() {
-        return System.currentTimeMillis() - serverIpsLastUpdatedTime >= 24 * 60 * 60 * 1000 && serverIps != null && serverIps.length > 0;
-    }
-
-    /**
      * 切换https
      *
      * @param enabled
@@ -182,38 +137,7 @@ public class HttpDnsConfig {
      */
     public void setRegion(String region) {
         this.region = region;
-    }
-
-    /**
-     * 获取当前使用的服务IP
-     *
-     * @return
-     */
-    public String getServerIp() {
-        if (serverIps == null || currentServerIndex >= serverIps.length || currentServerIndex < 0) {
-            return null;
-        }
-        return serverIps[currentServerIndex];
-    }
-
-    /**
-     * 获取当前使用的服务端口
-     *
-     * @return
-     */
-    public int getPort() {
-        if (ports == null || currentServerIndex >= ports.length || currentServerIndex < 0) {
-            return getDefaultPort();
-        }
-        return ports[currentServerIndex];
-    }
-
-    private int getDefaultPort() {
-        if (schema.equals(HttpRequestConfig.HTTP_SCHEMA)) {
-            return 80;
-        } else {
-            return 443;
-        }
+        saveToCache(context, this);
     }
 
     /**
@@ -238,51 +162,11 @@ public class HttpDnsConfig {
     }
 
     /**
-     * 切换域名解析服务
-     *
-     * @param ip   请求失败的服务IP
-     * @param port 请求失败的服务端口
-     * @return
-     */
-    public boolean shiftServer(String ip, int port) {
-        if (serverIps == null) {
-            return false;
-        }
-        if (!(ip.equals(serverIps[currentServerIndex]) && (ports == null || ports[currentServerIndex] == port))) {
-            return false;
-        }
-        currentServerIndex++;
-        if (currentServerIndex >= serverIps.length) {
-            currentServerIndex = 0;
-        }
-        return currentServerIndex == lastOkServerIndex;
-    }
-
-    /**
-     * 标记当前好用的域名解析服务
-     *
-     * @param serverIp
-     * @param port
-     * @return 标记成功与否
-     */
-    public boolean markOkServer(String serverIp, int port) {
-        if (serverIps == null) {
-            return false;
-        }
-        if (serverIps[currentServerIndex].equals(serverIp) && (ports == null || ports[currentServerIndex] == port)) {
-            lastOkServerIndex = currentServerIndex;
-            saveToCache(context, this);
-            return true;
-        }
-        return false;
-    }
-
-    /**
      * 重置服务Ip为初始服务IP
      */
     public void resetServerIpsToInitServer() {
         if (initServerIps != null) {
-            setServerIps(null, initServerIps, initServerPorts);
+            serverConfig.setServerIps(null, initServerIps, initServerPorts);
         }
     }
 
@@ -296,12 +180,8 @@ public class HttpDnsConfig {
         tmp.accountId = accountId;
         tmp.schema = schema;
         tmp.region = region;
-        tmp.currentServerRegion = currentServerRegion;
-        tmp.serverIps = serverIps == null ? null : Arrays.copyOf(serverIps, serverIps.length);
-        tmp.ports = ports == null ? null : Arrays.copyOf(ports, ports.length);
-        tmp.lastOkServerIndex = lastOkServerIndex;
-        tmp.currentServerIndex = currentServerIndex;
-        tmp.serverIpsLastUpdatedTime = serverIpsLastUpdatedTime;
+        tmp.serverConfig = serverConfig.copy();
+        tmp.serverConfig.setConfig(tmp);
         tmp.timeout = timeout;
         tmp.worker = worker;
         tmp.initServerIps = initServerIps;
@@ -311,10 +191,15 @@ public class HttpDnsConfig {
 
     /**
      * 获取初始服务个数
+     *
      * @return
      */
     public int getInitServerSize() {
         return this.initServerIps == null ? 0 : this.initServerIps.length;
+    }
+
+    public String[] getInitServerIps() {
+        return this.initServerIps;
     }
 
     @Override
@@ -323,34 +208,30 @@ public class HttpDnsConfig {
         if (o == null || getClass() != o.getClass()) return false;
         HttpDnsConfig that = (HttpDnsConfig) o;
         return enabled == that.enabled &&
-                lastOkServerIndex == that.lastOkServerIndex &&
-                currentServerIndex == that.currentServerIndex &&
-                serverIpsLastUpdatedTime == that.serverIpsLastUpdatedTime &&
                 timeout == that.timeout &&
                 CommonUtil.equals(context, that.context) &&
                 Arrays.equals(initServerIps, that.initServerIps) &&
                 Arrays.equals(initServerPorts, that.initServerPorts) &&
                 CommonUtil.equals(accountId, that.accountId) &&
                 CommonUtil.equals(schema, that.schema) &&
-                Arrays.equals(serverIps, that.serverIps) &&
-                Arrays.equals(ports, that.ports) &&
                 CommonUtil.equals(region, that.region) &&
-                CommonUtil.equals(currentServerRegion, that.currentServerRegion) &&
                 CommonUtil.equals(worker, that.worker);
     }
 
     @Override
     public int hashCode() {
-        int result = Arrays.hashCode(new Object[]{context, enabled, accountId, schema, lastOkServerIndex, currentServerIndex, region, currentServerRegion, serverIpsLastUpdatedTime, timeout, worker});
+        int result = Arrays.hashCode(new Object[]{context, enabled, accountId, schema, serverConfig, region, timeout, worker});
         result = 31 * result + Arrays.hashCode(initServerIps);
         result = 31 * result + Arrays.hashCode(initServerPorts);
-        result = 31 * result + Arrays.hashCode(serverIps);
-        result = 31 * result + Arrays.hashCode(ports);
         return result;
     }
 
     /**
      * 设置初始服务IP
+     *
+     * 线上SDK 初始化服务IP是内置写死的。
+     * 本API主要用于一些测试代码使用
+     *
      * @param initIps
      * @param initPorts
      */
@@ -361,9 +242,9 @@ public class HttpDnsConfig {
         String[] oldInitServerIps = this.initServerIps;
         this.initServerIps = initIps;
         this.initServerPorts = initPorts;
-        if (serverIps == null || isSameServer(oldInitServerIps, null, serverIps, null)) {
+        if (serverConfig.getCurrentServerIps() == null || CommonUtil.isSameServer(oldInitServerIps, null, serverConfig.getCurrentServerIps(), null)) {
             // 初始IP默认region为国内
-            setServerIps(null, initIps, initPorts);
+            serverConfig.setServerIps(null, initIps, initPorts);
         }
     }
 
@@ -384,37 +265,19 @@ public class HttpDnsConfig {
     }
 
     private static final String CONFIG_CACHE_PREFIX = "httpdns_config_";
-    private static final String CONFIG_KEY_SERVERS = "serverIps";
-    private static final String CONFIG_KEY_PORTS = "ports";
-    private static final String CONFIG_CURRENT_INDEX = "current";
-    private static final String CONFIG_LAST_INDEX = "last";
-    private static final String CONFIG_SERVERS_LAST_UPDATED_TIME = "servers_last_updated_time";
     private static final String CONFIG_REGION = "region";
-    private static final String CONFIG_CURRENT_SERVER_REGION = "server_region";
     private static final String CONFIG_ENABLE = "enable";
 
     private static void readFromCache(Context context, HttpDnsConfig config) {
         SharedPreferences sp = context.getSharedPreferences(CONFIG_CACHE_PREFIX + config.getAccountId(), Context.MODE_PRIVATE);
-        config.serverIps = CommonUtil.parseStringArray(sp.getString(CONFIG_KEY_SERVERS, CommonUtil.translateStringArray(BuildConfig.INIT_SERVER)));
-        config.ports = CommonUtil.parseIntArray(sp.getString(CONFIG_KEY_PORTS, null));
-        config.currentServerIndex = sp.getInt(CONFIG_CURRENT_INDEX, 0);
-        config.lastOkServerIndex = sp.getInt(CONFIG_LAST_INDEX, 0);
-        config.serverIpsLastUpdatedTime = sp.getLong(CONFIG_SERVERS_LAST_UPDATED_TIME, 0);
         config.region = sp.getString(CONFIG_REGION, null);
-        config.currentServerRegion = sp.getString(CONFIG_CURRENT_SERVER_REGION, null);
         config.enabled = sp.getBoolean(CONFIG_ENABLE, true);
     }
 
     @SuppressLint("ApplySharedPref")
     private static void saveToCache(Context context, HttpDnsConfig config) {
         SharedPreferences.Editor editor = context.getSharedPreferences(CONFIG_CACHE_PREFIX + config.getAccountId(), Context.MODE_PRIVATE).edit();
-        editor.putString(CONFIG_KEY_SERVERS, CommonUtil.translateStringArray(config.serverIps));
-        editor.putString(CONFIG_KEY_PORTS, CommonUtil.translateIntArray(config.ports));
-        editor.putInt(CONFIG_CURRENT_INDEX, config.currentServerIndex);
-        editor.putInt(CONFIG_LAST_INDEX, config.lastOkServerIndex);
-        editor.putLong(CONFIG_SERVERS_LAST_UPDATED_TIME, config.serverIpsLastUpdatedTime);
         editor.putString(CONFIG_REGION, config.region);
-        editor.putString(CONFIG_CURRENT_SERVER_REGION, config.currentServerRegion);
         editor.putBoolean(CONFIG_ENABLE, config.enabled);
         // 虽然提示建议使用apply，但是实践证明，apply是把写文件操作推迟到了一些界面切换等时机，反而影响了UI线程。不如直接在子线程写文件
         editor.commit();

@@ -30,13 +30,13 @@ public class ShiftServerWatcher implements HttpRequestWatcher.Watcher {
     @Override
     public void onFail(HttpRequestConfig requestConfig, Throwable throwable) {
         // 切换和更新请求的服务IP
-        boolean isBackToFirstServer = this.config.shiftServer(requestConfig.getIp(), requestConfig.getPort());
+        boolean isBackToFirstServer = this.config.getServerConfig().shiftServer(requestConfig.getIp(), requestConfig.getPort());
         // 所有服务IP都尝试过了，重置为初始IP
         if (isBackToFirstServer) {
             this.config.resetServerIpsToInitServer();
         }
         // 更新请求用的IP
-        requestConfig.setIp(this.config.getServerIp());
-        requestConfig.setPort(this.config.getPort());
+        requestConfig.setIp(this.config.getServerConfig().getServerIp());
+        requestConfig.setPort(this.config.getServerConfig().getPort());
     }
 }

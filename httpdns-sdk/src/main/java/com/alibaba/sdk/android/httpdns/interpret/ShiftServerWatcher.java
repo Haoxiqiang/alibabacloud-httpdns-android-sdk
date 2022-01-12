@@ -34,7 +34,7 @@ public class ShiftServerWatcher implements HttpRequestWatcher.Watcher {
 
     @Override
     public void onSuccess(HttpRequestConfig requestConfig, Object data) {
-        if (this.config.markOkServer(requestConfig.getIp(), requestConfig.getPort())) {
+        if (this.config.getServerConfig().markOkServer(requestConfig.getIp(), requestConfig.getPort())) {
             if (statusControl != null) {
                 statusControl.turnUp();
             }
@@ -47,9 +47,9 @@ public class ShiftServerWatcher implements HttpRequestWatcher.Watcher {
         // 是否切换服务IP, 超过超时时间，我们也切换ip，花费时间太长，说明这个ip可能也有问题
         if (shouldShiftServer(throwable) || cost > requestConfig.getTimeout()) {
             // 切换和更新请求的服务IP
-            boolean isBackToFirstServer = this.config.shiftServer(requestConfig.getIp(), requestConfig.getPort());
-            requestConfig.setIp(this.config.getServerIp());
-            requestConfig.setPort(this.config.getPort());
+            boolean isBackToFirstServer = this.config.getServerConfig().shiftServer(requestConfig.getIp(), requestConfig.getPort());
+            requestConfig.setIp(this.config.getServerConfig().getServerIp());
+            requestConfig.setPort(this.config.getServerConfig().getPort());
             // 所有服务IP都尝试过了，通知上层进一步处理
             if (isBackToFirstServer && scheduleService != null) {
                 scheduleService.updateServerIps();

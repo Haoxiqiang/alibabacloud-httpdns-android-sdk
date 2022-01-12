@@ -41,7 +41,7 @@ public class InterpretHostHelper {
             }
         }
         String path = getPath(config, host, type, extraArgs, null);
-        return new HttpRequestConfig(config.getSchema(), config.getServerIp(), config.getPort(), path, config.getTimeout());
+        return new HttpRequestConfig(config.getSchema(), config.getServerConfig().getServerIp(), config.getServerConfig().getPort(), path, config.getTimeout());
     }
 
     public static HttpRequestConfig getConfig(HttpDnsConfig config, String host, RequestIpType type, Map<String, String> extras, String cacheKey, Map<String, String> globalParams, SignService signService) {
@@ -57,7 +57,7 @@ public class InterpretHostHelper {
         }
         HashMap<String, String> signParams = signService.getSigns(host);
         String path = getPath(config, host, type, extraArgs, signParams);
-        return new HttpRequestConfig(config.getSchema(), config.getServerIp(), config.getPort(), path, config.getTimeout());
+        return new HttpRequestConfig(config.getSchema(), config.getServerConfig().getServerIp(), config.getServerConfig().getPort(), path, config.getTimeout());
     }
 
 
@@ -168,7 +168,7 @@ public class InterpretHostHelper {
             service = "sign_resolve";
         }
         String path = "/" + config.getAccountId() + "/" + service + "?host=" + host + "&sdk=android_" + BuildConfig.VERSION_NAME + query + getSid() + toUrlParams(signs);
-        return new HttpRequestConfig(config.getSchema(), config.getServerIp(), config.getPort(), path, config.getTimeout());
+        return new HttpRequestConfig(config.getSchema(), config.getServerConfig().getServerIp(), config.getServerConfig().getPort(), path, config.getTimeout());
     }
 
 

@@ -11,6 +11,7 @@ import org.json.JSONObject;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -45,6 +46,11 @@ public class CommonUtil {
             return "";
         }
         return region;
+    }
+
+
+    public static boolean isSameServer(String[] oldServerIps, int[] oldPorts, String[] newServerIps, int[] newPorts) {
+        return Arrays.equals(oldServerIps, newServerIps) && Arrays.equals(oldPorts, newPorts);
     }
 
     public static String[] sortIpsWithSpeeds(String[] ips, int[] speeds) {

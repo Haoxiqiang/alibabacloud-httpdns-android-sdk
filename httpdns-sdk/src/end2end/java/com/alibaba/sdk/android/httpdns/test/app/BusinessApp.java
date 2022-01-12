@@ -333,7 +333,7 @@ public class BusinessApp {
 
     @SuppressLint("ApplySharedPref")
     public void changeServerIpUpdateTimeTo(long time) {
-        SharedPreferences.Editor editor = RuntimeEnvironment.application.getSharedPreferences("httpdns_config_" + accountId, Context.MODE_PRIVATE).edit();
+        SharedPreferences.Editor editor = RuntimeEnvironment.application.getSharedPreferences("httpdns_config_server_" + accountId, Context.MODE_PRIVATE).edit();
         editor.putLong("servers_last_updated_time", time);
         editor.commit();
     }

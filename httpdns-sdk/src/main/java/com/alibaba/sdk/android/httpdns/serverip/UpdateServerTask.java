@@ -28,7 +28,7 @@ public class UpdateServerTask {
                 + "platform=android&sdk_version=" + BuildConfig.VERSION_NAME
                 + (TextUtils.isEmpty(region) ? "" : ("&region=" + region)
                 + getSid());
-        HttpRequestConfig requestConfig = new HttpRequestConfig(config.getSchema(), config.getServerIp(), config.getPort(), path, config.getTimeout());
+        HttpRequestConfig requestConfig = new HttpRequestConfig(config.getSchema(), config.getServerConfig().getServerIp(), config.getServerConfig().getPort(), path, config.getTimeout());
         HttpRequest<UpdateServerResponse> httpRequest = new HttpRequest<>(requestConfig, new ResponseTranslator<UpdateServerResponse>() {
             @Override
             public UpdateServerResponse translate(String response) throws Throwable {
@@ -40,8 +40,8 @@ public class UpdateServerTask {
         httpRequest = new HttpRequestWatcher<>(httpRequest, new Ipv6onlyWatcher(config));
         // 增加切换ip，回到初始Ip的逻辑
         httpRequest = new HttpRequestWatcher<>(httpRequest, new ShiftServerWatcher(config));
-        // 重试，当前服务Ip和初始服务ip个数
-        httpRequest = new RetryHttpRequest<>(httpRequest, config.getServerIps().length + config.getInitServerSize() - 1);
+        // 重试，当前服务Ip和初始服务ip个数 FIXME 这里重试次数 其实是期望每次重试切换一个服务节点，而切换服务节点的逻辑在ShiftServerWatcher, 两者目前没有关联，需要修改
+        httpRequest = new RetryHttpRequest<>(httpRequest, config.getServerConfig().getCurrentServerIps().length + config.getInitServerSize() - 1);
 
         try {
             config.getWorker().execute(new HttpRequestTask<>(httpRequest, callback));

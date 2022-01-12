@@ -43,9 +43,9 @@ public class InterpretHostRequestHandler {
     }
 
     public void requestInterpretHost(final String host, final RequestIpType type, Map<String, String> extras, final String cacheKey, RequestCallback<InterpretHostResponse> callback) {
-        if (!config.isRegionMatch()) {
+        if (!config.isCurrentRegionMatch()) {
             if (HttpDnsLog.isPrint()) {
-                HttpDnsLog.w("requestInterpretHost region miss match [" + config.getRegion() + "] [" + config.getCurrentServerRegion() + "]");
+                HttpDnsLog.w("requestInterpretHost region miss match [" + config.getRegion() + "] [" + config.getServerConfig().getCurrentServerRegion() + "]");
             }
             callback.onFail(Constants.region_not_match);
             return;
@@ -59,9 +59,9 @@ public class InterpretHostRequestHandler {
 
 
     public void requestResolveHost(final ArrayList<String> hostList, final RequestIpType type, RequestCallback<ResolveHostResponse> callback) {
-        if (!config.isRegionMatch()) {
+        if (!config.isCurrentRegionMatch()) {
             if (HttpDnsLog.isPrint()) {
-                HttpDnsLog.w("requestResolveHost region miss match [" + config.getRegion() + "] [" + config.getCurrentServerRegion() + "]");
+                HttpDnsLog.w("requestResolveHost region miss match [" + config.getRegion() + "] [" + config.getServerConfig().getCurrentServerRegion() + "]");
             }
             callback.onFail(Constants.region_not_match);
             return;
