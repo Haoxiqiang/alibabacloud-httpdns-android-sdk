@@ -152,8 +152,9 @@ public class HttpDnsConfig implements SpCacheItem {
      * 切换https
      *
      * @param enabled
+     * @return 配置是否变化
      */
-    public void setHTTPSRequestEnabled(boolean enabled) {
+    public boolean setHTTPSRequestEnabled(boolean enabled) {
         String oldSchema = schema;
         if (enabled) {
             schema = HttpRequestConfig.HTTPS_SCHEMA;
@@ -163,6 +164,7 @@ public class HttpDnsConfig implements SpCacheItem {
         if (!schema.equals(oldSchema)) {
             saveToCache();
         }
+        return !schema.equals(oldSchema);
     }
 
     /**

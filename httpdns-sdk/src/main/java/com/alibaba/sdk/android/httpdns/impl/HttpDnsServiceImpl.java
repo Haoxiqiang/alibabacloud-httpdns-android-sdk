@@ -327,8 +327,8 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
         if (!config.isEnabled()) {
             return;
         }
-        config.setHTTPSRequestEnabled(enabled);
-        if (enabled) {
+        boolean changed = config.setHTTPSRequestEnabled(enabled);
+        if (changed && enabled) {
             // 避免应用禁止http请求，导致初始化时的服务更新请求失败
             if (config.getCurrentServer().shouldUpdateServerIp()) {
                 scheduleService.updateServerIps();
