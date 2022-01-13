@@ -22,13 +22,15 @@ import java.util.List;
 public class RecordDBHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "aliclound_httpdns_";
-    private static final int DB_VERSION = 0x01;
+    private static final int DB_VERSION = 0x02;
 
     static class HOST {
 
         static final String TABLE_NAME = "host";
 
         static final String COL_ID = "id";
+
+        static final String COL_REGION = "region";
 
         static final String COL_HOST = "host";
 
@@ -48,6 +50,7 @@ public class RecordDBHelper extends SQLiteOpenHelper {
 
         static final String CREATE_HOST_TABLE_SQL = "CREATE TABLE " + TABLE_NAME + " ("
                 + COL_ID + " INTEGER PRIMARY KEY,"
+                + COL_REGION + " TEXT,"
                 + COL_HOST + " TEXT,"
                 + COL_IPS + " TEXT,"
                 + COL_TYPE + " INTEGER,"
@@ -92,9 +95,10 @@ public class RecordDBHelper extends SQLiteOpenHelper {
     /**
      * 从数据库获取全部数据
      *
+     * @param region
      * @return
      */
-    public List<HostRecord> readFromDb() {
+    public List<HostRecord> readFromDb(String region) {
         synchronized (lock) {
             ArrayList<HostRecord> hosts = new ArrayList<>();
 
@@ -109,6 +113,7 @@ public class RecordDBHelper extends SQLiteOpenHelper {
                     do {
                         HostRecord hostRecord = new HostRecord();
                         hostRecord.setId(cursor.getLong(cursor.getColumnIndex(HOST.COL_ID)));
+                        hostRecord.setRegion(cursor.getString(cursor.getColumnIndex(HOST.COL_REGION)));
                         hostRecord.setHost(cursor.getString(cursor.getColumnIndex(HOST.COL_HOST)));
                         hostRecord.setIps(CommonUtil.parseStringArray(cursor.getString(cursor.getColumnIndex(HOST.COL_IPS))));
                         hostRecord.setType(cursor.getInt(cursor.getColumnIndex(HOST.COL_TYPE)));
@@ -176,6 +181,7 @@ public class RecordDBHelper extends SQLiteOpenHelper {
                 db.beginTransaction();
                 for (HostRecord record : records) {
                     ContentValues cv = new ContentValues();
+                    cv.put(HOST.COL_REGION, record.getRegion());
                     cv.put(HOST.COL_HOST, record.getHost());
                     cv.put(HOST.COL_IPS, CommonUtil.translateStringArray(record.getIps()));
                     cv.put(HOST.COL_CACHE_KEY, record.getCacheKey());

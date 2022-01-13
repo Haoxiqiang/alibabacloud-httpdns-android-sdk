@@ -4,6 +4,7 @@ import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.impl.HostInterpretLocker;
 import com.alibaba.sdk.android.httpdns.impl.HostInterpretRecorder;
+import com.alibaba.sdk.android.httpdns.impl.HttpDnsConfig;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import com.alibaba.sdk.android.httpdns.probe.ProbeCallback;
 import com.alibaba.sdk.android.httpdns.probe.ProbeService;
@@ -22,6 +23,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class InterpretHostService {
 
+    private HttpDnsConfig config;
     private InterpretHostResultRepo repo;
     private InterpretHostRequestHandler requestHandler;
     private ProbeService ipProbeService;
@@ -30,7 +32,8 @@ public class InterpretHostService {
     private HostInterpretRecorder recorder;
     private HostInterpretLocker locker;
 
-    public InterpretHostService(ProbeService ipProbeService, InterpretHostRequestHandler requestHandler, InterpretHostResultRepo repo, HostFilter filter, HostInterpretRecorder recorder) {
+    public InterpretHostService(HttpDnsConfig config, ProbeService ipProbeService, InterpretHostRequestHandler requestHandler, InterpretHostResultRepo repo, HostFilter filter, HostInterpretRecorder recorder) {
+        this.config = config;
         this.ipProbeService = ipProbeService;
         this.requestHandler = requestHandler;
         this.repo = repo;
@@ -60,13 +63,14 @@ public class InterpretHostService {
             HttpDnsLog.d("host " + host + " result is " + CommonUtil.toString(result));
         }
         if ((result == null || result.isExpired()) && recorder.beginInterpret(host, type, cacheKey)) {
+            final String region = config.getRegion();
             requestHandler.requestInterpretHost(host, type, extras, cacheKey, new RequestCallback<InterpretHostResponse>() {
                 @Override
                 public void onSuccess(final InterpretHostResponse interpretHostResponse) {
                     if (HttpDnsLog.isPrint()) {
                         HttpDnsLog.i("ip request for " + host + " " + type + " return " + interpretHostResponse.toString());
                     }
-                    repo.save(host, type, interpretHostResponse.getExtras(), cacheKey, interpretHostResponse);
+                    repo.save(region, host, type, interpretHostResponse.getExtras(), cacheKey, interpretHostResponse);
                     if (type == RequestIpType.v4 || type == RequestIpType.both) {
                         ipProbeService.probleIpv4(host, interpretHostResponse.getIps(), new ProbeCallback() {
                             @Override
@@ -122,6 +126,7 @@ public class InterpretHostService {
         if ((result == null || result.isExpired())) {
             // 没有缓存，或者缓存过期，需要解析
             if (locker.beginInterpret(host, type, cacheKey)) {
+                final String region = config.getRegion();
                 // 没有正在进行的解析，发起新的解析
                 requestHandler.requestInterpretHost(host, type, extras, cacheKey, new RequestCallback<InterpretHostResponse>() {
                     @Override
@@ -129,7 +134,7 @@ public class InterpretHostService {
                         if (HttpDnsLog.isPrint()) {
                             HttpDnsLog.i("ip request for " + host + " " + type + " return " + interpretHostResponse.toString());
                         }
-                        repo.save(host, type, interpretHostResponse.getExtras(), cacheKey, interpretHostResponse);
+                        repo.save(region, host, type, interpretHostResponse.getExtras(), cacheKey, interpretHostResponse);
                         if (type == RequestIpType.v4 || type == RequestIpType.both) {
                             ipProbeService.probleIpv4(host, interpretHostResponse.getIps(), new ProbeCallback() {
                                 @Override

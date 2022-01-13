@@ -3,6 +3,7 @@ package com.alibaba.sdk.android.httpdns.cache;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.net.NetworkStateManager;
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
+import com.alibaba.sdk.android.httpdns.utils.Constants;
 
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -40,7 +41,7 @@ public class RecordDBHelperTest {
         helper.insertOrUpdate(records);
 
         // 读取
-        List<HostRecord> records3 = helper.readFromDb();
+        List<HostRecord> records3 = helper.readFromDb(Constants.REGION_DEFAULT);
 
         ArrayList<HostRecord> saved = new ArrayList<>();
         saved.addAll(records);
@@ -65,7 +66,7 @@ public class RecordDBHelperTest {
         helper.delete(deleted);
 
         // 读取
-        List<HostRecord> records3 = helper.readFromDb();
+        List<HostRecord> records3 = helper.readFromDb(Constants.REGION_DEFAULT);
 
         ArrayList<HostRecord> saved = new ArrayList<>();
         saved.addAll(left);
@@ -86,7 +87,7 @@ public class RecordDBHelperTest {
         helper.insertOrUpdate(records1);
 
         // 读取
-        List<HostRecord> records3 = helper.readFromDb();
+        List<HostRecord> records3 = helper.readFromDb(Constants.REGION_DEFAULT);
 
         ArrayList<HostRecord> saved = new ArrayList<>();
         saved.addAll(records);
@@ -121,7 +122,7 @@ public class RecordDBHelperTest {
         helper.insertOrUpdate(records2);
 
         // 读取
-        List<HostRecord> records3 = helper.readFromDb();
+        List<HostRecord> records3 = helper.readFromDb(Constants.REGION_DEFAULT);
 
         ArrayList<HostRecord> saved = new ArrayList<>();
         saved.addAll(records);
@@ -164,7 +165,7 @@ public class RecordDBHelperTest {
         helper.insertOrUpdate(records2);
 
         // 读取
-        List<HostRecord> records3 = helper.readFromDb();
+        List<HostRecord> records3 = helper.readFromDb(Constants.REGION_DEFAULT);
 
         ArrayList<HostRecord> saved = new ArrayList<>();
         saved.addAll(left);
@@ -202,16 +203,16 @@ public class RecordDBHelperTest {
             int style = RandomValue.randomInt(4);
             switch (style) {
                 case 0:
-                    list.add(HostRecord.create(RandomValue.randomHost(), RequestIpType.v4, RandomValue.randomJsonMap(), RandomValue.randomStringWithMaxLength(10), RandomValue.randomIpv4s(), RandomValue.randomInt(300)));
+                    list.add(HostRecord.create(Constants.REGION_DEFAULT, RandomValue.randomHost(), RequestIpType.v4, RandomValue.randomJsonMap(), RandomValue.randomStringWithMaxLength(10), RandomValue.randomIpv4s(), RandomValue.randomInt(300)));
                     break;
                 case 1:
-                    list.add(HostRecord.create(RandomValue.randomHost(), RequestIpType.v4, null, null, RandomValue.randomIpv4s(), RandomValue.randomInt(300)));
+                    list.add(HostRecord.create(Constants.REGION_DEFAULT, RandomValue.randomHost(), RequestIpType.v4, null, null, RandomValue.randomIpv4s(), RandomValue.randomInt(300)));
                     break;
                 case 2:
-                    list.add(HostRecord.create(RandomValue.randomHost(), RequestIpType.v6, RandomValue.randomJsonMap(), RandomValue.randomStringWithMaxLength(10), RandomValue.randomIpv6s(), RandomValue.randomInt(300)));
+                    list.add(HostRecord.create(Constants.REGION_DEFAULT, RandomValue.randomHost(), RequestIpType.v6, RandomValue.randomJsonMap(), RandomValue.randomStringWithMaxLength(10), RandomValue.randomIpv6s(), RandomValue.randomInt(300)));
                     break;
                 default:
-                    list.add(HostRecord.create(RandomValue.randomHost(), RequestIpType.v6, null, null, RandomValue.randomIpv6s(), RandomValue.randomInt(300)));
+                    list.add(HostRecord.create(Constants.REGION_DEFAULT, RandomValue.randomHost(), RequestIpType.v6, null, null, RandomValue.randomIpv6s(), RandomValue.randomInt(300)));
                     break;
             }
         }

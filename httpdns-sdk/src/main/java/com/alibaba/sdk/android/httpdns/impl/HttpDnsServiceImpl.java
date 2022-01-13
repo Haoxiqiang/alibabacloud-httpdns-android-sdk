@@ -74,8 +74,8 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             repo = new InterpretHostResultRepo(this.config, this.ipProbeService, new RecordDBHelper(this.config.getContext(), this.config.getAccountId()), new InterpretHostCacheGroup());
             scheduleService = new ScheduleService(this.config, this);
             requestHandler = new InterpretHostRequestHandler(config, scheduleService, signService);
-            interpretHostService = new InterpretHostService(ipProbeService, requestHandler, repo, filter, recorder);
-            resolveHostService = new ResolveHostService(repo, requestHandler, ipProbeService, filter, recorder);
+            interpretHostService = new InterpretHostService(this.config, ipProbeService, requestHandler, repo, filter, recorder);
+            resolveHostService = new ResolveHostService(this.config, repo, requestHandler, ipProbeService, filter, recorder);
             NetworkStateManager.getInstance().addListener(this);
             if (config.getCurrentServer().shouldUpdateServerIp()) {
                 scheduleService.updateServerIps();

@@ -3,6 +3,7 @@ package com.alibaba.sdk.android.httpdns.interpret;
 import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.impl.HostInterpretRecorder;
+import com.alibaba.sdk.android.httpdns.impl.HttpDnsConfig;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import com.alibaba.sdk.android.httpdns.probe.ProbeCallback;
 import com.alibaba.sdk.android.httpdns.probe.ProbeService;
@@ -18,13 +19,15 @@ import java.util.ArrayList;
  * @date 2020/12/11
  */
 public class ResolveHostService {
+    private HttpDnsConfig config;
     private InterpretHostResultRepo repo;
     private InterpretHostRequestHandler requestHandler;
     private ProbeService ipProbeService;
     private HostFilter filter;
     private HostInterpretRecorder recorder;
 
-    public ResolveHostService(InterpretHostResultRepo repo, InterpretHostRequestHandler requestHandler, ProbeService ipProbeService, HostFilter filter, HostInterpretRecorder recorder) {
+    public ResolveHostService(HttpDnsConfig config, InterpretHostResultRepo repo, InterpretHostRequestHandler requestHandler, ProbeService ipProbeService, HostFilter filter, HostInterpretRecorder recorder) {
+        this.config = config;
         this.repo = repo;
         this.requestHandler = requestHandler;
         this.ipProbeService = ipProbeService;
@@ -67,13 +70,14 @@ public class ResolveHostService {
             if (HttpDnsLog.isPrint()) {
                 HttpDnsLog.i("resolve host " + targetHost.toString() + " " + type);
             }
+            final String region = config.getRegion();
             requestHandler.requestResolveHost(targetHost, type, new RequestCallback<ResolveHostResponse>() {
                 @Override
                 public void onSuccess(final ResolveHostResponse resolveHostResponse) {
                     if (HttpDnsLog.isPrint()) {
                         HttpDnsLog.d("resolve hosts for " + targetHost.toString() + " " + type + " return " + resolveHostResponse.toString());
                     }
-                    repo.save(type, resolveHostResponse);
+                    repo.save(region, type, resolveHostResponse);
                     if (type == RequestIpType.v4 || type == RequestIpType.both) {
                         for (String host : resolveHostResponse.getHosts()) {
                             ipProbeService.probleIpv4(host, resolveHostResponse.getItem(host).getIps(), new ProbeCallback() {

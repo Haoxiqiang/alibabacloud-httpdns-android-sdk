@@ -14,6 +14,7 @@ import java.util.Arrays;
  */
 public class HostRecord {
     private long id = -1;
+    private String region;
     private String host;
     private String[] ips;
     private int type;
@@ -23,8 +24,9 @@ public class HostRecord {
     private String cacheKey;
     private boolean fromDB = false;
 
-    public static HostRecord create(String host, RequestIpType type, String extra, String cacheKey, String[] ips, int ttl) {
+    public static HostRecord create(String region, String host, RequestIpType type, String extra, String cacheKey, String[] ips, int ttl) {
         HostRecord record = new HostRecord();
+        record.region = region;
         record.host = host;
         record.type = type.ordinal();
         record.ips = ips;
@@ -45,6 +47,14 @@ public class HostRecord {
 
     public boolean isFromDB() {
         return fromDB;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
     }
 
     public String getHost() {
@@ -115,20 +125,21 @@ public class HostRecord {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        HostRecord record = (HostRecord) o;
-        return id == record.id &&
-                type == record.type &&
-                ttl == record.ttl &&
-                queryTime == record.queryTime &&
-                CommonUtil.equals(host, record.host) &&
-                Arrays.equals(ips, record.ips) &&
-                CommonUtil.equals(extra, record.extra) &&
-                CommonUtil.equals(cacheKey, record.cacheKey);
+        HostRecord that = (HostRecord) o;
+        return id == that.id &&
+                type == that.type &&
+                ttl == that.ttl &&
+                queryTime == that.queryTime &&
+                region.equals(that.region) &&
+                host.equals(that.host) &&
+                Arrays.equals(ips, that.ips) &&
+                CommonUtil.equals(extra, that.extra) &&
+                CommonUtil.equals(cacheKey, that.cacheKey);
     }
 
     @Override
     public int hashCode() {
-        int result = Arrays.hashCode(new Object[]{id, host, type, ttl, queryTime, extra, cacheKey});
+        int result = Arrays.hashCode(new Object[]{id, region, host, type, ttl, queryTime, extra, cacheKey});
         result = 31 * result + Arrays.hashCode(ips);
         return result;
     }
@@ -137,6 +148,7 @@ public class HostRecord {
     public String toString() {
         return "HostRecord{" +
                 "id=" + id +
+                ", region='" + region + '\'' +
                 ", host='" + host + '\'' +
                 ", ips=" + Arrays.toString(ips) +
                 ", type=" + type +

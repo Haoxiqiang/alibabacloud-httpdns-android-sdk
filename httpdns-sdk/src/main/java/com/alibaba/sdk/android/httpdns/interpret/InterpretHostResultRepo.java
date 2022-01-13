@@ -35,7 +35,8 @@ public class InterpretHostResultRepo {
     }
 
     private void readFromDB(boolean cleanCache) {
-        List<HostRecord> records = dbHelper.readFromDb();
+        final String region = config.getRegion();
+        List<HostRecord> records = dbHelper.readFromDb(region);
         for (HostRecord record : records) {
             InterpretHostCache cache = cacheGroup.getCache(record.getCacheKey());
             cache.put(record);
@@ -51,6 +52,10 @@ public class InterpretHostResultRepo {
             }
             dbHelper.delete(expired);
         }
+        if (!config.getRegion().equals(region)) {
+            // 防止刚读取完，region变化了
+            cacheGroup.clearAll();
+        }
         for (final HostRecord record : records) {
             if (!record.isExpired() && RequestIpType.values()[record.getType()] == RequestIpType.v4) {
                 ipProbeService.probleIpv4(record.getHost(), record.getIps(), new ProbeCallback() {
@@ -63,9 +68,9 @@ public class InterpretHostResultRepo {
         }
     }
 
-    private HostRecord save(String host, RequestIpType type, String extra, String cacheKey, String[] ips, int ttl) {
+    private HostRecord save(String region, String host, RequestIpType type, String extra, String cacheKey, String[] ips, int ttl) {
         InterpretHostCache cache = cacheGroup.getCache(cacheKey);
-        return cache.update(host, type, extra, cacheKey, ips, ttl);
+        return cache.update(region, host, type, extra, cacheKey, ips, ttl);
     }
 
     private void updateInner(String host, RequestIpType type, String cacheKey, String[] ips) {
@@ -89,23 +94,24 @@ public class InterpretHostResultRepo {
     /**
      * 保存结果
      *
+     * @param region
      * @param host
      * @param type
      * @param response
      */
-    public void save(String host, RequestIpType type, String extra, String cacheKey, InterpretHostResponse response) {
+    public void save(String region, String host, RequestIpType type, String extra, String cacheKey, InterpretHostResponse response) {
         final ArrayList<HostRecord> records = new ArrayList<>();
         switch (type) {
             case v4:
-                records.add(save(host, RequestIpType.v4, extra, cacheKey, response.getIps(), response.getTtl()));
+                records.add(save(region, host, RequestIpType.v4, extra, cacheKey, response.getIps(), response.getTtl()));
                 break;
             case v6:
-                records.add(save(host, RequestIpType.v6, extra, cacheKey, response.getIpsv6(), response.getTtl()));
+                records.add(save(region, host, RequestIpType.v6, extra, cacheKey, response.getIpsv6(), response.getTtl()));
                 break;
             case both:
-                HostRecord v4Record = save(host, RequestIpType.v4, extra, cacheKey, response.getIps(), response.getTtl());
+                HostRecord v4Record = save(region, host, RequestIpType.v4, extra, cacheKey, response.getIps(), response.getTtl());
                 records.add(v4Record);
-                HostRecord v6Record = save(host, RequestIpType.v6, extra, cacheKey, response.getIpsv6(), response.getTtl());
+                HostRecord v6Record = save(region, host, RequestIpType.v6, extra, cacheKey, response.getIpsv6(), response.getTtl());
                 records.add(v6Record);
                 break;
         }
@@ -122,19 +128,19 @@ public class InterpretHostResultRepo {
         }
     }
 
-    public void save(RequestIpType type, ResolveHostResponse resolveHostResponse) {
+    public void save(String region, RequestIpType type, ResolveHostResponse resolveHostResponse) {
         final ArrayList<HostRecord> records = new ArrayList<>();
         for (String host : resolveHostResponse.getHosts()) {
             switch (type) {
                 case v4:
-                    records.add(save(host, RequestIpType.v4, null, null, resolveHostResponse.getItem(host).getIps(), resolveHostResponse.getItem(host).getTtl()));
+                    records.add(save(region, host, RequestIpType.v4, null, null, resolveHostResponse.getItem(host).getIps(), resolveHostResponse.getItem(host).getTtl()));
                     break;
                 case v6:
-                    records.add(save(host, RequestIpType.v6, null, null, resolveHostResponse.getItem(host).getIpv6s(), resolveHostResponse.getItem(host).getTtl()));
+                    records.add(save(region, host, RequestIpType.v6, null, null, resolveHostResponse.getItem(host).getIpv6s(), resolveHostResponse.getItem(host).getTtl()));
                     break;
                 case both:
-                    records.add(save(host, RequestIpType.v4, null, null, resolveHostResponse.getItem(host).getIps(), resolveHostResponse.getItem(host).getTtl()));
-                    records.add(save(host, RequestIpType.v6, null, null, resolveHostResponse.getItem(host).getIpv6s(), resolveHostResponse.getItem(host).getTtl()));
+                    records.add(save(region, host, RequestIpType.v4, null, null, resolveHostResponse.getItem(host).getIps(), resolveHostResponse.getItem(host).getTtl()));
+                    records.add(save(region, host, RequestIpType.v6, null, null, resolveHostResponse.getItem(host).getIpv6s(), resolveHostResponse.getItem(host).getTtl()));
                     break;
             }
         }

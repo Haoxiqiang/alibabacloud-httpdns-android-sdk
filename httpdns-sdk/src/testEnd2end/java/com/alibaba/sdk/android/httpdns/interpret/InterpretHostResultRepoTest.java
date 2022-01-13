@@ -9,6 +9,7 @@ import com.alibaba.sdk.android.httpdns.test.helper.ServerHelper;
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
 import com.alibaba.sdk.android.httpdns.test.utils.TestExecutorService;
 import com.alibaba.sdk.android.httpdns.test.utils.UnitTestUtil;
+import com.alibaba.sdk.android.httpdns.utils.Constants;
 
 import org.hamcrest.MatcherAssert;
 import org.json.JSONException;
@@ -63,12 +64,12 @@ public class InterpretHostResultRepoTest {
 
         InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(host);
 
-        repo.save(host, RequestIpType.v4, null, null, response);
+        repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
         UnitTestUtil.assertIpsEqual("解析过的域名返回上次的解析结果", repo.getIps(host, RequestIpType.v4, null).getIps(), response.getIps());
         MatcherAssert.assertThat("没有解析过的域名返回空", repo.getIps(host, RequestIpType.v6, null) == null);
         MatcherAssert.assertThat("get方法传入both时，返回空", repo.getIps(host, RequestIpType.both, null) == null);
 
-        repo.save(host, RequestIpType.v6, null, null, response);
+        repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v6, null, null, response);
         UnitTestUtil.assertIpsEqual("解析过的域名返回上次的解析结果", repo.getIps(host, RequestIpType.v4, null).getIps(), response.getIps());
         UnitTestUtil.assertIpsEqual("解析过的域名返回上次的解析结果", repo.getIps(host, RequestIpType.v6, null).getIpv6s(), response.getIpsv6());
         UnitTestUtil.assertIpsEqual("get方法传入both时，返回ipv4 ipv6的结果", repo.getIps(host, RequestIpType.both, null).getIps(), response.getIps());
@@ -80,7 +81,7 @@ public class InterpretHostResultRepoTest {
         UnitTestUtil.assertIpsEqual("更新结果之后再请求，返回更新后的结果", repo.getIps(host, RequestIpType.v6, null).getIpv6s(), ipv6s);
 
         InterpretHostResponse response1 = ServerHelper.randomInterpretHostResponse(host);
-        repo.save(host, RequestIpType.both, null, null, response1);
+        repo.save(Constants.REGION_DEFAULT, host, RequestIpType.both, null, null, response1);
         UnitTestUtil.assertIpsEqual("新的解析结果会覆盖原来的解析结果", repo.getIps(host, RequestIpType.v4, null).getIps(), response1.getIps());
         UnitTestUtil.assertIpsEqual("新的解析结果会覆盖原来的解析结果", repo.getIps(host, RequestIpType.v6, null).getIpv6s(), response1.getIpsv6());
         UnitTestUtil.assertIpsEqual("新的解析结果会覆盖原来的解析结果", repo.getIps(host, RequestIpType.both, null).getIps(), response1.getIps());
@@ -113,7 +114,7 @@ public class InterpretHostResultRepoTest {
                 preHosts.add(RandomValue.randomHost());
             }
             ResolveHostResponse resolveHostResponse = ServerHelper.randomResolveHostResponse(preHosts, type);
-            repo.save(type, resolveHostResponse);
+            repo.save(Constants.REGION_DEFAULT, type, resolveHostResponse);
             for (String host : resolveHostResponse.getHosts()) {
                 if (type == RequestIpType.v4) {
                     responses.put(host, new InterpretHostResponse(host, resolveHostResponse.getItem(host).getIps(), null, resolveHostResponse.getItem(host).getTtl(), null));
@@ -136,7 +137,7 @@ public class InterpretHostResultRepoTest {
             String cacheKey = sdns ? RandomValue.randomStringWithMaxLength(10) : null;
             String extra = sdns ? RandomValue.randomJsonMap() : null;
             RequestIpType type = RequestIpType.values()[RandomValue.randomInt(3)];
-            repo.save(host, type, extra, cacheKey, response);
+            repo.save(Constants.REGION_DEFAULT, host, type, extra, cacheKey, response);
             responses.put(host, response);
             types.put(host, type);
             cacheKeys.put(host, cacheKey);
@@ -148,7 +149,7 @@ public class InterpretHostResultRepoTest {
         for (int i = 0; i < 30; i++) {
             String host = hosts.get(RandomValue.randomInt(hosts.size()));
             InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(host);
-            repo.save(host, types.get(host), extras.get(host), cacheKeys.get(host), response);
+            repo.save(Constants.REGION_DEFAULT, host, types.get(host), extras.get(host), cacheKeys.get(host), response);
             responses.put(host, response);
         }
 

@@ -2,6 +2,7 @@ package com.alibaba.sdk.android.httpdns;
 
 import com.alibaba.sdk.android.httpdns.cache.HostRecord;
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
+import com.alibaba.sdk.android.httpdns.utils.Constants;
 
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -26,12 +27,12 @@ public class HttpDnsResultTest {
         final String host = RandomValue.randomHost();
         HTTPDNSResult httpdnsResult = new HTTPDNSResult(host);
 
-        HostRecord record = HostRecord.create(host, RequestIpType.v4, null, null, RandomValue.randomIpv4s(), 60);
+        HostRecord record = HostRecord.create(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, RandomValue.randomIpv4s(), 60);
         httpdnsResult.update(record);
 
         MatcherAssert.assertThat("使用HostRecord更新result", httpdnsResult.getIps(), Matchers.is(Matchers.equalTo(record.getIps())));
 
-        HostRecord record1 = HostRecord.create(host, RequestIpType.v6, null, null, RandomValue.randomIpv6s(), 60);
+        HostRecord record1 = HostRecord.create(Constants.REGION_DEFAULT, host, RequestIpType.v6, null, null, RandomValue.randomIpv6s(), 60);
         httpdnsResult.update(record1);
 
         MatcherAssert.assertThat("更新ipv6 不会影响v4的结果", httpdnsResult.getIps(), Matchers.is(Matchers.equalTo(record.getIps())));
@@ -51,9 +52,9 @@ public class HttpDnsResultTest {
     @Test
     public void updateContentWithHostRecords() {
         final String host = RandomValue.randomHost();
-        HostRecord record = HostRecord.create(host, RequestIpType.v4, null, null, RandomValue.randomIpv4s(), 60);
+        HostRecord record = HostRecord.create(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, RandomValue.randomIpv4s(), 60);
         record.setQueryTime(0);
-        HostRecord record1 = HostRecord.create(host, RequestIpType.v6, "{\"name\":\"BeJson\",\"url\":\"http://www.bejson.com\",\"page\":88,\"isNonProfit\":true}", null, RandomValue.randomIpv6s(), 60);
+        HostRecord record1 = HostRecord.create(Constants.REGION_DEFAULT, host, RequestIpType.v6, "{\"name\":\"BeJson\",\"url\":\"http://www.bejson.com\",\"page\":88,\"isNonProfit\":true}", null, RandomValue.randomIpv6s(), 60);
         record1.setFromDB(true);
 
         HTTPDNSResult result = new HTTPDNSResult(host);

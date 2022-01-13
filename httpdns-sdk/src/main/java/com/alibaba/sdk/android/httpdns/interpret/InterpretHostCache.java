@@ -15,10 +15,25 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class InterpretHostCache {
 
+    /**
+     * v4的解析记录
+     */
     private ConcurrentHashMap<String, HostRecord> v4Records = new ConcurrentHashMap<>();
+    /**
+     * v6的解析记录
+     */
     private ConcurrentHashMap<String, HostRecord> v6Records = new ConcurrentHashMap<>();
+    /**
+     * v4的返回结果
+     */
     private ConcurrentHashMap<String, HTTPDNSResult> v4HttpDnsResults = new ConcurrentHashMap<>();
+    /**
+     * v6的返回结果
+     */
     private ConcurrentHashMap<String, HTTPDNSResult> v6HttpDnsResults = new ConcurrentHashMap<>();
+    /**
+     * 同时解析4 6的结果
+     */
     private ConcurrentHashMap<String, HTTPDNSResult> bothHttpDnsResults = new ConcurrentHashMap<>();
 
     public HTTPDNSResult getResult(String host, RequestIpType type) {
@@ -88,15 +103,16 @@ public class InterpretHostCache {
         return result;
     }
 
-    public HostRecord update(String host, RequestIpType type, String extra, String cacheKey, String[] ips, int ttl) {
+    public HostRecord update(String region, String host, RequestIpType type, String extra, String cacheKey, String[] ips, int ttl) {
         HostRecord record = null;
         switch (type) {
             case v4:
                 record = v4Records.get(host);
                 if (record == null) {
-                    record = HostRecord.create(host, type, extra, cacheKey, ips, ttl);
+                    record = HostRecord.create(region, host, type, extra, cacheKey, ips, ttl);
                     v4Records.put(host, record);
                 } else {
+                    record.setRegion(region);
                     record.setQueryTime(System.currentTimeMillis());
                     record.setIps(ips);
                     record.setTtl(ttl);
@@ -107,9 +123,10 @@ public class InterpretHostCache {
             case v6:
                 record = v6Records.get(host);
                 if (record == null) {
-                    record = HostRecord.create(host, type, extra, cacheKey, ips, ttl);
+                    record = HostRecord.create(region, host, type, extra, cacheKey, ips, ttl);
                     v6Records.put(host, record);
                 } else {
+                    record.setRegion(region);
                     record.setQueryTime(System.currentTimeMillis());
                     record.setIps(ips);
                     record.setTtl(ttl);

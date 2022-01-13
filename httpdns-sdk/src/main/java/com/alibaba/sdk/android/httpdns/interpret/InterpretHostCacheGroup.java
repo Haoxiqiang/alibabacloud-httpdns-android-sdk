@@ -7,12 +7,20 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
+ * 获取的缓存
+ *
  * @author zonglin.nzl
  * @date 11/8/21
  */
 public class InterpretHostCacheGroup {
 
+    /**
+     * 默认缓存
+     */
     private final InterpretHostCache defaultCache = new InterpretHostCache();
+    /**
+     * 使用sdns时，不同CacheKey对应的缓存
+     */
     private final HashMap<String, InterpretHostCache> sdnsCaches = new HashMap<>();
     private final Object lock = new Object();
 
