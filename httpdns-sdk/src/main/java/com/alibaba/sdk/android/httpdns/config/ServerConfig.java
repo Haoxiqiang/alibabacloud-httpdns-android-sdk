@@ -1,7 +1,5 @@
 package com.alibaba.sdk.android.httpdns.config;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.alibaba.sdk.android.httpdns.BuildConfig;
@@ -18,7 +16,7 @@ import java.util.Arrays;
  * @author zonglin.nzl
  * @date 1/12/22
  */
-public class ServerConfig extends RegionServer {
+public class ServerConfig extends RegionServer implements SpCacheItem {
 
     private final HttpDnsConfig config;
     private int lastOkServerIndex = 0;
@@ -28,7 +26,6 @@ public class ServerConfig extends RegionServer {
     public ServerConfig(HttpDnsConfig config) {
         super(config.getInitServer().getServerIps(), config.getInitServer().getPorts(), config.getInitServer().getRegion());
         this.config = config;
-        readFromCache(config.getContext(), this);
     }
 
     /**
@@ -84,7 +81,7 @@ public class ServerConfig extends RegionServer {
                 // 非初始化IP，才认为是真正的更新了服务IP
                 this.serverIpsLastUpdatedTime = System.currentTimeMillis();
             }
-            saveToCache(config.getContext(), this);
+            config.saveToCache();
             return true;
         } else {
             return false;
@@ -130,7 +127,7 @@ public class ServerConfig extends RegionServer {
         }
         if (serverIps[currentServerIndex].equals(serverIp) && (ports == null || ports[currentServerIndex] == port)) {
             lastOkServerIndex = currentServerIndex;
-            saveToCache(config.getContext(), this);
+            config.saveToCache();
             return true;
         }
         return false;
@@ -153,35 +150,24 @@ public class ServerConfig extends RegionServer {
         return Arrays.hashCode(new Object[]{super.hashCode(), config, lastOkServerIndex, currentServerIndex, serverIpsLastUpdatedTime});
     }
 
-    private static final String CONFIG_CACHE_PREFIX = "httpdns_config_server_";
-    private static final String CONFIG_KEY_SERVERS = "serverIps";
-    private static final String CONFIG_KEY_PORTS = "ports";
-    private static final String CONFIG_CURRENT_INDEX = "current";
-    private static final String CONFIG_LAST_INDEX = "last";
-    private static final String CONFIG_SERVERS_LAST_UPDATED_TIME = "servers_last_updated_time";
-    private static final String CONFIG_CURRENT_SERVER_REGION = "server_region";
-
-    private static void readFromCache(Context context, ServerConfig config) {
-        SharedPreferences sp = context.getSharedPreferences(CONFIG_CACHE_PREFIX + config.config.getAccountId(), Context.MODE_PRIVATE);
-        String[] serverIps = CommonUtil.parseStringArray(sp.getString(CONFIG_KEY_SERVERS, CommonUtil.translateStringArray(BuildConfig.INIT_SERVER)));
-        int[] ports = CommonUtil.parsePorts(sp.getString(CONFIG_KEY_PORTS, null));
-        config.currentServerIndex = sp.getInt(CONFIG_CURRENT_INDEX, 0);
-        config.lastOkServerIndex = sp.getInt(CONFIG_LAST_INDEX, 0);
-        config.serverIpsLastUpdatedTime = sp.getLong(CONFIG_SERVERS_LAST_UPDATED_TIME, 0);
-        String currentServerRegion = sp.getString(CONFIG_CURRENT_SERVER_REGION, Constants.REGION_DEFAULT);
-        config.updateAll(currentServerRegion, serverIps, ports);
+    @Override
+    public void restoreFromCache(SharedPreferences sp) {
+        String[] serverIps = CommonUtil.parseStringArray(sp.getString(Constants.CONFIG_KEY_SERVERS, CommonUtil.translateStringArray(BuildConfig.INIT_SERVER)));
+        int[] ports = CommonUtil.parsePorts(sp.getString(Constants.CONFIG_KEY_PORTS, null));
+        String currentServerRegion = sp.getString(Constants.CONFIG_CURRENT_SERVER_REGION, Constants.REGION_DEFAULT);
+        updateAll(currentServerRegion, serverIps, ports);
+        currentServerIndex = sp.getInt(Constants.CONFIG_CURRENT_INDEX, 0);
+        lastOkServerIndex = sp.getInt(Constants.CONFIG_LAST_INDEX, 0);
+        serverIpsLastUpdatedTime = sp.getLong(Constants.CONFIG_SERVERS_LAST_UPDATED_TIME, 0);
     }
 
-    @SuppressLint("ApplySharedPref")
-    private static void saveToCache(Context context, ServerConfig config) {
-        SharedPreferences.Editor editor = context.getSharedPreferences(CONFIG_CACHE_PREFIX + config.config.getAccountId(), Context.MODE_PRIVATE).edit();
-        editor.putString(CONFIG_KEY_SERVERS, CommonUtil.translateStringArray(config.getServerIps()));
-        editor.putString(CONFIG_KEY_PORTS, CommonUtil.translateIntArray(config.getPorts()));
-        editor.putInt(CONFIG_CURRENT_INDEX, config.currentServerIndex);
-        editor.putInt(CONFIG_LAST_INDEX, config.lastOkServerIndex);
-        editor.putLong(CONFIG_SERVERS_LAST_UPDATED_TIME, config.serverIpsLastUpdatedTime);
-        editor.putString(CONFIG_CURRENT_SERVER_REGION, config.getRegion());
-        // 虽然提示建议使用apply，但是实践证明，apply是把写文件操作推迟到了一些界面切换等时机，反而影响了UI线程。不如直接在子线程写文件
-        editor.commit();
+    @Override
+    public void saveToCache(SharedPreferences.Editor editor) {
+        editor.putString(Constants.CONFIG_KEY_SERVERS, CommonUtil.translateStringArray(getServerIps()));
+        editor.putString(Constants.CONFIG_KEY_PORTS, CommonUtil.translateIntArray(getPorts()));
+        editor.putInt(Constants.CONFIG_CURRENT_INDEX, currentServerIndex);
+        editor.putInt(Constants.CONFIG_LAST_INDEX, lastOkServerIndex);
+        editor.putLong(Constants.CONFIG_SERVERS_LAST_UPDATED_TIME, serverIpsLastUpdatedTime);
+        editor.putString(Constants.CONFIG_CURRENT_SERVER_REGION, getRegion());
     }
 }

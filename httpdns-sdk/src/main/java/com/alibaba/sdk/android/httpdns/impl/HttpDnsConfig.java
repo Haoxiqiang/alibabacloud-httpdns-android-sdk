@@ -1,12 +1,13 @@
 package com.alibaba.sdk.android.httpdns.impl;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.alibaba.sdk.android.httpdns.BuildConfig;
+import com.alibaba.sdk.android.httpdns.config.ConfigCacheHelper;
 import com.alibaba.sdk.android.httpdns.config.RegionServer;
 import com.alibaba.sdk.android.httpdns.config.ServerConfig;
+import com.alibaba.sdk.android.httpdns.config.SpCacheItem;
 import com.alibaba.sdk.android.httpdns.request.HttpRequestConfig;
 import com.alibaba.sdk.android.httpdns.utils.CommonUtil;
 import com.alibaba.sdk.android.httpdns.utils.Constants;
@@ -21,7 +22,7 @@ import java.util.concurrent.ExecutorService;
  * @author zonglin.nzl
  * @date 2020/12/3
  */
-public class HttpDnsConfig {
+public class HttpDnsConfig implements SpCacheItem {
     private Context context;
     private boolean enabled = true;
     /**
@@ -66,6 +67,8 @@ public class HttpDnsConfig {
      */
     private boolean probeDisabled = false;
 
+    private ConfigCacheHelper cacheHelper;
+
 
     protected ExecutorService worker = ThreadUtil.createExecutorService();
     protected ExecutorService dbWorker = ThreadUtil.createDBExecutorService();
@@ -73,8 +76,9 @@ public class HttpDnsConfig {
     public HttpDnsConfig(Context context, String accountId) {
         this.context = context;
         this.accountId = accountId;
-        readFromCache(context, this);
         this.currentServer = new ServerConfig(this);
+        this.cacheHelper = new ConfigCacheHelper();
+        this.cacheHelper.restoreFromCache(context, this);
     }
 
     public Context getContext() {
@@ -108,7 +112,7 @@ public class HttpDnsConfig {
      */
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
-        saveToCache(context, this);
+        saveToCache();
     }
 
     public int getTimeout() {
@@ -157,7 +161,7 @@ public class HttpDnsConfig {
      */
     public void setRegion(String region) {
         this.region = region;
-        saveToCache(context, this);
+        saveToCache();
     }
 
     /**
@@ -196,7 +200,7 @@ public class HttpDnsConfig {
 
     /**
      * 设置初始服务IP
-     *
+     * <p>
      * 线上SDK 初始化服务IP是内置写死的。
      * 本API主要用于一些测试代码使用
      *
@@ -232,23 +236,29 @@ public class HttpDnsConfig {
         return probeDisabled;
     }
 
-    private static final String CONFIG_CACHE_PREFIX = "httpdns_config_";
-    private static final String CONFIG_REGION = "region";
-    private static final String CONFIG_ENABLE = "enable";
-
-    private static void readFromCache(Context context, HttpDnsConfig config) {
-        SharedPreferences sp = context.getSharedPreferences(CONFIG_CACHE_PREFIX + config.getAccountId(), Context.MODE_PRIVATE);
-        config.region = sp.getString(CONFIG_REGION, Constants.REGION_DEFAULT);
-        config.enabled = sp.getBoolean(CONFIG_ENABLE, true);
+    public void setCacheHelper(ConfigCacheHelper configCacheHelper) {
+        this.cacheHelper = configCacheHelper;
     }
 
-    @SuppressLint("ApplySharedPref")
-    private static void saveToCache(Context context, HttpDnsConfig config) {
-        SharedPreferences.Editor editor = context.getSharedPreferences(CONFIG_CACHE_PREFIX + config.getAccountId(), Context.MODE_PRIVATE).edit();
-        editor.putString(CONFIG_REGION, config.region);
-        editor.putBoolean(CONFIG_ENABLE, config.enabled);
-        // 虽然提示建议使用apply，但是实践证明，apply是把写文件操作推迟到了一些界面切换等时机，反而影响了UI线程。不如直接在子线程写文件
-        editor.commit();
+    public void saveToCache() {
+        if (cacheHelper != null) {
+            cacheHelper.saveConfigToCache(context, this);
+        }
     }
 
+    public SpCacheItem[] getCacheItem() {
+        return new SpCacheItem[]{this, currentServer};
+    }
+
+    @Override
+    public void restoreFromCache(SharedPreferences sp) {
+        region = sp.getString(Constants.CONFIG_REGION, Constants.REGION_DEFAULT);
+        enabled = sp.getBoolean(Constants.CONFIG_ENABLE, true);
+    }
+
+    @Override
+    public void saveToCache(SharedPreferences.Editor editor) {
+        editor.putString(Constants.CONFIG_REGION, region);
+        editor.putBoolean(Constants.CONFIG_ENABLE, enabled);
+    }
 }

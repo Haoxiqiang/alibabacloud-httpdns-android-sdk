@@ -23,6 +23,7 @@ import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
 import com.alibaba.sdk.android.httpdns.test.utils.ShadowNetworkInfo;
 import com.alibaba.sdk.android.httpdns.test.utils.TestExecutorService;
 import com.alibaba.sdk.android.httpdns.test.utils.TestLogger;
+import com.alibaba.sdk.android.httpdns.utils.Constants;
 
 import org.mockito.ArgumentCaptor;
 import org.robolectric.RuntimeEnvironment;
@@ -333,7 +334,7 @@ public class BusinessApp {
 
     @SuppressLint("ApplySharedPref")
     public void changeServerIpUpdateTimeTo(long time) {
-        SharedPreferences.Editor editor = RuntimeEnvironment.application.getSharedPreferences("httpdns_config_server_" + accountId, Context.MODE_PRIVATE).edit();
+        SharedPreferences.Editor editor = RuntimeEnvironment.application.getSharedPreferences(Constants.CONFIG_CACHE_PREFIX + accountId, Context.MODE_PRIVATE).edit();
         editor.putLong("servers_last_updated_time", time);
         editor.commit();
     }
