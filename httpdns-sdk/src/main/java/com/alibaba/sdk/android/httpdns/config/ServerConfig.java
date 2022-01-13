@@ -60,7 +60,8 @@ public class ServerConfig extends RegionServer implements SpCacheItem {
      * @return
      */
     public boolean shouldUpdateServerIp() {
-        return System.currentTimeMillis() - serverIpsLastUpdatedTime >= 24 * 60 * 60 * 1000;
+        // 这里判断serverIp是否存在 其实 在测试场景才会生效
+        return System.currentTimeMillis() - serverIpsLastUpdatedTime >= 24 * 60 * 60 * 1000 && getServerIps() != null && getServerIps().length > 0;
     }
 
 
@@ -80,8 +81,9 @@ public class ServerConfig extends RegionServer implements SpCacheItem {
             if (!CommonUtil.isSameServer(serverIps, ports, config.getInitServer().getServerIps(), config.getInitServer().getPorts())) {
                 // 非初始化IP，才认为是真正的更新了服务IP
                 this.serverIpsLastUpdatedTime = System.currentTimeMillis();
+                // 非初始IP才有缓存的必要
+                config.saveToCache();
             }
-            config.saveToCache();
             return true;
         } else {
             return false;

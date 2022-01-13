@@ -1,6 +1,7 @@
 package com.alibaba.sdk.android.httpdns.impl;
 
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
+import com.alibaba.sdk.android.httpdns.test.utils.SyncExecutorService;
 import com.alibaba.sdk.android.httpdns.utils.Constants;
 
 import org.hamcrest.MatcherAssert;
@@ -25,6 +26,7 @@ public class HttpDnsConfigTest {
     @Before
     public void setUp() {
         config = new HttpDnsConfig(RuntimeEnvironment.application, account);
+        config.setWorker(new SyncExecutorService());
         config.setInitServers(serverIps, null);
     }
 

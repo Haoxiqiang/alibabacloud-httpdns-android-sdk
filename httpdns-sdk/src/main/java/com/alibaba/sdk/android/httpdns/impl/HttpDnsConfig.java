@@ -77,8 +77,10 @@ public class HttpDnsConfig implements SpCacheItem {
         this.context = context;
         this.accountId = accountId;
         this.currentServer = new ServerConfig(this);
-        this.cacheHelper = new ConfigCacheHelper();
-        this.cacheHelper.restoreFromCache(context, this);
+        // 先从缓存读取数据，再赋值cacheHelper， 避免在读取缓存过程中，触发写缓存操作
+        ConfigCacheHelper helper = new ConfigCacheHelper();
+        helper.restoreFromCache(context, this);
+        this.cacheHelper = helper;
     }
 
     public Context getContext() {
@@ -236,9 +238,8 @@ public class HttpDnsConfig implements SpCacheItem {
         return probeDisabled;
     }
 
-    public void setCacheHelper(ConfigCacheHelper configCacheHelper) {
-        this.cacheHelper = configCacheHelper;
-    }
+
+    // 缓存相关的 处理，暂时放这里
 
     public void saveToCache() {
         if (cacheHelper != null) {
