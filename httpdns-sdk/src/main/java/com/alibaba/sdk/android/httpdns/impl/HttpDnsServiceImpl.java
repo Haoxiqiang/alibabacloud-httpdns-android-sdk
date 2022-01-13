@@ -417,7 +417,10 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             }
             return;
         }
-        config.setRegion(region);
+        boolean changed = config.setRegion(region);
+        if (changed) {
+            repo.clear();
+        }
         scheduleService.updateServerIps(region);
     }
 

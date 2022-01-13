@@ -172,11 +172,13 @@ public class HttpDnsConfig implements SpCacheItem {
      *
      * @param region
      */
-    public void setRegion(String region) {
+    public boolean setRegion(String region) {
         if (!this.region.equals(region)) {
             this.region = region;
             saveToCache();
+            return true;
         }
+        return false;
     }
 
     /**
