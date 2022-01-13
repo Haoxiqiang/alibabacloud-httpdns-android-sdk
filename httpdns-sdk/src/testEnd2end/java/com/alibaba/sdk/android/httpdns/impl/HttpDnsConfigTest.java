@@ -127,11 +127,7 @@ public class HttpDnsConfigTest {
 
     @Test
     public void testConfigCache() {
-        int randomShift = RandomValue.randomInt(6);
-        while (randomShift > 0) {
-            randomShift--;
-            config.getCurrentServer().shiftServer(config.getCurrentServer().getServerIp(), config.getCurrentServer().getPort());
-        }
+        config.getCurrentServer().shiftServer(config.getCurrentServer().getServerIp(), config.getCurrentServer().getPort());
         config.getCurrentServer().markOkServer(config.getCurrentServer().getServerIp(), config.getCurrentServer().getPort());
 
         HttpDnsConfig another = new HttpDnsConfig(RuntimeEnvironment.application, account);

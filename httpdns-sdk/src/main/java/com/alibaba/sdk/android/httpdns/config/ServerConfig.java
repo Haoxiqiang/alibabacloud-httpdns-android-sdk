@@ -128,8 +128,10 @@ public class ServerConfig extends RegionServer implements SpCacheItem {
             return false;
         }
         if (serverIps[currentServerIndex].equals(serverIp) && (ports == null || ports[currentServerIndex] == port)) {
-            lastOkServerIndex = currentServerIndex;
-            config.saveToCache();
+            if (lastOkServerIndex != currentServerIndex) {
+                lastOkServerIndex = currentServerIndex;
+                config.saveToCache();
+            }
             return true;
         }
         return false;

@@ -113,8 +113,10 @@ public class HttpDnsConfig implements SpCacheItem {
      * @param enabled
      */
     public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-        saveToCache();
+        if (this.enabled != enabled) {
+            this.enabled = enabled;
+            saveToCache();
+        }
     }
 
     public int getTimeout() {
@@ -122,7 +124,10 @@ public class HttpDnsConfig implements SpCacheItem {
     }
 
     public void setTimeout(int timeout) {
-        this.timeout = timeout;
+        if (this.timeout != timeout) {
+            this.timeout = timeout;
+            saveToCache();
+        }
     }
 
     public String getSchema() {
@@ -149,10 +154,14 @@ public class HttpDnsConfig implements SpCacheItem {
      * @param enabled
      */
     public void setHTTPSRequestEnabled(boolean enabled) {
+        String oldSchema = schema;
         if (enabled) {
             schema = HttpRequestConfig.HTTPS_SCHEMA;
         } else {
             schema = HttpRequestConfig.HTTP_SCHEMA;
+        }
+        if (!schema.equals(oldSchema)) {
+            saveToCache();
         }
     }
 
@@ -162,8 +171,10 @@ public class HttpDnsConfig implements SpCacheItem {
      * @param region
      */
     public void setRegion(String region) {
-        this.region = region;
-        saveToCache();
+        if (!this.region.equals(region)) {
+            this.region = region;
+            saveToCache();
+        }
     }
 
     /**
@@ -255,11 +266,15 @@ public class HttpDnsConfig implements SpCacheItem {
     public void restoreFromCache(SharedPreferences sp) {
         region = sp.getString(Constants.CONFIG_REGION, Constants.REGION_DEFAULT);
         enabled = sp.getBoolean(Constants.CONFIG_ENABLE, true);
+        schema = sp.getString(Constants.CONFIG_SCHEMA, HttpRequestConfig.HTTP_SCHEMA);
+        timeout = sp.getInt(Constants.CONFIG_TIMEOUT, HttpRequestConfig.DEFAULT_TIMEOUT);
     }
 
     @Override
     public void saveToCache(SharedPreferences.Editor editor) {
         editor.putString(Constants.CONFIG_REGION, region);
         editor.putBoolean(Constants.CONFIG_ENABLE, enabled);
+        editor.putString(Constants.CONFIG_SCHEMA, schema);
+        editor.putInt(Constants.CONFIG_TIMEOUT, timeout);
     }
 }
