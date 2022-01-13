@@ -30,21 +30,21 @@ public class HttpDnsConfigTest {
 
     @Test
     public void setServerIpsWillResetServerStatus() {
-        config.getServerConfig().shiftServer(config.getServerConfig().getServerIp(), config.getServerConfig().getPort());
-        config.getServerConfig().markOkServer(config.getServerConfig().getServerIp(), config.getServerConfig().getPort());
-        MatcherAssert.assertThat("current ok server is " + serverIps[1], config.getServerConfig().getServerIp().equals(serverIps[1]));
+        config.getCurrentServer().shiftServer(config.getCurrentServer().getServerIp(), config.getCurrentServer().getPort());
+        config.getCurrentServer().markOkServer(config.getCurrentServer().getServerIp(), config.getCurrentServer().getPort());
+        MatcherAssert.assertThat("current ok server is " + serverIps[1], config.getCurrentServer().getServerIp().equals(serverIps[1]));
         String[] newServerIps = RandomValue.randomIpv4s();
-        config.getServerConfig().setServerIps(null, newServerIps, null);
-        MatcherAssert.assertThat("current ok server is " + newServerIps[0], config.getServerConfig().getServerIp().equals(newServerIps[0]));
+        config.getCurrentServer().setServerIps(null, newServerIps, null);
+        MatcherAssert.assertThat("current ok server is " + newServerIps[0], config.getCurrentServer().getServerIp().equals(newServerIps[0]));
     }
 
     @Test
     public void shiftServerTest() {
-        config.getServerConfig().setServerIps(null, serverIps, ports);
-        MatcherAssert.assertThat("default index is first", serverIps[0].equals(config.getServerConfig().getServerIp()));
-        MatcherAssert.assertThat("default index is first", ports[0] == config.getServerConfig().getPort());
+        config.getCurrentServer().setServerIps(null, serverIps, ports);
+        MatcherAssert.assertThat("default index is first", serverIps[0].equals(config.getCurrentServer().getServerIp()));
+        MatcherAssert.assertThat("default index is first", ports[0] == config.getCurrentServer().getPort());
 
-        config.getServerConfig().markOkServer(config.getServerConfig().getServerIp(), config.getServerConfig().getPort());
+        config.getCurrentServer().markOkServer(config.getCurrentServer().getServerIp(), config.getCurrentServer().getPort());
 
         checkShiftResult(1);
 
@@ -54,7 +54,7 @@ public class HttpDnsConfigTest {
 
         checkShiftResult(1);
 
-        config.getServerConfig().markOkServer(config.getServerConfig().getServerIp(), config.getServerConfig().getPort());
+        config.getCurrentServer().markOkServer(config.getCurrentServer().getServerIp(), config.getCurrentServer().getPort());
 
         checkShiftResult(2);
 
@@ -64,10 +64,10 @@ public class HttpDnsConfigTest {
     }
 
     private boolean checkShiftResult(int i) {
-        boolean isBackToFirst = config.getServerConfig().shiftServer(config.getServerConfig().getServerIp(), config.getServerConfig().getPort());
+        boolean isBackToFirst = config.getCurrentServer().shiftServer(config.getCurrentServer().getServerIp(), config.getCurrentServer().getPort());
 
-        MatcherAssert.assertThat("shift server", serverIps[i].equals(config.getServerConfig().getServerIp()));
-        MatcherAssert.assertThat("shift server", ports[i] == config.getServerConfig().getPort());
+        MatcherAssert.assertThat("shift server", serverIps[i].equals(config.getCurrentServer().getServerIp()));
+        MatcherAssert.assertThat("shift server", ports[i] == config.getCurrentServer().getPort());
 
         return isBackToFirst;
     }
@@ -75,9 +75,9 @@ public class HttpDnsConfigTest {
 
     @Test
     public void shiftServerTest2() {
-        MatcherAssert.assertThat("default index is first", serverIps[0].equals(config.getServerConfig().getServerIp()));
+        MatcherAssert.assertThat("default index is first", serverIps[0].equals(config.getCurrentServer().getServerIp()));
 
-        config.getServerConfig().markOkServer(config.getServerConfig().getServerIp(), config.getServerConfig().getPort());
+        config.getCurrentServer().markOkServer(config.getCurrentServer().getServerIp(), config.getCurrentServer().getPort());
 
         checkShiftResult2(1);
 
@@ -87,7 +87,7 @@ public class HttpDnsConfigTest {
 
         checkShiftResult2(1);
 
-        config.getServerConfig().markOkServer(config.getServerConfig().getServerIp(), config.getServerConfig().getPort());
+        config.getCurrentServer().markOkServer(config.getCurrentServer().getServerIp(), config.getCurrentServer().getPort());
 
         checkShiftResult2(2);
 
@@ -97,30 +97,30 @@ public class HttpDnsConfigTest {
     }
 
     private boolean checkShiftResult2(int i) {
-        boolean isBackToFirst = config.getServerConfig().shiftServer(config.getServerConfig().getServerIp(), config.getServerConfig().getPort());
+        boolean isBackToFirst = config.getCurrentServer().shiftServer(config.getCurrentServer().getServerIp(), config.getCurrentServer().getPort());
 
-        MatcherAssert.assertThat("shift server", serverIps[i].equals(config.getServerConfig().getServerIp()));
+        MatcherAssert.assertThat("shift server", serverIps[i].equals(config.getCurrentServer().getServerIp()));
 
         return isBackToFirst;
     }
 
     @Test
     public void markCurrentServerSuccess() {
-        MatcherAssert.assertThat("current Server can mark", config.getServerConfig().markOkServer(config.getServerConfig().getServerIp(), config.getServerConfig().getPort()));
+        MatcherAssert.assertThat("current Server can mark", config.getCurrentServer().markOkServer(config.getCurrentServer().getServerIp(), config.getCurrentServer().getPort()));
     }
 
     @Test
     public void markOtherServerFail() {
-        String ip = config.getServerConfig().getServerIp();
-        int port = config.getServerConfig().getPort();
-        config.getServerConfig().shiftServer(ip, port);
-        MatcherAssert.assertThat("only current Server can mark", !config.getServerConfig().markOkServer(ip, port));
+        String ip = config.getCurrentServer().getServerIp();
+        int port = config.getCurrentServer().getPort();
+        config.getCurrentServer().shiftServer(ip, port);
+        MatcherAssert.assertThat("only current Server can mark", !config.getCurrentServer().markOkServer(ip, port));
     }
 
     @Test
     public void setSameServerWillReturnFalse() {
-        config.getServerConfig().setServerIps(null, serverIps, ports);
-        MatcherAssert.assertThat("same server will return false", !config.getServerConfig().setServerIps(null, serverIps, ports));
+        config.getCurrentServer().setServerIps(null, serverIps, ports);
+        MatcherAssert.assertThat("same server will return false", !config.getCurrentServer().setServerIps(null, serverIps, ports));
     }
 
     @Test
@@ -128,39 +128,39 @@ public class HttpDnsConfigTest {
         int randomShift = RandomValue.randomInt(6);
         while (randomShift > 0) {
             randomShift--;
-            config.getServerConfig().shiftServer(config.getServerConfig().getServerIp(), config.getServerConfig().getPort());
+            config.getCurrentServer().shiftServer(config.getCurrentServer().getServerIp(), config.getCurrentServer().getPort());
         }
-        config.getServerConfig().markOkServer(config.getServerConfig().getServerIp(), config.getServerConfig().getPort());
+        config.getCurrentServer().markOkServer(config.getCurrentServer().getServerIp(), config.getCurrentServer().getPort());
 
         HttpDnsConfig another = new HttpDnsConfig(RuntimeEnvironment.application, account);
-        MatcherAssert.assertThat("当前服务更新后会缓存到本地，再次创建时读取缓存", another.getServerConfig().getServerIp(), Matchers.equalTo(config.getServerConfig().getServerIp()));
-        MatcherAssert.assertThat("当前服务更新后会缓存到本地，再次创建时读取缓存", another.getServerConfig().getPort(), Matchers.equalTo(config.getServerConfig().getPort()));
+        MatcherAssert.assertThat("当前服务更新后会缓存到本地，再次创建时读取缓存", another.getCurrentServer().getServerIp(), Matchers.equalTo(config.getCurrentServer().getServerIp()));
+        MatcherAssert.assertThat("当前服务更新后会缓存到本地，再次创建时读取缓存", another.getCurrentServer().getPort(), Matchers.equalTo(config.getCurrentServer().getPort()));
 
-        config.getServerConfig().setServerIps(null, RandomValue.randomIpv4s(), RandomValue.randomPorts());
+        config.getCurrentServer().setServerIps(null, RandomValue.randomIpv4s(), RandomValue.randomPorts());
 
         another = new HttpDnsConfig(RuntimeEnvironment.application, account);
-        MatcherAssert.assertThat("服务更新后会缓存到本地，再次创建时读取缓存", another.getServerConfig().getServerIp(), Matchers.equalTo(config.getServerConfig().getServerIp()));
-        MatcherAssert.assertThat("服务更新后会缓存到本地，再次创建时读取缓存", another.getServerConfig().getPort(), Matchers.equalTo(config.getServerConfig().getPort()));
+        MatcherAssert.assertThat("服务更新后会缓存到本地，再次创建时读取缓存", another.getCurrentServer().getServerIp(), Matchers.equalTo(config.getCurrentServer().getServerIp()));
+        MatcherAssert.assertThat("服务更新后会缓存到本地，再次创建时读取缓存", another.getCurrentServer().getPort(), Matchers.equalTo(config.getCurrentServer().getPort()));
     }
 
     @Test
     public void testRegionUpdate() {
 
         MatcherAssert.assertThat("默认region是国内", config.getRegion(), Matchers.is(Matchers.equalTo(Constants.REGION_DEFAULT)));
-        MatcherAssert.assertThat("默认服务节点是国内的", config.getServerConfig().getCurrentServerRegion(), Matchers.is(Matchers.equalTo(Constants.REGION_DEFAULT)));
+        MatcherAssert.assertThat("默认服务节点是国内的", config.getCurrentServer().getRegion(), Matchers.is(Matchers.equalTo(Constants.REGION_DEFAULT)));
         MatcherAssert.assertThat("默认region匹配", config.isCurrentRegionMatch(), Matchers.is(true));
 
         config.setRegion("hk");
 
         MatcherAssert.assertThat("setRegion 更新成功", config.getRegion(), Matchers.is(Matchers.equalTo("hk")));
-        MatcherAssert.assertThat("setRegion不影响服务节点的region", config.getServerConfig().getCurrentServerRegion(), Matchers.is(Matchers.equalTo(Constants.REGION_DEFAULT)));
+        MatcherAssert.assertThat("setRegion不影响服务节点的region", config.getCurrentServer().getRegion(), Matchers.is(Matchers.equalTo(Constants.REGION_DEFAULT)));
         MatcherAssert.assertThat("setRegion 导致region不匹配", config.isCurrentRegionMatch(), Matchers.is(false));
 
-        config.getServerConfig().setServerIps("hk", RandomValue.randomIpv4s(), RandomValue.randomPorts());
+        config.getCurrentServer().setServerIps("hk", RandomValue.randomIpv4s(), RandomValue.randomPorts());
 
 
         MatcherAssert.assertThat("setRegion 更新成功", config.getRegion(), Matchers.is(Matchers.equalTo("hk")));
-        MatcherAssert.assertThat("setServerIps更像服务节点", config.getServerConfig().getCurrentServerRegion(), Matchers.is(Matchers.equalTo("hk")));
+        MatcherAssert.assertThat("setServerIps更像服务节点", config.getCurrentServer().getRegion(), Matchers.is(Matchers.equalTo("hk")));
         MatcherAssert.assertThat("服务节点更新后，region匹配", config.isCurrentRegionMatch(), Matchers.is(true));
 
     }

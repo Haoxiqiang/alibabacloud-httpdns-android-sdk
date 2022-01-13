@@ -62,8 +62,8 @@ public class ScheduleService {
     }
 
     private void updateServerConfig(String newRegion, String[] serverIps, int[] serverPorts) {
-        boolean regionUpdated = !CommonUtil.regionEquals(this.config.getServerConfig().getCurrentServerRegion(), newRegion);
-        boolean updated = config.getServerConfig().setServerIps(newRegion, serverIps, serverPorts);
+        boolean regionUpdated = !CommonUtil.regionEquals(this.config.getCurrentServer().getRegion(), newRegion);
+        boolean updated = config.getCurrentServer().setServerIps(newRegion, serverIps, serverPorts);
         if (updated && onServerIpUpdate != null) {
             onServerIpUpdate.serverIpUpdated(regionUpdated);
         }

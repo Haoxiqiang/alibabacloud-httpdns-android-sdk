@@ -30,7 +30,7 @@ public class UpdateServerTask {
                 + (TextUtils.isEmpty(region) ? "" : ("&region=" + region)
                 + getSid());
 
-        Server[] servers = getAllServers(config.getServerConfig().getCurrentServerIps(), config.getServerConfig().getPorts(), config.getInitServer().getServerIps(), config.getInitServer().getPorts());
+        Server[] servers = getAllServers(config.getCurrentServer().getServerIps(), config.getCurrentServer().getPorts(), config.getInitServer().getServerIps(), config.getInitServer().getPorts());
 
         HttpRequestConfig requestConfig = new HttpRequestConfig(config.getSchema(), servers[0].getServerIp(), servers[0].getPort(config.getSchema()), path, config.getTimeout());
         HttpRequest<UpdateServerResponse> httpRequest = new HttpRequest<>(requestConfig, new ResponseTranslator<UpdateServerResponse>() {

@@ -77,7 +77,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             interpretHostService = new InterpretHostService(ipProbeService, requestHandler, repo, filter, recorder);
             resolveHostService = new ResolveHostService(repo, requestHandler, ipProbeService, filter, recorder);
             NetworkStateManager.getInstance().addListener(this);
-            if (config.getServerConfig().shouldUpdateServerIp()) {
+            if (config.getCurrentServer().shouldUpdateServerIp()) {
                 scheduleService.updateServerIps();
             }
             ReportManager.init(context);
@@ -330,7 +330,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
         config.setHTTPSRequestEnabled(enabled);
         if (enabled) {
             // 避免应用禁止http请求，导致初始化时的服务更新请求失败
-            if (config.getServerConfig().shouldUpdateServerIp()) {
+            if (config.getCurrentServer().shouldUpdateServerIp()) {
                 scheduleService.updateServerIps();
             }
         }
@@ -405,11 +405,12 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
     }
 
     @Override
-    public void setRegion(final String region) {
+    public void setRegion(String region) {
         if (!config.isEnabled()) {
             HttpDnsLog.i("service is disabled");
             return;
         }
+        region = CommonUtil.fixRegion(region);
         if (CommonUtil.regionEquals(this.config.getRegion(), region)) {
             if (HttpDnsLog.isPrint()) {
                 HttpDnsLog.d("region " + region + " is same, do not update serverIps");

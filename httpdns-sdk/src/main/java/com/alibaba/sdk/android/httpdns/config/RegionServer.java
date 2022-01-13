@@ -58,14 +58,24 @@ public class RegionServer {
         return result;
     }
 
-    public void update(String[] ips, int[] ports) {
+    public boolean update(String[] ips, int[] ports) {
+        boolean same = CommonUtil.isSameServer(this.serverIps, this.ports, ips, ports);
+        if (same) {
+            return false;
+        }
         this.serverIps = ips;
         this.ports = ports;
+        return true;
     }
 
-    public void updateAll(String region, String[] ips, int[] ports) {
+    public boolean updateAll(String region, String[] ips, int[] ports) {
+        boolean same = CommonUtil.isSameServer(this.serverIps, this.ports, ips, ports);
+        if (same && region.equals(this.region)) {
+            return false;
+        }
         this.region = region;
         this.serverIps = ips;
         this.ports = ports;
+        return true;
     }
 }

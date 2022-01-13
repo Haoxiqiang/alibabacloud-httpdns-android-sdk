@@ -35,10 +35,10 @@ public class ShiftServerWatcherTest {
     public void setUp() {
         Mockito.when(requestConfig.getIp()).thenReturn(ip);
         Mockito.when(requestConfig.getPort()).thenReturn(port);
-        Mockito.when(config.getServerConfig()).thenReturn(serverConfig);
+        Mockito.when(config.getCurrentServer()).thenReturn(serverConfig);
         Mockito.when(serverConfig.getServerIp()).thenReturn(ip);
         Mockito.when(serverConfig.getPort()).thenReturn(port);
-        Mockito.when(config.getServerConfig().markOkServer(ip, port)).thenReturn(true);
+        Mockito.when(config.getCurrentServer().markOkServer(ip, port)).thenReturn(true);
     }
 
     @Test

@@ -51,7 +51,7 @@ public class HttpDnsConfig {
         this.context = context;
         this.accountId = accountId;
         readFromCache(context, this);
-        this.serverConfig = new ServerConfig(this, initServer.getServerIps(), initServer.getPorts());
+        this.serverConfig = new ServerConfig(this);
     }
 
     public Context getContext() {
@@ -62,12 +62,12 @@ public class HttpDnsConfig {
         return accountId;
     }
 
-    public ServerConfig getServerConfig() {
+    public ServerConfig getCurrentServer() {
         return serverConfig;
     }
 
     public boolean isCurrentRegionMatch() {
-        return CommonUtil.regionEquals(region, serverConfig.getCurrentServerRegion());
+        return CommonUtil.regionEquals(region, serverConfig.getRegion());
     }
 
     public String getRegion() {
@@ -199,7 +199,7 @@ public class HttpDnsConfig {
         String[] oldInitServerIps = this.initServer.getServerIps();
         int[] oldInitPorts = this.initServer.getPorts();
         this.initServer.update(initIps, initPorts);
-        if (serverConfig.getCurrentServerIps() == null || CommonUtil.isSameServer(oldInitServerIps, oldInitPorts, serverConfig.getCurrentServerIps(), serverConfig.getPorts())) {
+        if (serverConfig.getServerIps() == null || CommonUtil.isSameServer(oldInitServerIps, oldInitPorts, serverConfig.getServerIps(), serverConfig.getPorts())) {
             // 初始IP默认region为国内
             serverConfig.setServerIps(this.initServer.getRegion(), initIps, initPorts);
         }
