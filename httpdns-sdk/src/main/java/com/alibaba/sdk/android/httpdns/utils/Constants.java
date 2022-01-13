@@ -11,6 +11,16 @@ import java.util.HashMap;
  */
 public class Constants {
 
+    // 国内
+    public static final String REGION_DEFAULT = "";
+    // 香港
+    public static final String REGION_HK = "hk";
+    // 新加坡
+    public static final String REGION_SG = "sg";
+
+    public static final int NO_PORT = -1;
+    public static final int[] NO_PORTS = null;
+
     public static final String[] NO_IPS = new String[0];
     public static final HashMap<String, String> NO_EXTRA = new HashMap<String, String>();
 

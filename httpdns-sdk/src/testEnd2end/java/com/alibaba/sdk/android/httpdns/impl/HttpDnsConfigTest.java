@@ -1,6 +1,7 @@
 package com.alibaba.sdk.android.httpdns.impl;
 
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
+import com.alibaba.sdk.android.httpdns.utils.Constants;
 
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -117,13 +118,6 @@ public class HttpDnsConfigTest {
     }
 
     @Test
-    public void testGetInitServerSize() {
-        String[] initIps = RandomValue.randomIpv4s();
-        config.setInitServers(initIps, null);
-        MatcherAssert.assertThat("getInitServerSize", config.getInitServerSize() == initIps.length);
-    }
-
-    @Test
     public void setSameServerWillReturnFalse() {
         config.getServerConfig().setServerIps(null, serverIps, ports);
         MatcherAssert.assertThat("same server will return false", !config.getServerConfig().setServerIps(null, serverIps, ports));
@@ -152,14 +146,14 @@ public class HttpDnsConfigTest {
     @Test
     public void testRegionUpdate() {
 
-        MatcherAssert.assertThat("默认region是国内", config.getRegion(), Matchers.nullValue());
-        MatcherAssert.assertThat("默认服务节点是国内的", config.getServerConfig().getCurrentServerRegion(), Matchers.nullValue());
+        MatcherAssert.assertThat("默认region是国内", config.getRegion(), Matchers.is(Matchers.equalTo(Constants.REGION_DEFAULT)));
+        MatcherAssert.assertThat("默认服务节点是国内的", config.getServerConfig().getCurrentServerRegion(), Matchers.is(Matchers.equalTo(Constants.REGION_DEFAULT)));
         MatcherAssert.assertThat("默认region匹配", config.isCurrentRegionMatch(), Matchers.is(true));
 
         config.setRegion("hk");
 
         MatcherAssert.assertThat("setRegion 更新成功", config.getRegion(), Matchers.is(Matchers.equalTo("hk")));
-        MatcherAssert.assertThat("setRegion不影响服务节点的region", config.getServerConfig().getCurrentServerRegion(), Matchers.nullValue());
+        MatcherAssert.assertThat("setRegion不影响服务节点的region", config.getServerConfig().getCurrentServerRegion(), Matchers.is(Matchers.equalTo(Constants.REGION_DEFAULT)));
         MatcherAssert.assertThat("setRegion 导致region不匹配", config.isCurrentRegionMatch(), Matchers.is(false));
 
         config.getServerConfig().setServerIps("hk", RandomValue.randomIpv4s(), RandomValue.randomPorts());

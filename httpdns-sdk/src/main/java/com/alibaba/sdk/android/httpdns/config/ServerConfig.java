@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import com.alibaba.sdk.android.httpdns.BuildConfig;
 import com.alibaba.sdk.android.httpdns.impl.HttpDnsConfig;
 import com.alibaba.sdk.android.httpdns.utils.CommonUtil;
+import com.alibaba.sdk.android.httpdns.utils.Constants;
 
 import java.util.Arrays;
 
@@ -19,7 +20,7 @@ import java.util.Arrays;
  */
 public class ServerConfig {
 
-    private HttpDnsConfig config;
+    private final HttpDnsConfig config;
     private String[] serverIps;
     private int[] ports;
     private int lastOkServerIndex = 0;
@@ -96,7 +97,7 @@ public class ServerConfig {
         this.ports = ports;
         this.lastOkServerIndex = 0;
         this.currentServerIndex = 0;
-        if (!Arrays.equals(serverIps, config.getInitServerIps())) {
+        if (!CommonUtil.isSameServer(serverIps, ports, config.getInitServer().getServerIps(), config.getInitServer().getPorts())) {
             // 非初始化IP，才认为是真正的更新了服务IP
             this.serverIpsLastUpdatedTime = System.currentTimeMillis();
         }
@@ -177,11 +178,11 @@ public class ServerConfig {
     private static void readFromCache(Context context, ServerConfig config) {
         SharedPreferences sp = context.getSharedPreferences(CONFIG_CACHE_PREFIX + config.config.getAccountId(), Context.MODE_PRIVATE);
         config.serverIps = CommonUtil.parseStringArray(sp.getString(CONFIG_KEY_SERVERS, CommonUtil.translateStringArray(BuildConfig.INIT_SERVER)));
-        config.ports = CommonUtil.parseIntArray(sp.getString(CONFIG_KEY_PORTS, null));
+        config.ports = CommonUtil.parsePorts(sp.getString(CONFIG_KEY_PORTS, null));
         config.currentServerIndex = sp.getInt(CONFIG_CURRENT_INDEX, 0);
         config.lastOkServerIndex = sp.getInt(CONFIG_LAST_INDEX, 0);
         config.serverIpsLastUpdatedTime = sp.getLong(CONFIG_SERVERS_LAST_UPDATED_TIME, 0);
-        config.currentServerRegion = sp.getString(CONFIG_CURRENT_SERVER_REGION, null);
+        config.currentServerRegion = sp.getString(CONFIG_CURRENT_SERVER_REGION, Constants.REGION_DEFAULT);
     }
 
     @SuppressLint("ApplySharedPref")

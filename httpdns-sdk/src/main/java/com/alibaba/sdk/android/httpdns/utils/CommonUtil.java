@@ -30,10 +30,10 @@ public class CommonUtil {
 
     public static boolean regionEquals(String region, String regionThat) {
         if (region == null) {
-            region = "";
+            region = Constants.REGION_DEFAULT;
         }
         if (regionThat == null) {
-            regionThat = "";
+            regionThat = Constants.REGION_DEFAULT;
         }
         return equals(region, regionThat);
     }
@@ -44,7 +44,7 @@ public class CommonUtil {
 
     public static String fixRegion(String region) {
         if (region == null) {
-            return "";
+            return Constants.REGION_DEFAULT;
         }
         return region;
     }
@@ -110,6 +110,14 @@ public class CommonUtil {
             stringBuilder.append(ports[i]);
         }
         return stringBuilder.toString();
+    }
+
+    public static int[] parsePorts(String str) {
+        int[] tmp = parseIntArray(str);
+        if (tmp == null || tmp.length == 0) {
+            return Constants.NO_PORTS;
+        }
+        return tmp;
     }
 
     public static int[] parseIntArray(String str) {

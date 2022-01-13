@@ -14,6 +14,7 @@ import com.alibaba.sdk.android.httpdns.request.Ipv6onlyWatcher;
 import com.alibaba.sdk.android.httpdns.request.RequestCallback;
 import com.alibaba.sdk.android.httpdns.request.ResponseTranslator;
 import com.alibaba.sdk.android.httpdns.request.RetryHttpRequest;
+import com.alibaba.sdk.android.httpdns.utils.Constants;
 
 import static com.alibaba.sdk.android.httpdns.interpret.InterpretHostHelper.getSid;
 
@@ -29,7 +30,7 @@ public class UpdateServerTask {
                 + (TextUtils.isEmpty(region) ? "" : ("&region=" + region)
                 + getSid());
 
-        Server[] servers = getAllServers(config.getServerConfig().getCurrentServerIps(), config.getServerConfig().getPorts(), config.getInitServerIps(), config.getInitServerPorts());
+        Server[] servers = getAllServers(config.getServerConfig().getCurrentServerIps(), config.getServerConfig().getPorts(), config.getInitServer().getServerIps(), config.getInitServer().getPorts());
 
         HttpRequestConfig requestConfig = new HttpRequestConfig(config.getSchema(), servers[0].getServerIp(), servers[0].getPort(config.getSchema()), path, config.getTimeout());
         HttpRequest<UpdateServerResponse> httpRequest = new HttpRequest<>(requestConfig, new ResponseTranslator<UpdateServerResponse>() {
@@ -56,11 +57,11 @@ public class UpdateServerTask {
     private static Server[] getAllServers(String[] currentServerIps, int[] ports, String[] initServerIps, int[] initServerPorts) {
         Server[] servers = new Server[currentServerIps.length + initServerIps.length];
         for (int i = 0; i < currentServerIps.length; i++) {
-            servers[i] = new Server(currentServerIps[i], ports != null && ports.length > i ? ports[i] : -1);
+            servers[i] = new Server(currentServerIps[i], ports != null && ports.length > i ? ports[i] : Constants.NO_PORT);
         }
         final int tmpSize = currentServerIps.length;
         for (int i = 0; i < initServerIps.length; i++) {
-            servers[tmpSize + i] = new Server(initServerIps[i], initServerPorts != null && initServerPorts.length > i ? initServerPorts[i] : -1);
+            servers[tmpSize + i] = new Server(initServerIps[i], initServerPorts != null && initServerPorts.length > i ? initServerPorts[i] : Constants.NO_PORT);
         }
         return servers;
     }

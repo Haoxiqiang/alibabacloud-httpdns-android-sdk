@@ -5,9 +5,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.alibaba.sdk.android.httpdns.BuildConfig;
+import com.alibaba.sdk.android.httpdns.config.RegionServer;
 import com.alibaba.sdk.android.httpdns.config.ServerConfig;
 import com.alibaba.sdk.android.httpdns.request.HttpRequestConfig;
 import com.alibaba.sdk.android.httpdns.utils.CommonUtil;
+import com.alibaba.sdk.android.httpdns.utils.Constants;
 import com.alibaba.sdk.android.httpdns.utils.ThreadUtil;
 
 import java.util.Arrays;
@@ -22,22 +24,20 @@ import java.util.concurrent.ExecutorService;
 public class HttpDnsConfig {
     private Context context;
     private boolean enabled = true;
-    private String[] initServerIps = BuildConfig.INIT_SERVER;
+    /**
+     * 初始服务
+     */
+    private RegionServer initServer = new RegionServer(BuildConfig.INIT_SERVER, Constants.NO_PORTS, Constants.REGION_DEFAULT);
     /**
      * ipv6的初始服务IP
      * 目前仅用于一些ipv6only的环境，避免httpdns完全失效
      */
     private String[] ipv6InitServerIps = BuildConfig.IPV6_INIT_SERVER;
-    /**
-     * 初始服务端口，下标和{@link #initServerIps}对应
-     * 线上httpdns服务并没有使用定制的端口，此处是用于在测试环境中指定端口
-     */
-    private int[] initServerPorts = null;
     private String accountId;
     private String schema = HttpRequestConfig.HTTP_SCHEMA;
     private ServerConfig serverConfig;
     private int currentIpv6ServerIndex = 0;
-    private String region = null;
+    private String region = Constants.REGION_DEFAULT;
     private int timeout = HttpRequestConfig.DEFAULT_TIMEOUT;
     private boolean crashDefend;
     private boolean remoteDisabled = false;
@@ -51,7 +51,7 @@ public class HttpDnsConfig {
         this.context = context;
         this.accountId = accountId;
         readFromCache(context, this);
-        this.serverConfig = new ServerConfig(this, initServerIps, initServerPorts);
+        this.serverConfig = new ServerConfig(this, initServer.getServerIps(), initServer.getPorts());
     }
 
     public Context getContext() {
@@ -158,21 +158,8 @@ public class HttpDnsConfig {
         }
     }
 
-    /**
-     * 获取初始服务个数
-     *
-     * @return
-     */
-    public int getInitServerSize() {
-        return this.initServerIps == null ? 0 : this.initServerIps.length;
-    }
-
-    public String[] getInitServerIps() {
-        return this.initServerIps;
-    }
-
-    public int[] getInitServerPorts() {
-        return this.initServerPorts;
+    public RegionServer getInitServer() {
+        return this.initServer;
     }
 
     @Override
@@ -183,8 +170,7 @@ public class HttpDnsConfig {
         return enabled == that.enabled &&
                 timeout == that.timeout &&
                 CommonUtil.equals(context, that.context) &&
-                Arrays.equals(initServerIps, that.initServerIps) &&
-                Arrays.equals(initServerPorts, that.initServerPorts) &&
+                CommonUtil.equals(initServer, initServer) &&
                 CommonUtil.equals(accountId, that.accountId) &&
                 CommonUtil.equals(schema, that.schema) &&
                 CommonUtil.equals(region, that.region) &&
@@ -193,9 +179,7 @@ public class HttpDnsConfig {
 
     @Override
     public int hashCode() {
-        int result = Arrays.hashCode(new Object[]{context, enabled, accountId, schema, serverConfig, region, timeout, worker});
-        result = 31 * result + Arrays.hashCode(initServerIps);
-        result = 31 * result + Arrays.hashCode(initServerPorts);
+        int result = Arrays.hashCode(new Object[]{context, enabled, accountId, schema, serverConfig, region, timeout, worker, initServer});
         return result;
     }
 
@@ -212,12 +196,12 @@ public class HttpDnsConfig {
         if (initIps == null) {
             return;
         }
-        String[] oldInitServerIps = this.initServerIps;
-        this.initServerIps = initIps;
-        this.initServerPorts = initPorts;
-        if (serverConfig.getCurrentServerIps() == null || CommonUtil.isSameServer(oldInitServerIps, null, serverConfig.getCurrentServerIps(), null)) {
+        String[] oldInitServerIps = this.initServer.getServerIps();
+        int[] oldInitPorts = this.initServer.getPorts();
+        this.initServer.update(initIps, initPorts);
+        if (serverConfig.getCurrentServerIps() == null || CommonUtil.isSameServer(oldInitServerIps, oldInitPorts, serverConfig.getCurrentServerIps(), serverConfig.getPorts())) {
             // 初始IP默认region为国内
-            serverConfig.setServerIps(null, initIps, initPorts);
+            serverConfig.setServerIps(this.initServer.getRegion(), initIps, initPorts);
         }
     }
 
@@ -243,7 +227,7 @@ public class HttpDnsConfig {
 
     private static void readFromCache(Context context, HttpDnsConfig config) {
         SharedPreferences sp = context.getSharedPreferences(CONFIG_CACHE_PREFIX + config.getAccountId(), Context.MODE_PRIVATE);
-        config.region = sp.getString(CONFIG_REGION, null);
+        config.region = sp.getString(CONFIG_REGION, Constants.REGION_DEFAULT);
         config.enabled = sp.getBoolean(CONFIG_ENABLE, true);
     }
 
