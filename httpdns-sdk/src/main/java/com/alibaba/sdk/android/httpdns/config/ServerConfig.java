@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 
 import com.alibaba.sdk.android.httpdns.BuildConfig;
 import com.alibaba.sdk.android.httpdns.impl.HttpDnsConfig;
-import com.alibaba.sdk.android.httpdns.request.HttpRequestConfig;
 import com.alibaba.sdk.android.httpdns.utils.CommonUtil;
 
 import java.util.Arrays;
@@ -69,19 +68,10 @@ public class ServerConfig {
      */
     public int getPort() {
         if (ports == null || currentServerIndex >= ports.length || currentServerIndex < 0) {
-            return getDefaultPort();
+            return CommonUtil.getPort(-1, config.getSchema());
         }
-        return ports[currentServerIndex];
+        return CommonUtil.getPort(ports[currentServerIndex], config.getSchema());
     }
-
-    private int getDefaultPort() {
-        if (config.getSchema().equals(HttpRequestConfig.HTTP_SCHEMA)) {
-            return 80;
-        } else {
-            return 443;
-        }
-    }
-
 
     /**
      * 是否应该更新服务IP

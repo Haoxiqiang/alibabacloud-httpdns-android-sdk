@@ -1,6 +1,5 @@
 package com.alibaba.sdk.android.httpdns.serverip;
 
-import com.alibaba.sdk.android.httpdns.impl.HttpDnsConfig;
 import com.alibaba.sdk.android.httpdns.request.HttpRequestConfig;
 import com.alibaba.sdk.android.httpdns.request.HttpRequestWatcher;
 
@@ -12,10 +11,11 @@ import com.alibaba.sdk.android.httpdns.request.HttpRequestWatcher;
  */
 public class ShiftServerWatcher implements HttpRequestWatcher.Watcher {
 
-    private HttpDnsConfig config;
+    private Server[] servers;
+    private int currentIndex = 0;
 
-    public ShiftServerWatcher(HttpDnsConfig config) {
-        this.config = config;
+    public ShiftServerWatcher(Server[] servers) {
+        this.servers = servers;
     }
 
     @Override
@@ -30,13 +30,12 @@ public class ShiftServerWatcher implements HttpRequestWatcher.Watcher {
     @Override
     public void onFail(HttpRequestConfig requestConfig, Throwable throwable) {
         // 切换和更新请求的服务IP
-        boolean isBackToFirstServer = this.config.getServerConfig().shiftServer(requestConfig.getIp(), requestConfig.getPort());
-        // 所有服务IP都尝试过了，重置为初始IP
-        if (isBackToFirstServer) {
-            this.config.resetServerIpsToInitServer();
+        currentIndex++;
+
+        if (currentIndex < servers.length) {
+            // 更新请求用的IP
+            requestConfig.setIp(servers[currentIndex].getServerIp());
+            requestConfig.setPort(servers[currentIndex].getPort(requestConfig.getSchema()));
         }
-        // 更新请求用的IP
-        requestConfig.setIp(this.config.getServerConfig().getServerIp());
-        requestConfig.setPort(this.config.getServerConfig().getPort());
     }
 }

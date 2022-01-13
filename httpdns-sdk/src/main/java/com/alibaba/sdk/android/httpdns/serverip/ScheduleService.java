@@ -36,7 +36,7 @@ public class ScheduleService {
             return;
         }
 
-        UpdateServerTask.updateServer(config.copy(), newRegion, new RequestCallback<UpdateServerResponse>() {
+        UpdateServerTask.updateServer(config, newRegion, new RequestCallback<UpdateServerResponse>() {
             @Override
             public void onSuccess(UpdateServerResponse updateServerResponse) {
                 if (!updateServerResponse.isEnable()) {

@@ -5,6 +5,7 @@ import android.text.Html;
 import android.util.Pair;
 
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
+import com.alibaba.sdk.android.httpdns.request.HttpRequestConfig;
 
 import org.json.JSONObject;
 
@@ -265,5 +266,26 @@ public class CommonUtil {
     public static void cleanCache() {
         hostCheckResult.clear();
         ipCheckResult.clear();
+    }
+
+
+    /**
+     * 当没有指定port（port非法时）根据schema使用默认的port
+     * 当指定了port时， 使用指定的port
+     *
+     * @param port
+     * @param schema
+     * @return
+     */
+    public static int getPort(int port, String schema) {
+        if (port > 0) {
+            return port;
+        } else {
+            if (schema.equals(HttpRequestConfig.HTTP_SCHEMA)) {
+                return 80;
+            } else {
+                return 443;
+            }
+        }
     }
 }

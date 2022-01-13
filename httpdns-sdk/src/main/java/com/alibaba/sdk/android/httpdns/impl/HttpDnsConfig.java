@@ -47,9 +47,6 @@ public class HttpDnsConfig {
     protected ExecutorService worker = ThreadUtil.createExecutorService();
     protected ExecutorService dbWorker = ThreadUtil.createDBExecutorService();
 
-    private HttpDnsConfig() {
-    }
-
     public HttpDnsConfig(Context context, String accountId) {
         this.context = context;
         this.accountId = accountId;
@@ -162,34 +159,6 @@ public class HttpDnsConfig {
     }
 
     /**
-     * 重置服务Ip为初始服务IP
-     */
-    public void resetServerIpsToInitServer() {
-        if (initServerIps != null) {
-            serverConfig.setServerIps(null, initServerIps, initServerPorts);
-        }
-    }
-
-    /**
-     * 复制自身
-     * @return
-     */
-    public HttpDnsConfig copy() {
-        HttpDnsConfig tmp = new HttpDnsConfig();
-        tmp.context = context;
-        tmp.accountId = accountId;
-        tmp.schema = schema;
-        tmp.region = region;
-        tmp.serverConfig = serverConfig.copy();
-        tmp.serverConfig.setConfig(tmp);
-        tmp.timeout = timeout;
-        tmp.worker = worker;
-        tmp.initServerIps = initServerIps;
-        tmp.initServerPorts = initServerPorts;
-        return tmp;
-    }
-
-    /**
      * 获取初始服务个数
      *
      * @return
@@ -200,6 +169,10 @@ public class HttpDnsConfig {
 
     public String[] getInitServerIps() {
         return this.initServerIps;
+    }
+
+    public int[] getInitServerPorts() {
+        return this.initServerPorts;
     }
 
     @Override

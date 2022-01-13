@@ -58,6 +58,10 @@ public class HttpRequestConfig {
         this.port = port;
     }
 
+    public String getSchema() {
+        return this.schema;
+    }
+
     public String getIp() {
         return ip;
     }

@@ -1,7 +1,6 @@
 package com.alibaba.sdk.android.httpdns.impl;
 
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
-import com.alibaba.sdk.android.httpdns.test.utils.UnitTestUtil;
 
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -115,37 +114,6 @@ public class HttpDnsConfigTest {
         int port = config.getServerConfig().getPort();
         config.getServerConfig().shiftServer(ip, port);
         MatcherAssert.assertThat("only current Server can mark", !config.getServerConfig().markOkServer(ip, port));
-    }
-
-    @Test
-    public void testCopy() {
-        // 调用api，使config内部的状态发生变化
-        config.getServerConfig().setServerIps(null, serverIps, ports);
-        config.getServerConfig().shiftServer(config.getServerConfig().getServerIp(), config.getServerConfig().getPort());
-        config.getServerConfig().markOkServer(config.getServerConfig().getServerIp(), config.getServerConfig().getPort());
-        config.getServerConfig().shiftServer(config.getServerConfig().getServerIp(), config.getServerConfig().getPort());
-
-        HttpDnsConfig testConfig = config.copy();
-        MatcherAssert.assertThat("copy的状态应该一模一样", testConfig.equals(config));
-        MatcherAssert.assertThat("copy的不应该是一个实例", testConfig != config);
-    }
-
-    @Test
-    public void testResetToInitServer() {
-        String[] initIps = RandomValue.randomIpv4s();
-        int[] initPorts = RandomValue.randomPorts();
-
-        config.setInitServers(initIps, null);
-        config.getServerConfig().setServerIps(null, serverIps, ports);
-        config.resetServerIpsToInitServer();
-        MatcherAssert.assertThat("reset whill change server to init servers", config.getServerConfig().getCurrentServerIps(), Matchers.arrayContaining(initIps));
-        MatcherAssert.assertThat("reset whill change server to init servers", config.getServerConfig().getPorts() == null);
-
-        config.setInitServers(initIps, initPorts);
-        config.getServerConfig().setServerIps(null, serverIps, ports);
-        config.resetServerIpsToInitServer();
-        MatcherAssert.assertThat("reset whill change server to init servers", config.getServerConfig().getCurrentServerIps(), Matchers.arrayContaining(initIps));
-        UnitTestUtil.assertIntArrayEquals(initPorts, config.getServerConfig().getPorts());
     }
 
     @Test
