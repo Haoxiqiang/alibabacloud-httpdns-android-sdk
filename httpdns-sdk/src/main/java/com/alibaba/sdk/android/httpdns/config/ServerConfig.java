@@ -20,22 +20,19 @@ import java.util.Arrays;
 public class ServerConfig {
 
     private HttpDnsConfig config;
-    private String[] serverIps = BuildConfig.INIT_SERVER;
-    private int[] ports = null;
+    private String[] serverIps;
+    private int[] ports;
     private int lastOkServerIndex = 0;
     private int currentServerIndex = 0;
     private String currentServerRegion = null;
     private long serverIpsLastUpdatedTime = 0;
 
-    public void init(HttpDnsConfig config) {
+    public ServerConfig(HttpDnsConfig config, String[] serverIps, int[] ports) {
         this.config = config;
+        this.serverIps = serverIps;
+        this.ports = ports;
         readFromCache(config.getContext(), this);
     }
-
-    public void setConfig(HttpDnsConfig config) {
-        this.config = config;
-    }
-
 
     public String getCurrentServerRegion() {
         return currentServerRegion;
@@ -147,23 +144,6 @@ public class ServerConfig {
         }
         return false;
     }
-
-    /**
-     * 复制自身
-     *
-     * @return
-     */
-    public ServerConfig copy() {
-        ServerConfig tmp = new ServerConfig();
-        tmp.currentServerRegion = currentServerRegion;
-        tmp.serverIps = serverIps == null ? null : Arrays.copyOf(serverIps, serverIps.length);
-        tmp.ports = ports == null ? null : Arrays.copyOf(ports, ports.length);
-        tmp.lastOkServerIndex = lastOkServerIndex;
-        tmp.currentServerIndex = currentServerIndex;
-        tmp.serverIpsLastUpdatedTime = serverIpsLastUpdatedTime;
-        return tmp;
-    }
-
 
     @Override
     public boolean equals(Object o) {

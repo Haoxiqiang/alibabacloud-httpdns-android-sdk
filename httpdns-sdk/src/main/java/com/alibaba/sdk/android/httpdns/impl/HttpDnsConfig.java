@@ -35,7 +35,7 @@ public class HttpDnsConfig {
     private int[] initServerPorts = null;
     private String accountId;
     private String schema = HttpRequestConfig.HTTP_SCHEMA;
-    private ServerConfig serverConfig = new ServerConfig();
+    private ServerConfig serverConfig;
     private int currentIpv6ServerIndex = 0;
     private String region = null;
     private int timeout = HttpRequestConfig.DEFAULT_TIMEOUT;
@@ -51,7 +51,7 @@ public class HttpDnsConfig {
         this.context = context;
         this.accountId = accountId;
         readFromCache(context, this);
-        this.serverConfig.init(this);
+        this.serverConfig = new ServerConfig(this, initServerIps, initServerPorts);
     }
 
     public Context getContext() {
