@@ -74,7 +74,7 @@ public class InterpretHostRequestHandler {
         HttpRequest<ResolveHostResponse> request = new HttpRequest<ResolveHostResponse>(requestConfig, new ResolveHostResponseTranslator());
         request = new HttpRequestWatcher<>(request, new HttpRequestFailWatcher(ReportManager.getReportManagerByAccount(config.getAccountId())));
         // 兼容ipv6only 环境
-        request = new HttpRequestWatcher<>(request, new Ipv6onlyWatcher(config));
+        request = new HttpRequestWatcher<>(request, new Ipv6onlyWatcher(config.getIpv6ServerIps()));
         // 切换服务IP，更新服务IP
         request = new HttpRequestWatcher<>(request, new ShiftServerWatcher(config, scheduleService, categoryController));
         // 重试一次

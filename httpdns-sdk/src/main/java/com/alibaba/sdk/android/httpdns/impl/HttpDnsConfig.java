@@ -25,22 +25,45 @@ public class HttpDnsConfig {
     private Context context;
     private boolean enabled = true;
     /**
-     * 初始服务
+     * 初始服务节点
      */
     private RegionServer initServer = new RegionServer(BuildConfig.INIT_SERVER, Constants.NO_PORTS, Constants.REGION_DEFAULT);
     /**
-     * ipv6的初始服务IP
+     * ipv6的初始服务节点
      * 目前仅用于一些ipv6only的环境，避免httpdns完全失效
      */
     private String[] ipv6InitServerIps = BuildConfig.IPV6_INIT_SERVER;
+    /**
+     * 当前服务节点
+     */
+    private ServerConfig currentServer;
+    /**
+     * 用户的accountId
+     */
     private String accountId;
+    /**
+     * 当前请求使用的schema
+     */
     private String schema = HttpRequestConfig.HTTP_SCHEMA;
-    private ServerConfig serverConfig;
-    private int currentIpv6ServerIndex = 0;
+    /**
+     * 当前region
+     */
     private String region = Constants.REGION_DEFAULT;
+    /**
+     * 超时时长
+     */
     private int timeout = HttpRequestConfig.DEFAULT_TIMEOUT;
+    /**
+     * 是否禁用服务，以避免崩溃
+     */
     private boolean crashDefend;
+    /**
+     * 是否远程禁用服务
+     */
     private boolean remoteDisabled = false;
+    /**
+     * 是否禁用probe能力
+     */
     private boolean probeDisabled = false;
 
 
@@ -51,7 +74,7 @@ public class HttpDnsConfig {
         this.context = context;
         this.accountId = accountId;
         readFromCache(context, this);
-        this.serverConfig = new ServerConfig(this);
+        this.currentServer = new ServerConfig(this);
     }
 
     public Context getContext() {
@@ -63,11 +86,11 @@ public class HttpDnsConfig {
     }
 
     public ServerConfig getCurrentServer() {
-        return serverConfig;
+        return currentServer;
     }
 
     public boolean isCurrentRegionMatch() {
-        return CommonUtil.regionEquals(region, serverConfig.getRegion());
+        return CommonUtil.regionEquals(region, currentServer.getRegion());
     }
 
     public String getRegion() {
@@ -142,20 +165,8 @@ public class HttpDnsConfig {
      *
      * @return
      */
-    public String getIpv6ServerIp() {
-        if (ipv6InitServerIps == null || currentIpv6ServerIndex >= ipv6InitServerIps.length || (region != null && !region.isEmpty())) {
-            return null;
-        }
-        return ipv6InitServerIps[currentIpv6ServerIndex];
-    }
-
-    /**
-     * 切换ipv6服务节点
-     */
-    public void shiftIpv6Server() {
-        if (ipv6InitServerIps != null && ipv6InitServerIps.length > 0) {
-            currentIpv6ServerIndex = (currentIpv6ServerIndex + 1) % ipv6InitServerIps.length;
-        }
+    public String[] getIpv6ServerIps() {
+        return ipv6InitServerIps;
     }
 
     public RegionServer getInitServer() {
@@ -179,7 +190,7 @@ public class HttpDnsConfig {
 
     @Override
     public int hashCode() {
-        int result = Arrays.hashCode(new Object[]{context, enabled, accountId, schema, serverConfig, region, timeout, worker, initServer});
+        int result = Arrays.hashCode(new Object[]{context, enabled, accountId, schema, currentServer, region, timeout, worker, initServer});
         return result;
     }
 
@@ -199,9 +210,9 @@ public class HttpDnsConfig {
         String[] oldInitServerIps = this.initServer.getServerIps();
         int[] oldInitPorts = this.initServer.getPorts();
         this.initServer.update(initIps, initPorts);
-        if (serverConfig.getServerIps() == null || CommonUtil.isSameServer(oldInitServerIps, oldInitPorts, serverConfig.getServerIps(), serverConfig.getPorts())) {
+        if (currentServer.getServerIps() == null || CommonUtil.isSameServer(oldInitServerIps, oldInitPorts, currentServer.getServerIps(), currentServer.getPorts())) {
             // 初始IP默认region为国内
-            serverConfig.setServerIps(this.initServer.getRegion(), initIps, initPorts);
+            currentServer.setServerIps(this.initServer.getRegion(), initIps, initPorts);
         }
     }
 
