@@ -6,6 +6,7 @@ import android.net.ConnectivityManager;
 import com.alibaba.sdk.android.httpdns.interpret.InterpretHostResponse;
 import com.alibaba.sdk.android.httpdns.interpret.ResolveHostResponse;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
+import com.alibaba.sdk.android.httpdns.probe.IPProbeItem;
 import com.alibaba.sdk.android.httpdns.test.app.BusinessApp;
 import com.alibaba.sdk.android.httpdns.test.helper.ServerHelper;
 import com.alibaba.sdk.android.httpdns.test.helper.ServerStatusHelper;
@@ -30,7 +31,10 @@ import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowLog;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -64,13 +68,15 @@ public class HttpDnsE2E {
     public void setUp() {
         HttpDnsLog.enable(true);
         logger = new ILogger() {
+            private SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
             @Override
             public void log(String msg) {
-                System.out.println("[Httpdns][" + System.currentTimeMillis() % (60 * 1000) + "]" + msg);
+                System.out.println("[" + format.format(new Date()) + "][Httpdns][" + System.currentTimeMillis() % (60 * 1000) + "]" + msg);
             }
         };
         HttpDnsLog.setLogger(logger);
         HttpDns.resetInstance();
+        InitConfig.removeConfig(null);
         server.start();
         server1.start();
         server2.start();
@@ -1628,5 +1634,236 @@ public class HttpDnsE2E {
 
         String[] ips = app.requestInterpretHost();
         MatcherAssert.assertThat("缓存被清除了，此时返回是空", ips == null || ips.length == 0);
+    }
+
+
+    @Test
+    public void enableCacheWhenInit() {
+        String accountId = RandomValue.randomStringWithFixedLength(10);
+
+        new InitConfig.Builder()
+                .setEnableCacheIp(true)
+                .buildFor(accountId);
+
+        BusinessApp app = new BusinessApp(accountId);
+
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+
+        // 先发起一些请求，缓存一些Ip结果
+        app.requestInterpretHost();
+        app.waitForAppThread();
+        String[] ips = app.requestInterpretHost();
+        MatcherAssert.assertThat("确定有缓存了", ips.length > 0);
+
+        // 重置实例，确保下次读取的信息是从本地缓存来的
+        HttpDns.resetInstance();
+
+        // 重启应用，获取新的实例
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+
+        String[] ips2 = app.requestInterpretHost();
+        ServerStatusHelper.hasNotReceiveAppInterpretHostRequest("当本地有缓存时，不会请求服务器", app, server);
+        UnitTestUtil.assertIpsEqual("解析域名返回服务器结果", ips2, ips);
+    }
+
+    @Test
+    public void setRegionWhenInit() {
+        String accountId = RandomValue.randomStringWithFixedLength(10);
+
+        new InitConfig.Builder()
+                .setRegion(Constants.REGION_HK)
+                .buildFor(accountId);
+
+        BusinessApp app = new BusinessApp(accountId);
+
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, false);
+
+        ServerStatusHelper.hasReceiveRegionChange("初始化时更新HK节点", app, server, Constants.REGION_HK, true);
+    }
+
+    @Test
+    public void disableExpireIpWhenInit() throws InterruptedException {
+        String accountId = RandomValue.randomStringWithFixedLength(10);
+
+        new InitConfig.Builder()
+                .setEnableExpiredIp(false)
+                .buildFor(accountId);
+
+        BusinessApp app = new BusinessApp(accountId);
+
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+
+        InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(app.getRequestHost(), 1);
+        InterpretHostResponse response1 = ServerHelper.randomInterpretHostResponse(app.getRequestHost());
+        server.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), response, 1);
+        server.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), response1, -1);
+        // 请求域名解析，并返回空结果，因为是接口是异步的，所以第一次请求一个域名返回是空
+        String[] ips = app.requestInterpretHost();
+        UnitTestUtil.assertIpsEmpty("第一次请求，没有缓存，应该返回空", ips);
+        app.waitForAppThread();
+        // 再次请求，获取服务器返回的结果
+        app.requestInterpretHost();
+
+        Thread.sleep(1000);
+        // ttl 过期后请求ip
+        ips = app.requestInterpretHost();
+        UnitTestUtil.assertIpsEmpty("不启用过期IP，返回空", ips);
+        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("ttl过期后，请求会触发网络请求", app, app.getRequestHost(), server, response1, 1, true);
+        // 再次请求，获取再次请求服务器返回的结果
+        ips = app.requestInterpretHost();
+        // 结果和服务器返回一致
+        UnitTestUtil.assertIpsEqual("解析域名返回服务器结果", response1.getIps(), ips);
+    }
+
+    @Test
+    public void setTimeoutWhenInit() {
+        String accountId = RandomValue.randomStringWithFixedLength(10);
+        // 设置超时时间
+        int timeout = 1000;
+        new InitConfig.Builder()
+                .setTimeout(timeout)
+                .buildFor(accountId);
+        BusinessApp app = new BusinessApp(accountId);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+
+        // 预设请求超时
+        server.getInterpretHostServer().preSetRequestTimeout(app.getRequestHost(), -1);
+
+        // 请求 并计时
+        long start = System.currentTimeMillis();
+        app.requestInterpretHost();
+        // 确实是否接受到请求，并超时
+        ServerStatusHelper.hasReceiveAppInterpretHostRequestButTimeout(app, server);
+        long costTime = System.currentTimeMillis() - start;
+
+        // 3.05 是个经验数据，可以考虑调整。影响因素主要有重试次数和线程切换
+        assertThat("requst timeout " + costTime, costTime < timeout * 3.05);
+    }
+
+    @Test
+    public void preResolveWhenInit() {
+        String accountId = RandomValue.randomStringWithFixedLength(10);
+        String[] hosts = new String[]{
+                RandomValue.randomHost(),
+                RandomValue.randomHost(),
+                RandomValue.randomHost()
+        };
+
+        new InitConfig.Builder()
+                .setHostsToPreResolve(Arrays.asList(hosts))
+                .buildFor(accountId);
+
+        BusinessApp app = new BusinessApp(accountId);
+
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+
+        app.waitForAppThread();
+
+        for (int i = 0; i < hosts.length; i++) {
+            String host = hosts[i];
+            String[] ips = app.requestInterpretHost(host);
+            MatcherAssert.assertThat("已经预解析，有缓存", ips.length > 0);
+        }
+    }
+
+    @Test
+    public void configProbeWhenInit() {
+        speedTestServer.watch(server);
+        String accountId = RandomValue.randomStringWithFixedLength(10);
+        String host = RandomValue.randomHost();
+        new InitConfig.Builder()
+                .setIpProbeItems(Arrays.asList(new IPProbeItem(host, 6666)))
+                .buildFor(accountId);
+
+        BusinessApp app = new BusinessApp(accountId);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+
+        // 请求数据触发IP优选
+        app.requestInterpretHost(host);
+        app.waitForAppThread();
+
+        // 判断返回的结果是优选的结果
+        String[] ips = app.requestInterpretHost(host);
+        String[] sortedIps = speedTestServer.getSortedIpsFor(host);
+
+        UnitTestUtil.assertIpsEqual("设置ip优选后，返回的ip是优选之后的结果", ips, sortedIps);
+    }
+
+    /**
+     * 当配置了region和预解析时，优先region更新，再进行预解析，避免预解析的ip不合适
+     */
+    @Test
+    public void preResolveWithRegionWhenConfig() {
+        // hk 指向 3 4 5
+        prepareUpdateServerResponseForGroup1(Constants.REGION_HK);
+
+        String host = RandomValue.randomHost();
+        ArrayList<String> hostList = new ArrayList<>();
+        hostList.add(host);
+        ResolveHostResponse response = ServerHelper.randomResolveHostResponse(hostList, RequestIpType.v4);
+        server3.getResolveHostServer().preSetRequestResponse(ServerHelper.formResolveHostArg(hostList, RequestIpType.v4), response, 1);
+
+        String accountId = RandomValue.randomStringWithFixedLength(10);
+        new InitConfig.Builder()
+                .setRegion(Constants.REGION_HK)
+                .setHostsToPreResolve(Arrays.asList(host))
+                .buildFor(accountId);
+
+        BusinessApp app = new BusinessApp(accountId);
+
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+
+        app.waitForAppThread();
+
+        String[] ips = app.requestInterpretHost(host);
+        UnitTestUtil.assertIpsEqual("使用hk的服务节点进行的预解析", ips, response.getItem(host).getIps());
+    }
+
+
+    /**
+     * 加载本地缓存应该在region切换之后，避免加载错误的缓存
+     */
+    @Test
+    public void loadCacheAfterRegionChangeWhenInit() {
+        final String defaultRegion = Constants.REGION_DEFAULT;
+        final String hkRegion = Constants.REGION_HK;
+        // 设置不同region对应的服务信息
+        prepareUpdateServerResponse(defaultRegion, hkRegion);
+
+        String accountId = RandomValue.randomStringWithFixedLength(10);
+        new InitConfig.Builder()
+                .setEnableCacheIp(true)
+                .buildFor(accountId);
+        BusinessApp app = new BusinessApp(accountId);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+
+        app.requestInterpretHost();
+        app.waitForAppThread();
+        String[] ips = app.requestInterpretHost();
+        // 确定已经有缓存
+        MatcherAssert.assertThat("已经有缓存", ips != null && ips.length > 0);
+
+        HttpDns.resetInstance();
+        app.waitForAppThread();
+
+        new InitConfig.Builder()
+                .setEnableCacheIp(true)
+                .setRegion(Constants.REGION_HK)
+                .buildFor(accountId);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+
+        app.waitForAppThread();
+
+        String[] ipsAfterChangeRegion = app.requestInterpretHost();
+        MatcherAssert.assertThat("region切换，无法读取到原region的缓存", ipsAfterChangeRegion == null || ipsAfterChangeRegion.length == 0);
+
+        HttpDns.resetInstance();
+        app.waitForAppThread();
+
+        new InitConfig.Builder()
+                .setEnableCacheIp(true)
+                .setRegion(Constants.REGION_HK)
+                .buildFor(accountId);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
     }
 }
