@@ -50,6 +50,12 @@ public class RegionServer {
                 CommonUtil.equals(region, that.region);
     }
 
+    public boolean serverEquals(RegionServer that) {
+        return Arrays.equals(serverIps, that.serverIps) &&
+                Arrays.equals(ports, that.ports) &&
+                CommonUtil.equals(region, that.region);
+    }
+
     @Override
     public int hashCode() {
         int result = Arrays.hashCode(new Object[]{region});

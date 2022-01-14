@@ -14,6 +14,7 @@ import com.alibaba.sdk.android.httpdns.test.server.MockSpeedTestServer;
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
 import com.alibaba.sdk.android.httpdns.test.utils.ShadowNetworkInfo;
 import com.alibaba.sdk.android.httpdns.test.utils.UnitTestUtil;
+import com.alibaba.sdk.android.httpdns.utils.Constants;
 
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -78,8 +79,8 @@ public class HttpDnsE2E {
         server5.start();
         ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
         application.grantPermissions(Manifest.permission.ACCESS_NETWORK_STATE);
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
-        app1.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+        app1.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
     }
 
     @After
@@ -162,8 +163,8 @@ public class HttpDnsE2E {
      */
     @Test
     public void changeRegionWillUpdateServerIp() {
-        final String defaultRegion = "";
-        final String hkRegion = "hk";
+        final String defaultRegion = Constants.REGION_DEFAULT;
+        final String hkRegion = Constants.REGION_HK;
 
         // 设置不同region对应的服务信息
         prepareUpdateServerResponse(defaultRegion, hkRegion);
@@ -400,8 +401,8 @@ public class HttpDnsE2E {
      */
     @Test
     public void setRegionHasTimeInterval() {
-        String defaultRegion = "";
-        String hkRegion = "hk";
+        String defaultRegion = Constants.REGION_DEFAULT;
+        String hkRegion = Constants.REGION_HK;
 
         prepareUpdateServerResponse(defaultRegion, hkRegion);
 
@@ -442,8 +443,9 @@ public class HttpDnsE2E {
      */
     @Test
     public void updateServerIpsHasTimeInterval() throws InterruptedException {
+
         // 设置更新服务IP数据
-        prepareUpdateServerResponse("", "");
+        prepareUpdateServerResponse(Constants.REGION_DEFAULT, Constants.REGION_DEFAULT);
         //设置所有的服务为不可用
         ServerStatusHelper.degradeServer(server, app.getRequestHost(), -1);
         ServerStatusHelper.degradeServer(server1, app.getRequestHost(), -1);
@@ -458,7 +460,7 @@ public class HttpDnsE2E {
         // 请求一次， 切换服务IP，触发服务IP更新
         app.requestInterpretHost(app.getRequestHost());
         // 检查更新服务IP请求是否触发
-        ServerStatusHelper.hasReceiveRegionChange("服务IP切换一遍后，触发服务IP更新", app, server, "", true);
+        ServerStatusHelper.hasReceiveRegionChange("服务IP切换一遍后，触发服务IP更新", app, server, Constants.REGION_DEFAULT, true);
         // 更新之后，退出嗅探模式， 再来一次
         // 请求 切换服务IP，每次请求 重试1次，一共请求两次，进入嗅探模式
         app.requestInterpretHost(app.getRequestHost());
@@ -466,8 +468,8 @@ public class HttpDnsE2E {
         // 请求一次， 切换服务IP，触发服务IP更新
         app.requestInterpretHost(app.getRequestHost());
         // 因为间隔过小，不会请求服务器
-        ServerStatusHelper.hasNotReceiveRegionChange("更新服务IP没有设置时间间隔", app, server, "");
-        ServerStatusHelper.hasNotReceiveRegionChange("更新服务IP没有设置时间间隔", app, server3, "");
+        ServerStatusHelper.hasNotReceiveRegionChange("更新服务IP没有设置时间间隔", app, server, Constants.REGION_DEFAULT);
+        ServerStatusHelper.hasNotReceiveRegionChange("更新服务IP没有设置时间间隔", app, server3, Constants.REGION_DEFAULT);
 
         // 缩短时间间隔
         app.setUpdateServerTimeInterval(1000);
@@ -481,7 +483,7 @@ public class HttpDnsE2E {
         Thread.sleep(500);
         app.requestInterpretHost(app.getRequestHost());
         // 确认服务IP请求触发
-        ServerStatusHelper.hasReceiveRegionChange("更新服务IP超过时间间隔才能请求,如果在嗅探模式下，也需要缩短嗅探的时间间隔", app, server3, "");
+        ServerStatusHelper.hasReceiveRegionChange("更新服务IP超过时间间隔才能请求,如果在嗅探模式下，也需要缩短嗅探的时间间隔", app, server3, Constants.REGION_DEFAULT);
     }
 
     /**
@@ -489,7 +491,8 @@ public class HttpDnsE2E {
      */
     @Test
     public void updateServerFailWhenRetryAnotherServer() {
-        String hkRegion = "hk";
+
+        String hkRegion = Constants.REGION_HK;
         String updateServerResponse = ServerHelper.createUpdateServerResponse(new String[]{server3.getServerIp(), server4.getServerIp(), server5.getServerIp()}, RandomValue.randomIpv6s(), new int[]{server3.getPort(), server4.getPort(), server5.getPort()}, RandomValue.randomPorts());
         // 第一个服务失败
         server.getServerIpsServer().preSetRequestResponse(hkRegion, 400, "whatever", 1);
@@ -508,8 +511,9 @@ public class HttpDnsE2E {
      */
     @Test
     public void updateServerAllFailWhenRetryInitServer() {
-        String hkRegion = "hk";
-        String defaultRegion = "";
+
+        String hkRegion = Constants.REGION_HK;
+        String defaultRegion = Constants.REGION_DEFAULT;
         prepareUpdateServerResponseForGroup1(hkRegion);
 
         // 设置服务不可用
@@ -535,8 +539,8 @@ public class HttpDnsE2E {
         ServerStatusHelper.requestInterpretAnotherHost("应用0域名解析服务正常", app, server);
         ServerStatusHelper.requestInterpretAnotherHost("应用1域名解析服务正常", app1, server);
 
-        String defaultRegion = "";
-        String hkRegion = "hk";
+        String defaultRegion = Constants.REGION_DEFAULT;
+        String hkRegion = Constants.REGION_HK;
         prepareUpdateServerResponse(defaultRegion, hkRegion);
 
         // 应用0切换到 hk
@@ -924,7 +928,7 @@ public class HttpDnsE2E {
         HttpDns.resetInstance();
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
 
         // 确认后续请求都是使用切换后的服务
         ServerStatusHelper.requestInterpretAnotherHost("读取缓存应该是直接使用切换后的服务", app, server1);
@@ -949,7 +953,7 @@ public class HttpDnsE2E {
         HttpDns.resetInstance();
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
 
         // 检查服务IP是否已经更新
         ServerStatusHelper.requestInterpretAnotherHost("更新服务IP后，使用新服务解析域名", app, server3);
@@ -970,7 +974,7 @@ public class HttpDnsE2E {
         HttpDns.resetInstance();
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         app.enableCache(false);
 
         ips = app.requestInterpretHost();
@@ -995,7 +999,7 @@ public class HttpDnsE2E {
         HttpDns.resetInstance();
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         app.enableCache(true);
 
         ips = app.requestInterpretHost();
@@ -1006,7 +1010,7 @@ public class HttpDnsE2E {
         HttpDns.resetInstance();
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         app.enableCache(false);
 
         ips = app.requestInterpretHost();
@@ -1030,7 +1034,7 @@ public class HttpDnsE2E {
         HttpDns.resetInstance();
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         app.enableCache(false);
 
         ips = app.requestInterpretHost();
@@ -1061,7 +1065,7 @@ public class HttpDnsE2E {
         Thread.sleep(1000);
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         app.enableCache(false);
         app.enableExpiredIp(false);
 
@@ -1115,7 +1119,7 @@ public class HttpDnsE2E {
         String account = RandomValue.randomStringWithFixedLength(20);
         String secret = server.createSecretFor(account);
         BusinessApp app2 = new BusinessApp(account, secret);
-        app2.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app2.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
 
         String host = RandomValue.randomHost();
         app2.requestInterpretHost(host);
@@ -1134,7 +1138,7 @@ public class HttpDnsE2E {
         String account = RandomValue.randomStringWithFixedLength(20);
         String secret = server.createSecretFor(account);
         BusinessApp app2 = new BusinessApp(account, secret);
-        app2.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app2.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         app2.setTime(System.currentTimeMillis() / 1000 - 11 * 60);
 
         String host = RandomValue.randomHost();
@@ -1226,7 +1230,7 @@ public class HttpDnsE2E {
 
     @Test
     public void serverIpWillUpdateEveryday() {
-        String region = "hk";
+        String region = Constants.REGION_DEFAULT;
         String updateServerResponseFor345 = ServerHelper.createUpdateServerResponse(new String[]{server.getServerIp(), server1.getServerIp(), server2.getServerIp()}, RandomValue.randomIpv6s(), new int[]{server.getPort(), server1.getPort(), server2.getPort()}, RandomValue.randomPorts());
         server3.getServerIpsServer().preSetRequestResponse(region, 200, updateServerResponseFor345, -1);
         server4.getServerIpsServer().preSetRequestResponse(region, 200, updateServerResponseFor345, -1);
@@ -1248,7 +1252,7 @@ public class HttpDnsE2E {
         HttpDns.resetInstance();
 
         // 重新初始化应用，自动更新服务IP 到 1 2 3
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, false);
         app.waitForAppThread();
 
         ServerStatusHelper.hasReceiveRegionChange("服务IP超过一天自动更新", app, server3, region, true);
@@ -1258,7 +1262,7 @@ public class HttpDnsE2E {
 
     @Test
     public void testDisableService() {
-        String region = "hk";
+        String region = Constants.REGION_HK;
         String disableResponse = ServerHelper.createUpdateServerDisableResponse();
         server.getServerIpsServer().preSetRequestResponse(region, 200, disableResponse, -1);
 
@@ -1335,7 +1339,7 @@ public class HttpDnsE2E {
     @Test
     public void testNotCrashWhenCallTwoManyTime() {
         app.checkThreadCount(false);
-        prepareUpdateServerResponse("", "hk");
+        prepareUpdateServerResponse(Constants.REGION_DEFAULT, Constants.REGION_HK);
         try {
             for (int i = 0; i < 1000; i++) {
                 String host = RandomValue.randomHost();
@@ -1353,7 +1357,7 @@ public class HttpDnsE2E {
                         app.requestInterpretHostForIpv6();
                         break;
                     case 4:
-                        app.changeRegionTo(RandomValue.randomInt(2) == 0 ? "" : "hk");
+                        app.changeRegionTo(RandomValue.randomInt(2) == 0 ? Constants.REGION_DEFAULT : Constants.REGION_HK);
                         break;
                     case 5:
                         ArrayList<String> hostList = new ArrayList<>();
@@ -1436,7 +1440,7 @@ public class HttpDnsE2E {
         HttpDns.resetInstance();
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         app.enableCache(false);
 
         // 读取缓存
@@ -1447,7 +1451,7 @@ public class HttpDnsE2E {
         HttpDns.resetInstance();
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         app.enableCache(false);
 
         String[] ips3 = app.requestInterpretHost();
@@ -1461,7 +1465,7 @@ public class HttpDnsE2E {
         HttpDns.resetInstance();
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         app.enableCache(false);
 
         String[] ips4 = app.requestInterpretHost();
@@ -1558,8 +1562,8 @@ public class HttpDnsE2E {
      */
     @Test
     public void stopInterpretHostWhenServerIpDoNotBelongCurrentRegion() {
-        final String defaultRegion = "";
-        final String hkRegion = "hk";
+        final String defaultRegion = Constants.REGION_DEFAULT;
+        final String hkRegion = Constants.REGION_HK;
 
         // 设置不同region对应的服务信息
         prepareUpdateServerResponse(defaultRegion, hkRegion);
@@ -1578,8 +1582,8 @@ public class HttpDnsE2E {
 
     @Test
     public void changeRegionWillCleanCachePreventGetWrongIp() {
-        final String defaultRegion = "";
-        final String hkRegion = "hk";
+        final String defaultRegion = Constants.REGION_DEFAULT;
+        final String hkRegion = Constants.REGION_HK;
         // 设置不同region对应的服务信息
         prepareUpdateServerResponse(defaultRegion, hkRegion);
 
@@ -1599,8 +1603,8 @@ public class HttpDnsE2E {
 
     @Test
     public void cacheWillLoadCurrentRegion() {
-        final String defaultRegion = "";
-        final String hkRegion = "hk";
+        final String defaultRegion = Constants.REGION_DEFAULT;
+        final String hkRegion = Constants.REGION_HK;
         // 设置不同region对应的服务信息
         prepareUpdateServerResponse(defaultRegion, hkRegion);
 
@@ -1616,7 +1620,7 @@ public class HttpDnsE2E {
         app.waitForAppThread();
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         // 切换region
         app.changeRegionTo(hkRegion);
         // 再加载缓存

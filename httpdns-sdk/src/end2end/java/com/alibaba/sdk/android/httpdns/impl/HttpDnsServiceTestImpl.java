@@ -3,8 +3,9 @@ package com.alibaba.sdk.android.httpdns.impl;
 import android.content.Context;
 
 import com.alibaba.sdk.android.httpdns.ApiForTest;
+import com.alibaba.sdk.android.httpdns.BeforeHttpDnsServiceInit;
+import com.alibaba.sdk.android.httpdns.InitManager;
 import com.alibaba.sdk.android.httpdns.probe.ProbeTask;
-import com.alibaba.sdk.android.httpdns.serverip.UpdateServerTask;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -16,6 +17,16 @@ import java.util.concurrent.ScheduledExecutorService;
 public class HttpDnsServiceTestImpl extends HttpDnsServiceImpl implements ApiForTest {
     public HttpDnsServiceTestImpl(Context context, String accountId, String secret) {
         super(context, accountId, secret);
+    }
+
+    @Override
+    protected void beforeInit() {
+        super.beforeInit();
+        BeforeHttpDnsServiceInit init = InitManager.getInstance().getAndRemove(config.getAccountId());
+
+        if (init != null) {
+            init.beforeInit(this);
+        }
     }
 
     @Override

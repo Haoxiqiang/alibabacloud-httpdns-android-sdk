@@ -2,6 +2,7 @@ package com.alibaba.sdk.android.httpdns.serverip;
 
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
 import com.alibaba.sdk.android.httpdns.test.utils.UnitTestUtil;
+import com.alibaba.sdk.android.httpdns.utils.Constants;
 
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -25,7 +26,7 @@ public class ServerIpRepoTest {
         MatcherAssert.assertThat("没有数据时应该返回null", repo.getServerIps("") == null);
         MatcherAssert.assertThat("没有数据时应该返回null", repo.getPorts("") == null);
 
-        String hk = "hk";
+        String hk = Constants.REGION_HK;
         String[] hkIps = RandomValue.randomIpv4s();
         repo.save(hk, hkIps, null);
 

@@ -77,8 +77,8 @@ public class HttpDnsE2E {
         server5.start();
         ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
         application.grantPermissions(Manifest.permission.ACCESS_NETWORK_STATE);
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
-        app1.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+        app1.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
     }
 
     @After
@@ -921,7 +921,7 @@ public class HttpDnsE2E {
         HttpDns.resetInstance();
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
 
         // 确认后续请求都是使用切换后的服务
         ServerStatusHelper.requestInterpretAnotherHost("读取缓存应该是直接使用切换后的服务", app, server1);
@@ -946,7 +946,7 @@ public class HttpDnsE2E {
         HttpDns.resetInstance();
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
 
         // 检查服务IP是否已经更新
         ServerStatusHelper.requestInterpretAnotherHost("更新服务IP后，使用新服务解析域名", app, server3);
@@ -967,7 +967,7 @@ public class HttpDnsE2E {
         HttpDns.resetInstance();
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         app.enableCache(false);
 
         ips = app.requestInterpretHost();
@@ -992,7 +992,7 @@ public class HttpDnsE2E {
         HttpDns.resetInstance();
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         app.enableCache(true);
 
         ips = app.requestInterpretHost();
@@ -1003,7 +1003,7 @@ public class HttpDnsE2E {
         HttpDns.resetInstance();
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         app.enableCache(false);
 
         ips = app.requestInterpretHost();
@@ -1027,7 +1027,7 @@ public class HttpDnsE2E {
         HttpDns.resetInstance();
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         app.enableCache(false);
 
         ips = app.requestInterpretHost();
@@ -1058,7 +1058,7 @@ public class HttpDnsE2E {
         Thread.sleep(1000);
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         app.enableCache(false);
         app.enableExpiredIp(false);
 
@@ -1112,7 +1112,7 @@ public class HttpDnsE2E {
         String account = RandomValue.randomStringWithFixedLength(20);
         String secret = server.createSecretFor(account);
         BusinessApp app2 = new BusinessApp(account, secret);
-        app2.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app2.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
 
         String host = RandomValue.randomHost();
         app2.requestInterpretHost(host);
@@ -1131,7 +1131,7 @@ public class HttpDnsE2E {
         String account = RandomValue.randomStringWithFixedLength(20);
         String secret = server.createSecretFor(account);
         BusinessApp app2 = new BusinessApp(account, secret);
-        app2.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app2.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         app2.setTime(System.currentTimeMillis() / 1000 - 11 * 60);
 
         String host = RandomValue.randomHost();
@@ -1245,7 +1245,7 @@ public class HttpDnsE2E {
         HttpDns.resetInstance();
 
         // 重新初始化应用，自动更新服务IP 到 1 2 3
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         app.waitForAppThread();
 
         ServerStatusHelper.hasReceiveRegionChange("服务IP超过一天自动更新", app, server3, region, true);
@@ -1435,7 +1435,7 @@ public class HttpDnsE2E {
         HttpDns.resetInstance();
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         app.enableCache(false);
 
         // 读取缓存
@@ -1446,7 +1446,7 @@ public class HttpDnsE2E {
         HttpDns.resetInstance();
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         app.enableCache(false);
 
         String[] ips3 = app.requestInterpretHost();
@@ -1460,7 +1460,7 @@ public class HttpDnsE2E {
         HttpDns.resetInstance();
 
         // 重启应用，获取新的实例
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         app.enableCache(false);
 
         String[] ips4 = app.requestInterpretHost();

@@ -27,7 +27,7 @@ public class UpdateServerTask {
     public static void updateServer(HttpDnsConfig config, String region, RequestCallback<UpdateServerResponse> callback) {
         String path = "/" + config.getAccountId() + "/ss?"
                 + "platform=android&sdk_version=" + BuildConfig.VERSION_NAME
-                + (TextUtils.isEmpty(region) ? "" : ("&region=" + region)
+                + ((TextUtils.isEmpty(region) ? "" : ("&region=" + region))
                 + getSid());
 
         Server[] servers = getAllServers(config.getCurrentServer().getServerIps(), config.getCurrentServer().getPorts(), config.getInitServer().getServerIps(), config.getInitServer().getPorts());

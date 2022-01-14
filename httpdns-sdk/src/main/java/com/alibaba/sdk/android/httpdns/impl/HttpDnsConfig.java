@@ -99,6 +99,10 @@ public class HttpDnsConfig implements SpCacheItem {
         return CommonUtil.regionEquals(region, currentServer.getRegion());
     }
 
+    public boolean isInitServerInUse() {
+        return initServer.serverEquals((RegionServer) currentServer);
+    }
+
     public String getRegion() {
         return region;
     }

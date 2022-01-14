@@ -148,17 +148,17 @@ public class HttpDnsConfigTest {
         MatcherAssert.assertThat("默认服务节点是国内的", config.getCurrentServer().getRegion(), Matchers.is(Matchers.equalTo(Constants.REGION_DEFAULT)));
         MatcherAssert.assertThat("默认region匹配", config.isCurrentRegionMatch(), Matchers.is(true));
 
-        config.setRegion("hk");
+        config.setRegion(Constants.REGION_HK);
 
-        MatcherAssert.assertThat("setRegion 更新成功", config.getRegion(), Matchers.is(Matchers.equalTo("hk")));
+        MatcherAssert.assertThat("setRegion 更新成功", config.getRegion(), Matchers.is(Matchers.equalTo(Constants.REGION_HK)));
         MatcherAssert.assertThat("setRegion不影响服务节点的region", config.getCurrentServer().getRegion(), Matchers.is(Matchers.equalTo(Constants.REGION_DEFAULT)));
         MatcherAssert.assertThat("setRegion 导致region不匹配", config.isCurrentRegionMatch(), Matchers.is(false));
 
-        config.getCurrentServer().setServerIps("hk", RandomValue.randomIpv4s(), RandomValue.randomPorts());
+        config.getCurrentServer().setServerIps(Constants.REGION_HK, RandomValue.randomIpv4s(), RandomValue.randomPorts());
 
 
-        MatcherAssert.assertThat("setRegion 更新成功", config.getRegion(), Matchers.is(Matchers.equalTo("hk")));
-        MatcherAssert.assertThat("setServerIps更像服务节点", config.getCurrentServer().getRegion(), Matchers.is(Matchers.equalTo("hk")));
+        MatcherAssert.assertThat("setRegion 更新成功", config.getRegion(), Matchers.is(Matchers.equalTo(Constants.REGION_HK)));
+        MatcherAssert.assertThat("setServerIps更像服务节点", config.getCurrentServer().getRegion(), Matchers.is(Matchers.equalTo(Constants.REGION_HK)));
         MatcherAssert.assertThat("服务节点更新后，region匹配", config.isCurrentRegionMatch(), Matchers.is(true));
 
     }

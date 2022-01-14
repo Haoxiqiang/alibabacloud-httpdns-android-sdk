@@ -62,12 +62,6 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
     public HttpDnsServiceImpl(Context context, final String accountId, String secret) {
         try {
             config = new HttpDnsConfig(context, accountId);
-            initCrashDefend(context, config);
-            if (!config.isEnabled()) {
-                HttpDnsLog.w("init fail, crashdefend");
-                return;
-            }
-            NetworkStateManager.getInstance().init(context);
             filter = new HostFilter();
             signService = new SignService(secret);
             ipProbeService = new ProbeService(this.config);
@@ -76,6 +70,15 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             requestHandler = new InterpretHostRequestHandler(config, scheduleService, signService);
             interpretHostService = new InterpretHostService(this.config, ipProbeService, requestHandler, repo, filter, recorder);
             resolveHostService = new ResolveHostService(this.config, repo, requestHandler, ipProbeService, filter, recorder);
+
+            beforeInit();
+
+            initCrashDefend(context, config);
+            if (!config.isEnabled()) {
+                HttpDnsLog.w("init fail, crashdefend");
+                return;
+            }
+            NetworkStateManager.getInstance().init(context);
             NetworkStateManager.getInstance().addListener(this);
             if (config.getCurrentServer().shouldUpdateServerIp()) {
                 scheduleService.updateServerIps();
@@ -91,6 +94,10 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    protected void beforeInit() {
+        // only for test
     }
 
     protected void initBeacon(Context context, String accountId, HttpDnsConfig config) {
@@ -411,7 +418,8 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             return;
         }
         region = CommonUtil.fixRegion(region);
-        if (CommonUtil.regionEquals(this.config.getRegion(), region)) {
+        if (CommonUtil.regionEquals(this.config.getRegion(), region)
+                && !this.config.isInitServerInUse()) {
             if (HttpDnsLog.isPrint()) {
                 HttpDnsLog.d("region " + region + " is same, do not update serverIps");
             }
