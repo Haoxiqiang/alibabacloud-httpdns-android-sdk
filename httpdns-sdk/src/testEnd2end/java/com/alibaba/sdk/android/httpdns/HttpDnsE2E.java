@@ -44,6 +44,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
+ * HTTPDNS end2end test case
+ *
  * @author zonglin.nzl
  * @date 2020/10/15
  */
@@ -66,17 +68,22 @@ public class HttpDnsE2E {
 
     @Before
     public void setUp() {
+        // 设置日志接口
         HttpDnsLog.enable(true);
         logger = new ILogger() {
             private SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+
             @Override
             public void log(String msg) {
                 System.out.println("[" + format.format(new Date()) + "][Httpdns][" + System.currentTimeMillis() % (60 * 1000) + "]" + msg);
             }
         };
         HttpDnsLog.setLogger(logger);
+        // 重置实例
         HttpDns.resetInstance();
+        // 重置配置
         InitConfig.removeConfig(null);
+        // 这里我们启动6个 服务节点用于测试
         server.start();
         server1.start();
         server2.start();
@@ -85,6 +92,7 @@ public class HttpDnsE2E {
         server5.start();
         ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
         application.grantPermissions(Manifest.permission.ACCESS_NETWORK_STATE);
+        // 启动两个httpdns实例用于测试
         app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         app1.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
     }
@@ -103,7 +111,6 @@ public class HttpDnsE2E {
         server4.stop();
         server5.stop();
         speedTestServer.stop();
-        HttpDns.resetInstance();
     }
 
     /**
@@ -191,6 +198,14 @@ public class HttpDnsE2E {
 
     }
 
+    /**
+     * 预设region更新请求
+     * defaultRegion 对应 server 0 1 2
+     * anotherRegion 对应 server 3 4 5
+     *
+     * @param defaultRegion
+     * @param anotherRegion
+     */
     private void prepareUpdateServerResponse(String defaultRegion, String anotherRegion) {
         prepareUpdateServerResponseForGroup1(anotherRegion);
         prepareUpdateServerResponseForGroup2(defaultRegion);
@@ -215,7 +230,7 @@ public class HttpDnsE2E {
 
     /**
      * 测试ip probe功能，
-     * 解析域名之后，对返回的ip进行测试，安装速度快慢排序
+     * 解析域名之后，对返回的ip进行测试，按照速度快慢排序
      */
     @Test
     public void sortIpArrayWithSpeedAfterInterpretHost() {
@@ -283,7 +298,7 @@ public class HttpDnsE2E {
      * 解析域名时，如果服务不可用，会切换服务IP
      */
     @Test
-    public void interpretHostRequestWillshiftServerIpWhenCurrentServerNotAvailable() {
+    public void interpretHostRequestWillShiftServerIpWhenCurrentServerNotAvailable() {
         // 预设服务0超时
         server.getInterpretHostServer().preSetRequestTimeout(app.getRequestHost(), -1);
         // 预设服务1正常返回
@@ -309,7 +324,7 @@ public class HttpDnsE2E {
      * 解析域名时，如果服务降级，会切换服务IP
      */
     @Test
-    public void interpretHostRequestWillshiftServerIpWhenCurrentServerDegrade() {
+    public void interpretHostRequestWillShiftServerIpWhenCurrentServerDegrade() {
         // 预设服务0降级
         ServerStatusHelper.degradeServer(server, app.getRequestHost(), 1);
         // 预设服务1正常返回
@@ -513,7 +528,7 @@ public class HttpDnsE2E {
     }
 
     /**
-     * 当前的服务更新服务IP都失败了，就实用初始服务IP尝试
+     * 当前的服务更新服务IP都失败了，就使用初始服务IP尝试
      */
     @Test
     public void updateServerAllFailWhenRetryInitServer() {
@@ -615,6 +630,9 @@ public class HttpDnsE2E {
         UnitTestUtil.assertIpsEqual("解析结果是服务返回的值", ipv6s, response.getIpsv6());
     }
 
+    /**
+     * 测试对SDNS的支持
+     */
     @Test
     public void testSDNS() {
         HashMap<String, String> extras = new HashMap<>();
@@ -640,6 +658,9 @@ public class HttpDnsE2E {
         UnitTestUtil.assertIpsEqual("一般解析结果和预期一致", ips, normalResponse.getIps());
     }
 
+    /**
+     * 测试SDNS全局参数
+     */
     @Test
     public void testGlobalParamsSDNS() {
 
@@ -694,6 +715,9 @@ public class HttpDnsE2E {
     }
 
 
+    /**
+     * 测试SDNS解析ipv6
+     */
     @Test
     public void testSDNSForIpv6() {
         HashMap<String, String> extras = new HashMap<>();
@@ -711,6 +735,9 @@ public class HttpDnsE2E {
         UnitTestUtil.assertIpsEqual("sdns解析结果和预期值一致", result.getIpv6s(), sdnsResponse.getIpsv6());
     }
 
+    /**
+     * 预解析ipv4
+     */
     @Test
     public void preInterpretHostForIpv4() {
         String host1 = RandomValue.randomHost();
@@ -737,6 +764,9 @@ public class HttpDnsE2E {
         UnitTestUtil.assertIpsEqual("预解析ipv4之后，可以直接获取解析结果", ips3, response.getItem(host3).getIps());
     }
 
+    /**
+     * 预解析ipv6
+     */
     @Test
     public void preInterpretHostForIpv6() {
         String host1 = RandomValue.randomHost();
@@ -765,6 +795,9 @@ public class HttpDnsE2E {
     }
 
 
+    /**
+     * 预解析 4 6
+     */
     @Test
     public void preInterpretHost() {
         String host1 = RandomValue.randomHost();
@@ -799,6 +832,9 @@ public class HttpDnsE2E {
     }
 
 
+    /**
+     * 当预解析域名超过5个场景
+     */
     @Test
     public void preInterpretHostMoreThan5() {
         String host1 = RandomValue.randomHost();
@@ -865,6 +901,11 @@ public class HttpDnsE2E {
         UnitTestUtil.assertIpsEqual("超过5个，预解析之后，可以直接获取解析结果", ipv6s7, response2.getItem(host7).getIpv6s());
     }
 
+    /**
+     * 测试 ttl 有效性
+     *
+     * @throws InterruptedException
+     */
     @Test
     public void testIpTtl() throws InterruptedException {
         app.enableExpiredIp(false);
@@ -892,6 +933,11 @@ public class HttpDnsE2E {
         UnitTestUtil.assertIpsEqual("解析域名返回服务器结果", response.getIps(), ips);
     }
 
+    /**
+     * 测试允许返回过期IP功能
+     *
+     * @throws InterruptedException
+     */
     @Test
     public void testEnableExpiredIp() throws InterruptedException {
         app.enableExpiredIp(true);
@@ -918,6 +964,9 @@ public class HttpDnsE2E {
         UnitTestUtil.assertIpsEqual("解析域名返回服务器结果", response1.getIps(), ips);
     }
 
+    /**
+     * 当前服务节点的状态会缓存，比如当前正使用哪个服务节点
+     */
     @Test
     public void testServerCache() {
         // 先通过请求失败，切换一次服务IP
@@ -940,10 +989,14 @@ public class HttpDnsE2E {
         ServerStatusHelper.requestInterpretAnotherHost("读取缓存应该是直接使用切换后的服务", app, server1);
     }
 
+
+    /**
+     * 测试 当前服务节点不是初始服务节点的 状态缓存
+     */
     @Test
     public void testServerCacheWhenServerIsNotInitServer() {
         //  先通过请求失败，切换服务IP
-        prepareUpdateServerResponse("", "");
+        prepareUpdateServerResponse(Constants.REGION_DEFAULT, Constants.REGION_DEFAULT);
         // 前三个server设置为不可用
         ServerStatusHelper.degradeServer(server, app.getRequestHost(), -1);
         ServerStatusHelper.degradeServer(server1, app.getRequestHost(), -1);
@@ -965,6 +1018,9 @@ public class HttpDnsE2E {
         ServerStatusHelper.requestInterpretAnotherHost("更新服务IP后，使用新服务解析域名", app, server3);
     }
 
+    /**
+     * 默认未开启IP缓存，下次开启IP缓存，也读取不到数据
+     */
     @Test
     public void testCacheControll() {
         // 先发起一些请求，因为没有开启缓存，所以不会缓存
@@ -989,6 +1045,10 @@ public class HttpDnsE2E {
     }
 
 
+    /**
+     * 开启缓存的情况下， IP会缓存到本地
+     * 下次读取时 如果 标记clean，会在读取缓存后，删除缓存
+     */
     @Test
     public void testCacheClean() {
         app.enableCache(false);
@@ -1024,6 +1084,9 @@ public class HttpDnsE2E {
         ServerStatusHelper.hasReceiveAppInterpretHostRequest("当没有缓存时，会异步请求服务器", app, server, 1);
     }
 
+    /**
+     * 测试 IP 缓存
+     */
     @Test
     public void testIpCache() {
         app.enableCache(false);
@@ -1049,6 +1112,12 @@ public class HttpDnsE2E {
     }
 
 
+    /**
+     * 1. 当开启IP缓存功能时，从缓存读取的IP，即使不允许返回过期IP，也会返回
+     * 2. 当IP更新后，不再认为是从本地缓存读取，过期了，就返回空
+     *
+     * @throws InterruptedException
+     */
     @Test
     public void testIpCacheWhenExpired() throws InterruptedException {
         app.enableCache(false);
@@ -1087,6 +1156,9 @@ public class HttpDnsE2E {
     }
 
 
+    /**
+     * 测试 域名解析拦截 接口
+     */
     @Test
     public void testHostFilter() {
         app.setFilter();
@@ -1101,6 +1173,9 @@ public class HttpDnsE2E {
     }
 
 
+    /**
+     * 测试 域名解析拦截 在 预解析上也生效
+     */
     @Test
     public void testHostFilterForResolve() {
         app.setFilter();
@@ -1120,6 +1195,9 @@ public class HttpDnsE2E {
         MatcherAssert.assertThat("没过滤的域名会请求到服务器", server.getResolveHostServer().hasRequestForArg(ServerHelper.formResolveHostArg(list, RequestIpType.v4), 1, false));
     }
 
+    /**
+     * 测试 加签能力
+     */
     @Test
     public void testAuthSign() {
         String account = RandomValue.randomStringWithFixedLength(20);
@@ -1139,6 +1217,10 @@ public class HttpDnsE2E {
     }
 
 
+    /**
+     * 测试 签名失效的场景
+     * 测试 校正时间能力
+     */
     @Test
     public void testAuthSignValid() {
         String account = RandomValue.randomStringWithFixedLength(20);
@@ -1158,6 +1240,9 @@ public class HttpDnsE2E {
         MatcherAssert.assertThat("超过有效期，服务不处理", !server.getInterpretHostServer().hasRequestForArgWithParams(ServerHelper.formInterpretHostArg(host, RequestIpType.v4), params, 1, false));
     }
 
+    /**
+     * 测试 网络变化后的预解析能力
+     */
     @Test
     @Config(shadows = {ShadowNetworkInfo.class})
     public void testResolveAfterNetworkChanged() {
@@ -1197,6 +1282,9 @@ public class HttpDnsE2E {
         UnitTestUtil.assertIpsEmpty("没有开启网络变化预解析时，网络变换只会清除现有缓存", ips);
     }
 
+    /**
+     * 断网时，不会触发预解析
+     */
     @Test
     @Config(shadows = {ShadowNetworkInfo.class})
     public void testNotResolveWhenNetworkDisconnect() {
@@ -1234,6 +1322,9 @@ public class HttpDnsE2E {
         UnitTestUtil.assertIpsEqual("网络断开再连上相同网络，解析的缓存不变", app.requestInterpretHost(host6), server.getInterpretHostServer().getResponse(host6, 1, false).get(0).getIps());
     }
 
+    /**
+     * 当前服务节点，每天更新一次
+     */
     @Test
     public void serverIpWillUpdateEveryday() {
         String region = Constants.REGION_DEFAULT;
@@ -1266,6 +1357,9 @@ public class HttpDnsE2E {
         ServerStatusHelper.requestInterpretAnotherHost("服务IP更新后使用新的服务解析域名", app, server);
     }
 
+    /**
+     * 测试远程降级能力
+     */
     @Test
     public void testDisableService() {
         String region = Constants.REGION_HK;
@@ -1290,6 +1384,9 @@ public class HttpDnsE2E {
         UnitTestUtil.assertIpsEmpty("服务禁用之后，不会再解析IP", ips);
     }
 
+    /**
+     * 测试 连续调用时 实际网络请求只会发一次
+     */
     @Test
     public void testMultiThreadForSameHost() {
         int count = 100;
@@ -1325,6 +1422,11 @@ public class HttpDnsE2E {
         MatcherAssert.assertThat("预解析相同的域名也只会触发一次请求", server.getResolveHostServer().hasRequestForArg(ServerHelper.formResolveHostArg(hostList, RequestIpType.both), 1, false));
     }
 
+    /**
+     * 测试同步接口
+     *
+     * @throws InterruptedException
+     */
     @Test
     public void testSyncRequest() throws InterruptedException {
         final CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -1342,6 +1444,9 @@ public class HttpDnsE2E {
         countDownLatch.await();
     }
 
+    /**
+     * 测试频繁调用的情况下，会不会崩溃
+     */
     @Test
     public void testNotCrashWhenCallTwoManyTime() {
         app.checkThreadCount(false);
@@ -1396,6 +1501,9 @@ public class HttpDnsE2E {
         }
     }
 
+    /**
+     * 测试 清除指定域名缓存功能
+     */
     @Test
     public void cleanHostCacheWillRemoveLocalCache() {
 
@@ -1413,6 +1521,9 @@ public class HttpDnsE2E {
         UnitTestUtil.assertIpsEmpty("清除缓存之后，请求会返回空", ips);
     }
 
+    /**
+     * 测试 清除全部域名缓存功能
+     */
     @Test
     public void cleanHostCacheWithoutHostWillRemoveAllHostCache() {
         String host1 = RandomValue.randomHost();
@@ -1433,6 +1544,9 @@ public class HttpDnsE2E {
         UnitTestUtil.assertIpsEmpty("清除缓存之后，请求会返回空", ips2);
     }
 
+    /**
+     * 测试对本地缓存的清理
+     */
     @Test
     public void cleanHostCacheWillCleanCacheInLocalDB() {
         // 启动缓存
@@ -1480,9 +1594,10 @@ public class HttpDnsE2E {
 
     /**
      * 这个应该手动执行，耗时太长
+     * 测试 多线程并发请求的情况下，接口的耗时情况
      */
-    @Test
     @Ignore("耗时太长，需要手动执行")
+    @Test
     public void multiThreadTest() {
         HttpDnsLog.removeLogger(logger);
         app.setTimeout(10 * 1000);
@@ -1586,6 +1701,9 @@ public class HttpDnsE2E {
         ServerStatusHelper.hasNotReceiveAppInterpretHostRequest("region更新还未完成，应该不会请求到新的服务IP", app, server3);
     }
 
+    /**
+     * 修改region后，马上清除缓存，避免获取错误的IP
+     */
     @Test
     public void changeRegionWillCleanCachePreventGetWrongIp() {
         final String defaultRegion = Constants.REGION_DEFAULT;
@@ -1607,6 +1725,9 @@ public class HttpDnsE2E {
         MatcherAssert.assertThat("region切换，清除了缓存", ipsAfterChagneRegion == null || ipsAfterChagneRegion.length == 0);
     }
 
+    /**
+     * IP缓存仅读取当前region的缓存
+     */
     @Test
     public void cacheWillLoadCurrentRegion() {
         final String defaultRegion = Constants.REGION_DEFAULT;
@@ -1637,6 +1758,9 @@ public class HttpDnsE2E {
     }
 
 
+    /**
+     * 通过初始化 开启IP缓存
+     */
     @Test
     public void enableCacheWhenInit() {
         String accountId = RandomValue.randomStringWithFixedLength(10);
@@ -1666,6 +1790,9 @@ public class HttpDnsE2E {
         UnitTestUtil.assertIpsEqual("解析域名返回服务器结果", ips2, ips);
     }
 
+    /**
+     * 通过初始化设置region
+     */
     @Test
     public void setRegionWhenInit() {
         String accountId = RandomValue.randomStringWithFixedLength(10);
@@ -1681,6 +1808,11 @@ public class HttpDnsE2E {
         ServerStatusHelper.hasReceiveRegionChange("初始化时更新HK节点", app, server, Constants.REGION_HK, true);
     }
 
+    /**
+     * 通过初始化 禁用过期IP
+     *
+     * @throws InterruptedException
+     */
     @Test
     public void disableExpireIpWhenInit() throws InterruptedException {
         String accountId = RandomValue.randomStringWithFixedLength(10);
@@ -1715,6 +1847,9 @@ public class HttpDnsE2E {
         UnitTestUtil.assertIpsEqual("解析域名返回服务器结果", response1.getIps(), ips);
     }
 
+    /**
+     * 通过初始化设置超时
+     */
     @Test
     public void setTimeoutWhenInit() {
         String accountId = RandomValue.randomStringWithFixedLength(10);
@@ -1740,6 +1875,9 @@ public class HttpDnsE2E {
         assertThat("requst timeout " + costTime, costTime < timeout * 3.05);
     }
 
+    /**
+     * 通过初始化设置预解析
+     */
     @Test
     public void preResolveWhenInit() {
         String accountId = RandomValue.randomStringWithFixedLength(10);
@@ -1766,6 +1904,9 @@ public class HttpDnsE2E {
         }
     }
 
+    /**
+     * 通过初始化设置测速配置
+     */
     @Test
     public void configProbeWhenInit() {
         speedTestServer.watch(server);
