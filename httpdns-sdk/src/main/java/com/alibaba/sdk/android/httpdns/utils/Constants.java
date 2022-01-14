@@ -2,6 +2,7 @@ package com.alibaba.sdk.android.httpdns.utils;
 
 import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
 import com.alibaba.sdk.android.httpdns.interpret.SniffException;
+import com.alibaba.sdk.android.httpdns.request.HttpRequestConfig;
 
 import java.util.HashMap;
 
@@ -32,6 +33,13 @@ public class Constants {
     public static final SniffException sniff_too_often = new SniffException("sniff too often");
 
     public static final Exception region_not_match = new Exception("region not match");
+
+    public static final boolean DEFAULT_SDK_ENABLE = true;
+    public static final boolean DEFAULT_ENABLE_EXPIRE_IP = true;
+    public static final boolean DEFAULT_ENABLE_CACHE_IP = false;
+    public static final boolean DEFAULT_ENABLE_HTTPS = false;
+    public static final String DEFAULT_SCHEMA = Constants.DEFAULT_ENABLE_HTTPS ? HttpRequestConfig.HTTPS_SCHEMA : HttpRequestConfig.HTTP_SCHEMA;
+    public static final int DEFAULT_TIMEOUT = 15 * 1000; // 默认超时时间 15s
 
     // 配置缓存使用的变量
     public static final String CONFIG_CACHE_PREFIX = "httpdns_config_";

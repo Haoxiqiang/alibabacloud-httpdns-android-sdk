@@ -24,7 +24,7 @@ import java.util.concurrent.ExecutorService;
  */
 public class HttpDnsConfig implements SpCacheItem {
     private Context context;
-    private boolean enabled = true;
+    private boolean enabled = Constants.DEFAULT_SDK_ENABLE;
     /**
      * 初始服务节点
      */
@@ -45,7 +45,7 @@ public class HttpDnsConfig implements SpCacheItem {
     /**
      * 当前请求使用的schema
      */
-    private String schema = HttpRequestConfig.HTTP_SCHEMA;
+    private String schema = Constants.DEFAULT_SCHEMA;
     /**
      * 当前region
      */
@@ -53,7 +53,7 @@ public class HttpDnsConfig implements SpCacheItem {
     /**
      * 超时时长
      */
-    private int timeout = HttpRequestConfig.DEFAULT_TIMEOUT;
+    private int timeout = Constants.DEFAULT_TIMEOUT;
     /**
      * 是否禁用服务，以避免崩溃
      */
@@ -273,9 +273,9 @@ public class HttpDnsConfig implements SpCacheItem {
     @Override
     public void restoreFromCache(SharedPreferences sp) {
         region = sp.getString(Constants.CONFIG_REGION, Constants.REGION_DEFAULT);
-        enabled = sp.getBoolean(Constants.CONFIG_ENABLE, true);
-        schema = sp.getString(Constants.CONFIG_SCHEMA, HttpRequestConfig.HTTP_SCHEMA);
-        timeout = sp.getInt(Constants.CONFIG_TIMEOUT, HttpRequestConfig.DEFAULT_TIMEOUT);
+        enabled = sp.getBoolean(Constants.CONFIG_ENABLE, Constants.DEFAULT_SDK_ENABLE);
+        schema = sp.getString(Constants.CONFIG_SCHEMA, Constants.DEFAULT_SCHEMA);
+        timeout = sp.getInt(Constants.CONFIG_TIMEOUT, Constants.DEFAULT_TIMEOUT);
     }
 
     @Override

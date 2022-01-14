@@ -1,5 +1,7 @@
 package com.alibaba.sdk.android.httpdns.request;
 
+import com.alibaba.sdk.android.httpdns.utils.Constants;
+
 /**
  * 网络请求的配置
  *
@@ -10,7 +12,6 @@ public class HttpRequestConfig {
     public static final String HTTP_SCHEMA = "http://";
     public static final String HTTPS_SCHEMA = "https://";
     public static final String HTTPS_CERTIFICATE_HOSTNAME = "203.107.1.1";
-    public static final int DEFAULT_TIMEOUT = 15 * 1000;
     /**
      * 请求协议
      */
@@ -30,7 +31,7 @@ public class HttpRequestConfig {
     /**
      * 请求超时时间
      */
-    private int timeout = DEFAULT_TIMEOUT;
+    private int timeout = Constants.DEFAULT_TIMEOUT;
 
     public HttpRequestConfig(String ip, int port, String path) {
         this.ip = ip;
