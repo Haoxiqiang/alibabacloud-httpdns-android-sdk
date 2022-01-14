@@ -1761,6 +1761,7 @@ public class HttpDnsE2E {
     /**
      * 通过初始化 开启IP缓存
      */
+    @Ignore
     @Test
     public void enableCacheWhenInit() {
         String accountId = RandomValue.randomStringWithFixedLength(10);
@@ -1793,6 +1794,7 @@ public class HttpDnsE2E {
     /**
      * 通过初始化设置region
      */
+    @Ignore
     @Test
     public void setRegionWhenInit() {
         String accountId = RandomValue.randomStringWithFixedLength(10);
@@ -1813,6 +1815,7 @@ public class HttpDnsE2E {
      *
      * @throws InterruptedException
      */
+    @Ignore
     @Test
     public void disableExpireIpWhenInit() throws InterruptedException {
         String accountId = RandomValue.randomStringWithFixedLength(10);
@@ -1850,6 +1853,7 @@ public class HttpDnsE2E {
     /**
      * 通过初始化设置超时
      */
+    @Ignore
     @Test
     public void setTimeoutWhenInit() {
         String accountId = RandomValue.randomStringWithFixedLength(10);
@@ -1878,6 +1882,7 @@ public class HttpDnsE2E {
     /**
      * 通过初始化设置预解析
      */
+    @Ignore
     @Test
     public void preResolveWhenInit() {
         String accountId = RandomValue.randomStringWithFixedLength(10);
@@ -1907,6 +1912,7 @@ public class HttpDnsE2E {
     /**
      * 通过初始化设置测速配置
      */
+    @Ignore
     @Test
     public void configProbeWhenInit() {
         speedTestServer.watch(server);
@@ -1933,6 +1939,7 @@ public class HttpDnsE2E {
     /**
      * 当配置了region和预解析时，优先region更新，再进行预解析，避免预解析的ip不合适
      */
+    @Ignore
     @Test
     public void preResolveWithRegionWhenConfig() {
         // hk 指向 3 4 5
@@ -1964,6 +1971,7 @@ public class HttpDnsE2E {
     /**
      * 加载本地缓存应该在region切换之后，避免加载错误的缓存
      */
+    @Ignore
     @Test
     public void loadCacheAfterRegionChangeWhenInit() {
         final String defaultRegion = Constants.REGION_DEFAULT;
