@@ -1575,4 +1575,54 @@ public class HttpDnsE2E {
         ServerStatusHelper.hasNotReceiveAppInterpretHostRequest("服务IP和region不匹配, 应该停止解析，直接返回，不应该请求当前服务IP进行解析", app, server);
         ServerStatusHelper.hasNotReceiveAppInterpretHostRequest("region更新还未完成，应该不会请求到新的服务IP", app, server3);
     }
+
+    @Test
+    public void changeRegionWillCleanCachePreventGetWrongIp() {
+        final String defaultRegion = "";
+        final String hkRegion = "hk";
+        // 设置不同region对应的服务信息
+        prepareUpdateServerResponse(defaultRegion, hkRegion);
+
+        app.requestInterpretHost();
+        app.waitForAppThread();
+        String[] ips = app.requestInterpretHost();
+        // 确定已经有缓存
+        MatcherAssert.assertThat("已经有缓存", ips != null && ips.length > 0);
+
+        // 修改region
+        app.changeRegionTo(hkRegion);
+        // 修改region之后马上请求解析域名
+        String[] ipsAfterChagneRegion = app.requestInterpretHost();
+
+        MatcherAssert.assertThat("region切换，清除了缓存", ipsAfterChagneRegion == null || ipsAfterChagneRegion.length == 0);
+    }
+
+    @Test
+    public void cacheWillLoadCurrentRegion() {
+        final String defaultRegion = "";
+        final String hkRegion = "hk";
+        // 设置不同region对应的服务信息
+        prepareUpdateServerResponse(defaultRegion, hkRegion);
+
+        app.enableCache(false);
+        // 先发起一些请求，缓存一些Ip结果
+        app.requestInterpretHost();
+        app.waitForAppThread();
+        String[] cachedIps = app.requestInterpretHost();
+        MatcherAssert.assertThat("确认缓存存在", cachedIps.length > 0);
+
+        // 重置实例，确保下次读取的信息是从本地缓存来的
+        HttpDns.resetInstance();
+        app.waitForAppThread();
+
+        // 重启应用，获取新的实例
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer);
+        // 切换region
+        app.changeRegionTo(hkRegion);
+        // 再加载缓存
+        app.enableCache(false);
+
+        String[] ips = app.requestInterpretHost();
+        MatcherAssert.assertThat("缓存被清除了，此时返回是空", ips == null || ips.length == 0);
+    }
 }

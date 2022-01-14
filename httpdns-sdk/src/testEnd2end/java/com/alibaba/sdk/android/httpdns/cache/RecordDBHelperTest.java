@@ -37,7 +37,7 @@ public class RecordDBHelperTest {
     @Test
     public void testSaveAndGet() {
         // 初始数据
-        List<HostRecord> records = randomRecord(30);
+        List<HostRecord> records = randomRecord(Constants.REGION_DEFAULT, 30);
         helper.insertOrUpdate(records);
 
         // 读取
@@ -54,7 +54,7 @@ public class RecordDBHelperTest {
     @Test
     public void testDeleted() {
         // 初始数据
-        List<HostRecord> records = randomRecord(30);
+        List<HostRecord> records = randomRecord(Constants.REGION_DEFAULT, 30);
         helper.insertOrUpdate(records);
 
         // 删除一些
@@ -79,11 +79,11 @@ public class RecordDBHelperTest {
     @Test
     public void testAdd() {
         // 初始数据
-        List<HostRecord> records = randomRecord(30);
+        List<HostRecord> records = randomRecord(Constants.REGION_DEFAULT, 30);
         helper.insertOrUpdate(records);
 
         // 新增一些
-        List<HostRecord> records1 = randomRecord(10);
+        List<HostRecord> records1 = randomRecord(Constants.REGION_DEFAULT, 10);
         helper.insertOrUpdate(records1);
 
         // 读取
@@ -101,11 +101,11 @@ public class RecordDBHelperTest {
     @Test
     public void testUpdate() {
         // 初始数据
-        List<HostRecord> records = randomRecord(30);
+        List<HostRecord> records = randomRecord(Constants.REGION_DEFAULT, 30);
         helper.insertOrUpdate(records);
 
         // 新增一些
-        List<HostRecord> records1 = randomRecord(10);
+        List<HostRecord> records1 = randomRecord(Constants.REGION_DEFAULT, 10);
         helper.insertOrUpdate(records1);
 
         // 更新一些
@@ -136,7 +136,7 @@ public class RecordDBHelperTest {
     @Test
     public void testCache() {
         // 初始数据
-        List<HostRecord> records = randomRecord(30);
+        List<HostRecord> records = randomRecord(Constants.REGION_DEFAULT, 30);
         helper.insertOrUpdate(records);
 
         // 删除一些
@@ -148,7 +148,7 @@ public class RecordDBHelperTest {
         helper.delete(deleted);
 
         // 新增一些
-        List<HostRecord> records1 = randomRecord(10);
+        List<HostRecord> records1 = randomRecord(Constants.REGION_DEFAULT, 10);
         helper.insertOrUpdate(records1);
 
         // 更新一些
@@ -176,6 +176,40 @@ public class RecordDBHelperTest {
         assertRecordsEqual(saved, read);
     }
 
+
+    @Test
+    public void readCacheByRegion() {
+        // 初始数据
+        List<HostRecord> records = randomRecord(Constants.REGION_DEFAULT, 30);
+        helper.insertOrUpdate(records);
+
+        List<HostRecord> recordsInHK = randomRecord(Constants.REGION_HK, 30);
+        helper.insertOrUpdate(recordsInHK);
+
+        // 读取
+        List<HostRecord> records3 = helper.readFromDb(Constants.REGION_DEFAULT);
+
+        ArrayList<HostRecord> saved = new ArrayList<>();
+        saved.addAll(records);
+
+        ArrayList<HostRecord> read = new ArrayList<>(records3);
+
+        assertRecordsEqual(saved, read);
+
+        List<HostRecord> records4 = helper.readFromDb(Constants.REGION_HK);
+
+        saved.clear();
+        saved.addAll(recordsInHK);
+
+        read.clear();
+        read.addAll(records4);
+        assertRecordsEqual(saved, read);
+
+        List<HostRecord> records5 = helper.readFromDb(Constants.REGION_SG);
+
+        MatcherAssert.assertThat("根据region读取缓存, sg的缓存应该为0", records5.size() == 0);
+    }
+
     private void assertRecordsEqual(ArrayList<HostRecord> saved, ArrayList<HostRecord> read) {
         Collections.sort(saved, new Comparator<HostRecord>() {
             @Override
@@ -197,26 +231,27 @@ public class RecordDBHelperTest {
     }
 
 
-    public List<HostRecord> randomRecord(int count) {
+    public List<HostRecord> randomRecord(String region, int count) {
         ArrayList<HostRecord> list = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             int style = RandomValue.randomInt(4);
             switch (style) {
                 case 0:
-                    list.add(HostRecord.create(Constants.REGION_DEFAULT, RandomValue.randomHost(), RequestIpType.v4, RandomValue.randomJsonMap(), RandomValue.randomStringWithMaxLength(10), RandomValue.randomIpv4s(), RandomValue.randomInt(300)));
+                    list.add(HostRecord.create(region, RandomValue.randomHost(), RequestIpType.v4, RandomValue.randomJsonMap(), RandomValue.randomStringWithMaxLength(10), RandomValue.randomIpv4s(), RandomValue.randomInt(300)));
                     break;
                 case 1:
-                    list.add(HostRecord.create(Constants.REGION_DEFAULT, RandomValue.randomHost(), RequestIpType.v4, null, null, RandomValue.randomIpv4s(), RandomValue.randomInt(300)));
+                    list.add(HostRecord.create(region, RandomValue.randomHost(), RequestIpType.v4, null, null, RandomValue.randomIpv4s(), RandomValue.randomInt(300)));
                     break;
                 case 2:
-                    list.add(HostRecord.create(Constants.REGION_DEFAULT, RandomValue.randomHost(), RequestIpType.v6, RandomValue.randomJsonMap(), RandomValue.randomStringWithMaxLength(10), RandomValue.randomIpv6s(), RandomValue.randomInt(300)));
+                    list.add(HostRecord.create(region, RandomValue.randomHost(), RequestIpType.v6, RandomValue.randomJsonMap(), RandomValue.randomStringWithMaxLength(10), RandomValue.randomIpv6s(), RandomValue.randomInt(300)));
                     break;
                 default:
-                    list.add(HostRecord.create(Constants.REGION_DEFAULT, RandomValue.randomHost(), RequestIpType.v6, null, null, RandomValue.randomIpv6s(), RandomValue.randomInt(300)));
+                    list.add(HostRecord.create(region, RandomValue.randomHost(), RequestIpType.v6, null, null, RandomValue.randomIpv6s(), RandomValue.randomInt(300)));
                     break;
             }
         }
         return list;
     }
+
 
 }

@@ -37,6 +37,7 @@ public class InterpretHostResultRepo {
     private void readFromDB(boolean cleanCache) {
         final String region = config.getRegion();
         List<HostRecord> records = dbHelper.readFromDb(region);
+        System.out.println("read ip from cache with " + region + " count " + records.size());
         for (HostRecord record : records) {
             InterpretHostCache cache = cacheGroup.getCache(record.getCacheKey());
             cache.put(record);
@@ -192,7 +193,6 @@ public class InterpretHostResultRepo {
     }
 
 
-
     /**
      * 清除已解析的结果
      */
@@ -203,6 +203,7 @@ public class InterpretHostResultRepo {
                 config.getDbWorker().execute(new Runnable() {
                     @Override
                     public void run() {
+                        System.out.println("clear all " + recordsToBeDeleted.size());
                         dbHelper.delete(recordsToBeDeleted);
                     }
                 });

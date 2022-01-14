@@ -418,6 +418,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             return;
         }
         boolean changed = config.setRegion(region);
+        System.out.println("set region to " + region);
         if (changed) {
             repo.clear();
         }

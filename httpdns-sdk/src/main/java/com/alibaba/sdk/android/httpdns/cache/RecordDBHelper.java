@@ -107,7 +107,7 @@ public class RecordDBHelper extends SQLiteOpenHelper {
             String sp = NetworkStateManager.getInstance().getSp();
             try {
                 db = getDB();
-                cursor = db.query(HOST.TABLE_NAME, null, HOST.COL_SP + " = ?", new String[]{sp}, null, null, null);
+                cursor = db.query(HOST.TABLE_NAME, null, HOST.COL_SP + " = ? AND " + HOST.COL_REGION + " = ?", new String[]{sp, region}, null, null, null);
                 if (cursor != null && cursor.getCount() > 0) {
                     cursor.moveToFirst();
                     do {
