@@ -43,10 +43,7 @@ public class Constants {
 
     // 配置缓存使用的变量
     public static final String CONFIG_CACHE_PREFIX = "httpdns_config_";
-    public static final String CONFIG_REGION = "region";
     public static final String CONFIG_ENABLE = "enable";
-    public static final String CONFIG_SCHEMA = "schema";
-    public static final String CONFIG_TIMEOUT = "timeout";
 
     public static final String CONFIG_KEY_SERVERS = "serverIps";
     public static final String CONFIG_KEY_PORTS = "ports";

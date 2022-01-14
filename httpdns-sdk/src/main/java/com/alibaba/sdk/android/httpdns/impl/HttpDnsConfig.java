@@ -113,6 +113,8 @@ public class HttpDnsConfig implements SpCacheItem {
 
     /**
      * 是否启用httpdns
+     * <p>
+     * 注意是 永久禁用，因为缓存的原因，一旦禁用，就没有机会启用了
      *
      * @param enabled
      */
@@ -272,17 +274,11 @@ public class HttpDnsConfig implements SpCacheItem {
 
     @Override
     public void restoreFromCache(SharedPreferences sp) {
-        region = sp.getString(Constants.CONFIG_REGION, Constants.REGION_DEFAULT);
         enabled = sp.getBoolean(Constants.CONFIG_ENABLE, Constants.DEFAULT_SDK_ENABLE);
-        schema = sp.getString(Constants.CONFIG_SCHEMA, Constants.DEFAULT_SCHEMA);
-        timeout = sp.getInt(Constants.CONFIG_TIMEOUT, Constants.DEFAULT_TIMEOUT);
     }
 
     @Override
     public void saveToCache(SharedPreferences.Editor editor) {
-        editor.putString(Constants.CONFIG_REGION, region);
         editor.putBoolean(Constants.CONFIG_ENABLE, enabled);
-        editor.putString(Constants.CONFIG_SCHEMA, schema);
-        editor.putInt(Constants.CONFIG_TIMEOUT, timeout);
     }
 }
