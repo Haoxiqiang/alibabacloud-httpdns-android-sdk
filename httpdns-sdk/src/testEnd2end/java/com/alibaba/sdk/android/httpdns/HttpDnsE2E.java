@@ -1761,7 +1761,6 @@ public class HttpDnsE2E {
     /**
      * 通过初始化 开启IP缓存
      */
-    @Ignore
     @Test
     public void enableCacheWhenInit() {
         String accountId = RandomValue.randomStringWithFixedLength(10);
@@ -1779,6 +1778,7 @@ public class HttpDnsE2E {
         app.waitForAppThread();
         String[] ips = app.requestInterpretHost();
         MatcherAssert.assertThat("确定有缓存了", ips.length > 0);
+        ServerStatusHelper.hasReceiveAppInterpretHostRequest("读取缓存之前请求了一次服务器", app, server, 1);
 
         // 重置实例，确保下次读取的信息是从本地缓存来的
         HttpDns.resetInstance();
@@ -1787,14 +1787,13 @@ public class HttpDnsE2E {
         app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
 
         String[] ips2 = app.requestInterpretHost();
-        ServerStatusHelper.hasNotReceiveAppInterpretHostRequest("当本地有缓存时，不会请求服务器", app, server);
+        ServerStatusHelper.hasReceiveAppInterpretHostRequest("有缓存，服务器还是一次请求记录", app, server, 1);
         UnitTestUtil.assertIpsEqual("解析域名返回服务器结果", ips2, ips);
     }
 
     /**
      * 通过初始化设置region
      */
-    @Ignore
     @Test
     public void setRegionWhenInit() {
         String accountId = RandomValue.randomStringWithFixedLength(10);
@@ -1815,7 +1814,6 @@ public class HttpDnsE2E {
      *
      * @throws InterruptedException
      */
-    @Ignore
     @Test
     public void disableExpireIpWhenInit() throws InterruptedException {
         String accountId = RandomValue.randomStringWithFixedLength(10);
@@ -1853,7 +1851,6 @@ public class HttpDnsE2E {
     /**
      * 通过初始化设置超时
      */
-    @Ignore
     @Test
     public void setTimeoutWhenInit() {
         String accountId = RandomValue.randomStringWithFixedLength(10);
@@ -1880,39 +1877,8 @@ public class HttpDnsE2E {
     }
 
     /**
-     * 通过初始化设置预解析
-     */
-    @Ignore
-    @Test
-    public void preResolveWhenInit() {
-        String accountId = RandomValue.randomStringWithFixedLength(10);
-        String[] hosts = new String[]{
-                RandomValue.randomHost(),
-                RandomValue.randomHost(),
-                RandomValue.randomHost()
-        };
-
-        new InitConfig.Builder()
-                .setHostsToPreResolve(Arrays.asList(hosts))
-                .buildFor(accountId);
-
-        BusinessApp app = new BusinessApp(accountId);
-
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
-
-        app.waitForAppThread();
-
-        for (int i = 0; i < hosts.length; i++) {
-            String host = hosts[i];
-            String[] ips = app.requestInterpretHost(host);
-            MatcherAssert.assertThat("已经预解析，有缓存", ips.length > 0);
-        }
-    }
-
-    /**
      * 通过初始化设置测速配置
      */
-    @Ignore
     @Test
     public void configProbeWhenInit() {
         speedTestServer.watch(server);
@@ -1936,42 +1902,10 @@ public class HttpDnsE2E {
         UnitTestUtil.assertIpsEqual("设置ip优选后，返回的ip是优选之后的结果", ips, sortedIps);
     }
 
-    /**
-     * 当配置了region和预解析时，优先region更新，再进行预解析，避免预解析的ip不合适
-     */
-    @Ignore
-    @Test
-    public void preResolveWithRegionWhenConfig() {
-        // hk 指向 3 4 5
-        prepareUpdateServerResponseForGroup1(Constants.REGION_HK);
-
-        String host = RandomValue.randomHost();
-        ArrayList<String> hostList = new ArrayList<>();
-        hostList.add(host);
-        ResolveHostResponse response = ServerHelper.randomResolveHostResponse(hostList, RequestIpType.v4);
-        server3.getResolveHostServer().preSetRequestResponse(ServerHelper.formResolveHostArg(hostList, RequestIpType.v4), response, 1);
-
-        String accountId = RandomValue.randomStringWithFixedLength(10);
-        new InitConfig.Builder()
-                .setRegion(Constants.REGION_HK)
-                .setHostsToPreResolve(Arrays.asList(host))
-                .buildFor(accountId);
-
-        BusinessApp app = new BusinessApp(accountId);
-
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
-
-        app.waitForAppThread();
-
-        String[] ips = app.requestInterpretHost(host);
-        UnitTestUtil.assertIpsEqual("使用hk的服务节点进行的预解析", ips, response.getItem(host).getIps());
-    }
-
 
     /**
      * 加载本地缓存应该在region切换之后，避免加载错误的缓存
      */
-    @Ignore
     @Test
     public void loadCacheAfterRegionChangeWhenInit() {
         final String defaultRegion = Constants.REGION_DEFAULT;
@@ -1999,7 +1933,8 @@ public class HttpDnsE2E {
                 .setEnableCacheIp(true)
                 .setRegion(Constants.REGION_HK)
                 .buildFor(accountId);
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+        // 这里上个实例刚更新过服务节点，所以本地启动不会更新服务节点
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, false);
 
         app.waitForAppThread();
 
@@ -2013,6 +1948,11 @@ public class HttpDnsE2E {
                 .setEnableCacheIp(true)
                 .setRegion(Constants.REGION_HK)
                 .buildFor(accountId);
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+        // 这里上个实例刚更新过服务节点，所以本地启动不会更新服务节点
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, false);
+
+        app.waitForAppThread();
+        String[] ipsWhenRegionNotChange = app.requestInterpretHost();
+        MatcherAssert.assertThat("region保持一致，读取到原region的缓存", ipsWhenRegionNotChange != null && ipsWhenRegionNotChange.length > 0);
     }
 }

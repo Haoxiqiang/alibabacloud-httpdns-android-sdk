@@ -41,7 +41,6 @@ public class InitConfig {
     private boolean enableHttps;
     private List<IPProbeItem> ipProbeItems;
     private String region;
-    private List<String> hostsToPreResolve;
 
     private InitConfig(Builder builder) {
         enableExpiredIp = builder.enableExpiredIp;
@@ -50,7 +49,6 @@ public class InitConfig {
         enableHttps = builder.enableHttps;
         ipProbeItems = builder.ipProbeItems;
         region = builder.region;
-        hostsToPreResolve = builder.hostsToPreResolve;
     }
 
     public boolean isEnableExpiredIp() {
@@ -77,10 +75,6 @@ public class InitConfig {
         return region;
     }
 
-    public List<String> getHostsToPreResolve() {
-        return hostsToPreResolve;
-    }
-
     public static class Builder {
         private boolean enableExpiredIp = Constants.DEFAULT_ENABLE_EXPIRE_IP;
         private boolean enableCacheIp = Constants.DEFAULT_ENABLE_CACHE_IP;
@@ -88,7 +82,6 @@ public class InitConfig {
         private boolean enableHttps = Constants.DEFAULT_ENABLE_HTTPS;
         private List<IPProbeItem> ipProbeItems = null;
         private String region = Constants.REGION_DEFAULT;
-        private List<String> hostsToPreResolve = null;
 
         public Builder setEnableExpiredIp(boolean enableExpiredIp) {
             this.enableExpiredIp = enableExpiredIp;
@@ -117,11 +110,6 @@ public class InitConfig {
 
         public Builder setRegion(String region) {
             this.region = region;
-            return this;
-        }
-
-        public Builder setHostsToPreResolve(List<String> hostsToPreResolve) {
-            this.hostsToPreResolve = hostsToPreResolve;
             return this;
         }
 

@@ -46,7 +46,6 @@ public class InitConfigTest {
         MatcherAssert.assertThat("默认不开启https", config.isEnableHttps(), Matchers.is(false));
         MatcherAssert.assertThat("默认region是国内", config.getRegion(), Matchers.is(Constants.REGION_DEFAULT));
         MatcherAssert.assertThat("默认超时时间是15s", config.getTimeout(), Matchers.is(15 * 1000));
-        MatcherAssert.assertThat("默认不预解析", config.getHostsToPreResolve(), Matchers.nullValue());
         MatcherAssert.assertThat("默认不测速", config.getIpProbeItems(), Matchers.nullValue());
     }
 
@@ -60,7 +59,6 @@ public class InitConfigTest {
                 .setRegion(Constants.REGION_HK)
                 .setTimeout(5 * 1000)
                 .setIpProbeItems(Arrays.asList(new IPProbeItem("aa", 43)))
-                .setHostsToPreResolve(Arrays.asList("bb"))
                 .buildFor(accountId);
         InitConfig config = InitConfig.getInitConfig(accountId);
 
@@ -69,7 +67,6 @@ public class InitConfigTest {
         MatcherAssert.assertThat("开启https", config.isEnableHttps(), Matchers.is(true));
         MatcherAssert.assertThat("region是HK", config.getRegion(), Matchers.is(Constants.REGION_HK));
         MatcherAssert.assertThat("超时时间是5s", config.getTimeout(), Matchers.is(5 * 1000));
-        MatcherAssert.assertThat("预解析", config.getHostsToPreResolve().get(0), Matchers.is(Matchers.equalTo("bb")));
         MatcherAssert.assertThat("测速", config.getIpProbeItems().get(0).getHostName(), Matchers.is(Matchers.equalTo("aa")));
         MatcherAssert.assertThat("测速", config.getIpProbeItems().get(0).getPort(), Matchers.is(43));
     }

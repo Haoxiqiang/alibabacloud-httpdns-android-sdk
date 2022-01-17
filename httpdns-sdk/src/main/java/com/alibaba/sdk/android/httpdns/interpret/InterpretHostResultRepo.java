@@ -37,7 +37,6 @@ public class InterpretHostResultRepo {
     private void readFromDB(boolean cleanCache) {
         final String region = config.getRegion();
         List<HostRecord> records = dbHelper.readFromDb(region);
-        System.out.println("read ip from cache with " + region + " count " + records.size());
         for (HostRecord record : records) {
             InterpretHostCache cache = cacheGroup.getCache(record.getCacheKey());
             cache.put(record);

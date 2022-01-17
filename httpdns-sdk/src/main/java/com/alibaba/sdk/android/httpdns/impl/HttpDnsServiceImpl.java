@@ -12,6 +12,7 @@ import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
 import com.alibaba.sdk.android.httpdns.HttpDnsService;
 import com.alibaba.sdk.android.httpdns.HttpDnsSettings;
 import com.alibaba.sdk.android.httpdns.ILogger;
+import com.alibaba.sdk.android.httpdns.InitConfig;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.SyncService;
 import com.alibaba.sdk.android.httpdns.beacon.BeaconControl;
@@ -73,6 +74,8 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
 
             beforeInit();
 
+            setupInitConfig(accountId);
+
             initCrashDefend(context, config);
             if (!config.isEnabled()) {
                 HttpDnsLog.w("init fail, crashdefend");
@@ -94,6 +97,25 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void setupInitConfig(final String accountId) {
+        InitConfig config = InitConfig.getInitConfig(accountId);
+
+        if (config != null) {
+            // 先设置和网络相关的内容
+            setTimeoutInterval(config.getTimeout());
+            setHTTPSRequestEnabled(config.isEnableHttps());
+            // 再设置一些可以提前，没有副作用的内容
+            setExpiredIPEnabled(config.isEnableExpiredIp());
+            if (config.getIpProbeItems() != null) {
+                setIPProbeList(config.getIpProbeItems());
+            }
+            // 设置region 必须在 缓存之前
+            setRegion(config.getRegion());
+            setCachedIPEnabled(config.isEnableCacheIp());
+        }
+
     }
 
     protected void beforeInit() {
