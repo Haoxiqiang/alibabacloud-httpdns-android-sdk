@@ -34,11 +34,11 @@ allprojects {
         }
     }
 
-    ext.restVersion = '1.5.9-open'
-    ext.senderVersion = '1.1.2'
+    ext.restVersion = '1.6.1-open'
+    ext.senderVersion = '1.1.4'
     ext.crashDefendVersion = '0.0.5'
     ext.utdidVersion = '2.5.2'
-    ext.beaconVersion = '1.0.5'
+    ext.beaconVersion = '1.0.7'
     ext.httpdnsDebugVersion = '0.0.0.1-local-SNAPSHOT'
 
 }

@@ -16,6 +16,7 @@ import com.alibaba.sdk.android.httpdns.HttpDns;
 import com.alibaba.sdk.android.httpdns.HttpDnsService;
 import com.alibaba.sdk.android.httpdns.HttpDnsSettings;
 import com.alibaba.sdk.android.httpdns.ILogger;
+import com.alibaba.sdk.android.httpdns.InitConfig;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.SyncService;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
@@ -195,15 +196,22 @@ public class MainActivity extends Activity implements View.OnClickListener {
         // 初始化httpdns
         SenderLog.setLevel(LogLevel.DEBUG);
         HttpDnsLog.enable(false);
-//        HttpDns.enableIPv6Service(this,(true);
-        httpdns = HttpDns.getService(getApplicationContext(), accountID);
-        httpdns.setLogEnabled(true);
-        httpdns.setLogger(new ILogger() {
+        HttpDnsLog.setLogger(new ILogger() {
             @Override
             public void log(String msg) {
                 Log.d("test", "from sdk: " + msg);
             }
         });
+//        初始化配置
+//        new InitConfig.Builder()
+//                .setRegion("hk")
+//                .setEnableHttps(true)
+//                .setTimeout(10 * 1000)
+//                .setEnableCacheIp(true)
+//                .buildFor(accountID);
+
+//        HttpDns.enableIPv6Service(this,(true);
+        httpdns = HttpDns.getService(getApplicationContext(), accountID);
 
         NetworkStateManager.getInstance().init(getApplicationContext());
         HttpDnsSettings.setNetworkChecker(new HttpDnsSettings.NetworkChecker() {
@@ -221,8 +229,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
 //        // 允许过期IP以实现懒加载策略
 //        httpdns.setExpiredIPEnabled(true);
 
-        // ipv6
-        httpdns.enableIPv6(true);
         httpdns.setCachedIPEnabled(true);
 
         List<IPProbeItem> list = new ArrayList<IPProbeItem>();
