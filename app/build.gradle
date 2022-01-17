@@ -22,11 +22,6 @@ android {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-        forTest {
-            initWith release
-            debuggable true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
     }
 
     testOptions {
@@ -43,22 +38,6 @@ android {
     productFlavors {
         normal {
 
-        }
-
-        end2end {
-        }
-    }
-
-    variantFilter { variant ->
-        def names = variant.flavors*.name
-        def type = variant.buildType.name
-        // To check for a certain build type, use variant.buildType.name == "<buildType>"
-        if ((names.contains("normal") && type.contains("forTest"))
-                || (names.contains("end2end") && type.contains("release"))
-                || (names.contains("end2end") && type.contains("debug"))
-        ) {
-            // Gradle ignores any variants that satisfy the conditions above.
-            setIgnore(true)
         }
     }
 }
