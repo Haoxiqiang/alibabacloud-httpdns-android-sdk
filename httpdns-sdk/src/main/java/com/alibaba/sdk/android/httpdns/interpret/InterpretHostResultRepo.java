@@ -191,6 +191,12 @@ public class InterpretHostResultRepo {
         return cache.getResult(host, type);
     }
 
+    /**
+     * 仅清除内容缓存
+     */
+    public void clearMemoryCache() {
+        cacheGroup.clearAll();
+    }
 
     /**
      * 清除已解析的结果

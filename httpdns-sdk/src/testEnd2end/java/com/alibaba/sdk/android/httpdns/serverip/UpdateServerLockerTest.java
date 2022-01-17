@@ -85,15 +85,15 @@ public class UpdateServerLockerTest {
                 if (random < 2) {
                     boolean result = locker.begin(tmpRegion);
                     if (result) {
-                        System.out.println("lock " + tmpRegion + " success");
+//                        System.out.println("lock " + tmpRegion + " success");
                         tmpRequesting.incrementAndGet();
                     } else {
-                        System.out.println("lock " + tmpRegion + " fail");
+//                        System.out.println("lock " + tmpRegion + " fail");
                     }
                 } else {
                     if (tmpRequesting.compareAndSet(1, 0)) {
                         locker.end(tmpRegion);
-                        System.out.println("unlock " + tmpRegion + " success");
+//                        System.out.println("unlock " + tmpRegion + " success");
                     }
                 }
 

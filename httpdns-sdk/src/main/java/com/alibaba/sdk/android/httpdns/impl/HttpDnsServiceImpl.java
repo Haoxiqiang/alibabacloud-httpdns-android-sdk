@@ -183,7 +183,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             return;
         }
         if (regionUpdated) {
-            repo.clear();
+            repo.clearMemoryCache();
         }
         requestHandler.resetStatus();
     }
@@ -451,7 +451,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
         boolean changed = config.setRegion(region);
         System.out.println("set region to " + region);
         if (changed) {
-            repo.clear();
+            repo.clearMemoryCache();
         }
         scheduleService.updateServerIps(region);
     }
@@ -493,7 +493,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
                 public void run() {
                     HashMap<String, RequestIpType> allHost = repo.getAllHost();
                     HttpDnsLog.d("network change, clean record");
-                    repo.clear();
+                    repo.clearMemoryCache();
                     if (resolveAfterNetworkChange && config.isEnabled()) {
                         ArrayList<String> v4List = new ArrayList<>();
                         ArrayList<String> v6List = new ArrayList<>();
