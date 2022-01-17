@@ -1806,7 +1806,7 @@ public class HttpDnsE2E {
 
         app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, false);
 
-        ServerStatusHelper.hasReceiveRegionChange("初始化时更新HK节点", app, server, Constants.REGION_HK, true);
+        ServerStatusHelper.hasReceiveRegionChange("初始化时更新HK节点, 一次", app, server, Constants.REGION_HK, 1, true);
     }
 
     /**

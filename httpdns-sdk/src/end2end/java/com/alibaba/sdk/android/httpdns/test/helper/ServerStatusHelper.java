@@ -116,6 +116,11 @@ public class ServerStatusHelper {
         assertThat(reason + ", region " + region, server.getServerIpsServer().hasRequestForArg(region, -1, remove));
     }
 
+    public static void hasReceiveRegionChange(String reason, BusinessApp app, HttpDnsServer server, String region, int count, boolean remove) {
+        app.waitForAppThread();
+        assertThat(reason + ", region " + region, server.getServerIpsServer().hasRequestForArg(region, count, remove));
+    }
+
 
     public static void hasNotReceiveRegionChange(String reason, BusinessApp app, HttpDnsServer server, String region) {
         app.waitForAppThread();

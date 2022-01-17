@@ -16,11 +16,13 @@ public class ScheduleService {
     private HttpDnsConfig config;
     private OnServerIpUpdate onServerIpUpdate;
     private ServerIpRepo repo;
+    private UpdateServerLocker locker;
 
     public ScheduleService(HttpDnsConfig config, OnServerIpUpdate onServerIpUpdate) {
         this.config = config;
         this.onServerIpUpdate = onServerIpUpdate;
         this.repo = new ServerIpRepo();
+        this.locker = new UpdateServerLocker();
     }
 
     /**
@@ -36,29 +38,33 @@ public class ScheduleService {
             return;
         }
 
-        UpdateServerTask.updateServer(config, newRegion, new RequestCallback<UpdateServerResponse>() {
-            @Override
-            public void onSuccess(UpdateServerResponse updateServerResponse) {
-                if (!updateServerResponse.isEnable()) {
-                    HttpDnsLog.i("disable service by server response " + updateServerResponse.toString());
-                    config.setEnabled(false);
-                    return;
-                } else {
-                    if (!config.isEnabled()) {
-                        config.setEnabled(true);
+        if (locker.begin(newRegion)) {
+            UpdateServerTask.updateServer(config, newRegion, new RequestCallback<UpdateServerResponse>() {
+                @Override
+                public void onSuccess(UpdateServerResponse updateServerResponse) {
+                    if (!updateServerResponse.isEnable()) {
+                        HttpDnsLog.i("disable service by server response " + updateServerResponse.toString());
+                        config.setEnabled(false);
+                        return;
+                    } else {
+                        if (!config.isEnabled()) {
+                            config.setEnabled(true);
+                        }
                     }
+                    if (updateServerResponse.getServerIps() != null) {
+                        updateServerConfig(newRegion, updateServerResponse.getServerIps(), updateServerResponse.getServerPorts());
+                        repo.save(newRegion, updateServerResponse.getServerIps(), updateServerResponse.getServerPorts());
+                    }
+                    locker.end(newRegion);
                 }
-                if (updateServerResponse.getServerIps() != null) {
-                    updateServerConfig(newRegion, updateServerResponse.getServerIps(), updateServerResponse.getServerPorts());
-                    repo.save(newRegion, updateServerResponse.getServerIps(), updateServerResponse.getServerPorts());
-                }
-            }
 
-            @Override
-            public void onFail(Throwable throwable) {
-                HttpDnsLog.w("update server ips fail", throwable);
-            }
-        });
+                @Override
+                public void onFail(Throwable throwable) {
+                    HttpDnsLog.w("update server ips fail", throwable);
+                    locker.end(newRegion);
+                }
+            });
+        }
     }
 
     private void updateServerConfig(String newRegion, String[] serverIps, int[] serverPorts) {

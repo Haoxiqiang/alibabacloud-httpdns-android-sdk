@@ -167,6 +167,8 @@ public class InterpretHostService {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                // 不管什么情况释放锁
+                locker.endInterpret(host, type, cacheKey);
             }
 
         } else {
