@@ -28,6 +28,7 @@
 -keep class com.alibaba.sdk.android.httpdns.HttpDns{*;}
 -keep class com.alibaba.sdk.android.httpdns.HttpDnsService{*;}
 -keep class com.alibaba.sdk.android.httpdns.SyncService{*;}
+-keep class com.alibaba.sdk.android.httpdns.InitConfig{*;}
 -keep class com.alibaba.sdk.android.httpdns.RequestIpType{*;}
 -keep class com.alibaba.sdk.android.httpdns.net64.Net64Service{*;}
 -keep class com.alibaba.sdk.android.httpdns.DegradationFilter{*;}
