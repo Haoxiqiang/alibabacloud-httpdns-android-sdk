@@ -184,6 +184,9 @@ public class HttpDnsE2E {
 
         // 修改region
         app.changeRegionTo(hkRegion);
+        // 连续请求多次 不影响
+        app.changeRegionTo(hkRegion);
+        app.changeRegionTo(hkRegion);
         ServerStatusHelper.hasReceiveRegionChange("修改region会触发更新服务IP请求", app, server, hkRegion);
         // 请求域名解析
         app.requestInterpretHost();
