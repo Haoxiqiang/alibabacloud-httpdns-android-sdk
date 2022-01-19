@@ -48,6 +48,7 @@ public class InterpretHostRequestHandler {
                 HttpDnsLog.w("requestInterpretHost region miss match [" + config.getRegion() + "] [" + config.getCurrentServer().getRegion() + "]");
             }
             callback.onFail(Constants.region_not_match);
+            scheduleService.updateServerIps();
             return;
         }
         HttpRequestConfig requestConfig = InterpretHostHelper.getConfig(config, host, type, extras, cacheKey, globalParams, signService);
@@ -64,6 +65,7 @@ public class InterpretHostRequestHandler {
                 HttpDnsLog.w("requestResolveHost region miss match [" + config.getRegion() + "] [" + config.getCurrentServer().getRegion() + "]");
             }
             callback.onFail(Constants.region_not_match);
+            scheduleService.updateServerIps();
             return;
         }
         HttpRequestConfig requestConfig = InterpretHostHelper.getConfig(config, hostList, type, signService);

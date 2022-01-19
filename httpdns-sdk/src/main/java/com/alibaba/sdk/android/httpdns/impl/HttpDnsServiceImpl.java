@@ -83,7 +83,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             }
             NetworkStateManager.getInstance().init(context);
             NetworkStateManager.getInstance().addListener(this);
-            if (config.getCurrentServer().shouldUpdateServerIp()) {
+            if (config.getCurrentServer().shouldUpdateServerIp() || !config.isCurrentRegionMatch()) {
                 scheduleService.updateServerIps();
             }
             ReportManager.init(context);
