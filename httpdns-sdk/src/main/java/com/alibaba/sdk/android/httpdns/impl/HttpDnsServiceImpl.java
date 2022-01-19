@@ -104,15 +104,15 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
 
         if (config != null) {
             // 先设置和网络相关的内容
-            setTimeoutInterval(config.getTimeout());
-            setHTTPSRequestEnabled(config.isEnableHttps());
+            this.config.setTimeout(config.getTimeout());
+            this.config.setHTTPSRequestEnabled(config.isEnableHttps());
             // 再设置一些可以提前，没有副作用的内容
             setExpiredIPEnabled(config.isEnableExpiredIp());
             if (config.getIpProbeItems() != null) {
                 setIPProbeList(config.getIpProbeItems());
             }
             // 设置region 必须在 缓存之前
-            setRegion(config.getRegion());
+            this.config.setRegion(config.getRegion());
             setCachedIPEnabled(config.isEnableCacheIp());
         }
 
@@ -193,7 +193,6 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
         if (!config.isEnabled()) {
             return;
         }
-        System.out.println("------> log control " + shouldPrintLog + " account " + config.getAccountId());
         HttpDnsLog.enable(shouldPrintLog);
     }
 
@@ -449,7 +448,6 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             return;
         }
         boolean changed = config.setRegion(region);
-        System.out.println("set region to " + region);
         if (changed) {
             repo.clearMemoryCache();
         }

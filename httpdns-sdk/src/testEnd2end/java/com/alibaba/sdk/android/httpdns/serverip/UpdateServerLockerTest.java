@@ -54,7 +54,7 @@ public class UpdateServerLockerTest {
         String region = Constants.REGION_DEFAULT;
         MatcherAssert.assertThat("允许第一个请求", locker.begin(region));
         MatcherAssert.assertThat("第一个请求,未完成，其它请求不处理", !locker.begin(region));
-        Thread.sleep(10);
+        Thread.sleep(11);
         MatcherAssert.assertThat("第一个请求,未完成，其它请求不处理", !locker.begin(region));
         MatcherAssert.assertThat("超时，允许下一个请求", locker.begin(region));
     }

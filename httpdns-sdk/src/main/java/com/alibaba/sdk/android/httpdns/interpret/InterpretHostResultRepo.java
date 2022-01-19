@@ -208,7 +208,6 @@ public class InterpretHostResultRepo {
                 config.getDbWorker().execute(new Runnable() {
                     @Override
                     public void run() {
-                        System.out.println("clear all " + recordsToBeDeleted.size());
                         dbHelper.delete(recordsToBeDeleted);
                     }
                 });
