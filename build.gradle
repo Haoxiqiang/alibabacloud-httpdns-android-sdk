@@ -34,7 +34,7 @@ allprojects {
         }
     }
 
-    ext.restVersion = '1.6.3-open'
+    ext.restVersion = '1.6.4-open'
     ext.senderVersion = '1.1.4'
     ext.crashDefendVersion = '0.0.6'
     ext.utdidVersion = '2.5.2'
