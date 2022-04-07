@@ -37,7 +37,7 @@ allprojects {
     ext.restVersion = '1.6.4-open'
     ext.senderVersion = '1.1.4'
     ext.crashDefendVersion = '0.0.6'
-    ext.utdidVersion = '2.5.2'
+    ext.utdidVersion = '2.6.0'
     ext.beaconVersion = '1.0.7'
     ext.httpdnsDebugVersion = '0.0.0.1-local-SNAPSHOT'
 
