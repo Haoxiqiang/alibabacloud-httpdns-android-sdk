@@ -53,7 +53,7 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:2.15.0'
     testImplementation 'com.squareup.okhttp3:mockwebserver:3.9.0'
 
-    implementation "com.aliyun.ams:alicloud-android-logger:1.2.0"
+    implementation "com.aliyun.ams:alicloud-android-logger:${loggerVersion}"
     implementation "com.aliyun.ams:alicloud-android-sender:${senderVersion}"
     implementation "com.aliyun.ams:alicloud-android-crashdefend:${crashDefendVersion}"
     implementation "com.aliyun.ams:alicloud-android-beacon:${beaconVersion}"
