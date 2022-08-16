@@ -1,6 +1,5 @@
 package com.alibaba.sdk.android.httpdns.impl;
 
-import android.app.Application;
 import android.content.Context;
 import android.os.Looper;
 
@@ -10,12 +9,10 @@ import com.alibaba.sdk.android.httpdns.BuildConfig;
 import com.alibaba.sdk.android.httpdns.DegradationFilter;
 import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
 import com.alibaba.sdk.android.httpdns.HttpDnsService;
-import com.alibaba.sdk.android.httpdns.HttpDnsSettings;
 import com.alibaba.sdk.android.httpdns.ILogger;
 import com.alibaba.sdk.android.httpdns.InitConfig;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.SyncService;
-import com.alibaba.sdk.android.httpdns.beacon.BeaconControl;
 import com.alibaba.sdk.android.httpdns.cache.RecordDBHelper;
 import com.alibaba.sdk.android.httpdns.interpret.HostFilter;
 import com.alibaba.sdk.android.httpdns.interpret.InterpretHostCacheGroup;
@@ -27,13 +24,10 @@ import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import com.alibaba.sdk.android.httpdns.net.NetworkStateManager;
 import com.alibaba.sdk.android.httpdns.probe.IPProbeItem;
 import com.alibaba.sdk.android.httpdns.probe.ProbeService;
-import com.alibaba.sdk.android.httpdns.report.ReportManager;
 import com.alibaba.sdk.android.httpdns.serverip.ScheduleService;
 import com.alibaba.sdk.android.httpdns.track.SessionTrackMgr;
 import com.alibaba.sdk.android.httpdns.utils.CommonUtil;
 import com.alibaba.sdk.android.httpdns.utils.Constants;
-import com.alibaba.sdk.android.sender.AlicloudSender;
-import com.alibaba.sdk.android.sender.SdkInfo;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -86,11 +80,8 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             if (config.getCurrentServer().shouldUpdateServerIp() || !config.isCurrentRegionMatch()) {
                 scheduleService.updateServerIps();
             }
-            ReportManager.init(context);
-            ReportManager reportManager = ReportManager.getReportManagerByAccount(accountId);
-            reportManager.setAccountId(accountId);
-            reportSdkStart(context, accountId);
-            initBeacon(context, accountId, config);
+            favorInit(context, accountId);
+
             if (HttpDnsLog.isPrint()) {
                 HttpDnsLog.d("httpdns service is inited " + accountId);
             }
@@ -122,9 +113,11 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
         // only for test
     }
 
-    protected void initBeacon(Context context, String accountId, HttpDnsConfig config) {
-        BeaconControl.initBeacon(context, accountId, config);
+
+    protected void favorInit(Context context, String accountId) {
+        // for different favor init
     }
+
 
     protected void initCrashDefend(Context context, final HttpDnsConfig config) {
         CrashDefendApi.registerCrashDefendSdk(context, "httpdns", BuildConfig.VERSION_NAME, 2, 7, new CrashDefendCallback() {
@@ -147,25 +140,6 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
         });
     }
 
-    protected void reportSdkStart(Context context, String accountId) {
-        if (HttpDnsSettings.isDailyReport()) {
-            try {
-                HashMap<String, String> ext = new HashMap<>();
-                ext.put("accountId", accountId);
-                SdkInfo sdkInfo = new SdkInfo();
-                sdkInfo.setSdkId("httpdns");
-                sdkInfo.setSdkVersion(BuildConfig.VERSION_NAME);
-                sdkInfo.setExt(ext);
-                if (context.getApplicationContext() instanceof Application) {
-                    AlicloudSender.asyncSend((Application) context.getApplicationContext(), sdkInfo);
-                } else {
-                    AlicloudSender.asyncSend(context.getApplicationContext(), sdkInfo);
-                }
-            } catch (Throwable ignore) {
-                ignore.printStackTrace();
-            }
-        }
-    }
 
     public void setSecret(String secret) {
         if (!config.isEnabled()) {

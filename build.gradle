@@ -35,8 +35,7 @@ allprojects {
     }
 
     ext.loggerVersion = '1.2.0'
-    ext.restVersion = '1.6.4-open'
-    ext.senderVersion = '1.1.4'
+    ext.senderVersion = '1.1.5'
     ext.crashDefendVersion = '0.0.6'
     ext.utdidVersion = '2.6.0'
     ext.beaconVersion = '1.0.7'

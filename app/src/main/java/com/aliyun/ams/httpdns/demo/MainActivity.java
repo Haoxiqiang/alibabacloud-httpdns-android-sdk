@@ -16,13 +16,10 @@ import com.alibaba.sdk.android.httpdns.HttpDns;
 import com.alibaba.sdk.android.httpdns.HttpDnsService;
 import com.alibaba.sdk.android.httpdns.HttpDnsSettings;
 import com.alibaba.sdk.android.httpdns.ILogger;
-import com.alibaba.sdk.android.httpdns.InitConfig;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.SyncService;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import com.alibaba.sdk.android.httpdns.probe.IPProbeItem;
-import com.alibaba.sdk.android.logger.LogLevel;
-import com.alibaba.sdk.android.sender.SenderLog;
 import com.aliyun.ams.httpdns.demo.utils.Inet64Util;
 import com.aliyun.ams.httpdns.demo.utils.NetworkStateManager;
 
@@ -194,7 +191,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     private void initHttpDns() {
         // 初始化httpdns
-        SenderLog.setLevel(LogLevel.DEBUG);
         HttpDnsLog.enable(false);
         HttpDnsLog.setLogger(new ILogger() {
             @Override

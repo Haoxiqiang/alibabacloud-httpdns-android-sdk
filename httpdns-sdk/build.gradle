@@ -45,6 +45,10 @@ android {
 
         }
 
+        intl {
+
+        }
+
         end2end {
             buildConfigField "String[]", "INIT_SERVER", "{}"
             buildConfigField "String[]", "IPV6_INIT_SERVER", "{}"
@@ -56,6 +60,7 @@ android {
         def type = variant.buildType.name
         // To check for a certain build type, use variant.buildType.name == "<buildType>"
         if ((names.contains("normal") && type.contains("forTest"))
+                || (names.contains("intl") && type.contains("forTest"))
                 || (names.contains("end2end") && type.contains("release"))
                 || (names.contains("end2end") && type.contains("debug"))
         ) {
@@ -89,9 +94,9 @@ dependencies {
     end2endImplementation 'com.squareup.okhttp3:mockwebserver:3.9.0'
 
     implementation "com.aliyun.ams:alicloud-android-logger:${loggerVersion}"
-    implementation "com.aliyun.ams:alicloud-android-sender:${senderVersion}"
     implementation "com.aliyun.ams:alicloud-android-crashdefend:${crashDefendVersion}"
-    implementation "com.aliyun.ams:alicloud-android-utdid:${utdidVersion}"
-    implementation "com.aliyun.ams:alicloud-android-beacon:${beaconVersion}"
-    implementation "com.aliyun.ams:alicloud-android-rest:${restVersion}"
+
+    normalImplementation "com.aliyun.ams:alicloud-android-utdid:${utdidVersion}"
+    normalImplementation "com.aliyun.ams:alicloud-android-sender:${senderVersion}"
+    normalImplementation "com.aliyun.ams:alicloud-android-beacon:${beaconVersion}"
 }

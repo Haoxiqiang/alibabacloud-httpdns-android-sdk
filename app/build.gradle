@@ -22,6 +22,24 @@ android {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+        forTest {
+            initWith release
+            debuggable true
+        }
+    }
+
+    variantFilter { variant ->
+        def names = variant.flavors*.name
+        def type = variant.buildType.name
+        // To check for a certain build type, use variant.buildType.name == "<buildType>"
+        if ((names.contains("normal") && type.contains("forTest"))
+                || (names.contains("intl") && type.contains("forTest"))
+                || (names.contains("end2end") && type.contains("release"))
+                || (names.contains("end2end") && type.contains("debug"))
+        ) {
+            // Gradle ignores any variants that satisfy the conditions above.
+            setIgnore(true)
+        }
     }
 
     testOptions {
@@ -39,6 +57,13 @@ android {
         normal {
 
         }
+
+        intl {
+
+        }
+
+        end2end {
+        }
     }
 }
 repositories {
@@ -53,13 +78,7 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:2.15.0'
     testImplementation 'com.squareup.okhttp3:mockwebserver:3.9.0'
 
-    implementation "com.aliyun.ams:alicloud-android-logger:${loggerVersion}"
-    implementation "com.aliyun.ams:alicloud-android-sender:${senderVersion}"
-    implementation "com.aliyun.ams:alicloud-android-crashdefend:${crashDefendVersion}"
-    implementation "com.aliyun.ams:alicloud-android-beacon:${beaconVersion}"
-    implementation "com.aliyun.ams:alicloud-android-utdid:${utdidVersion}"
     implementation project(':httpdns-sdk')
-//    implementation(name: "alicloud-android-httpdns-${httpdnsDebugVersion}-end2end-forTest", ext: 'aar')
 
     implementation("com.squareup.okhttp3:okhttp:3.9.0")
 }
