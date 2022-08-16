@@ -1,5 +1,6 @@
 package com.alibaba.sdk.android.httpdns.interpret;
 
+import com.alibaba.sdk.android.httpdns.CacheTtlChanger;
 import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.cache.RecordDBHelper;
@@ -183,6 +184,49 @@ public class InterpretHostResultRepoTest {
                 assertExtras("测试repo本地缓存", result.getExtras(), responses.get(host).getExtras());
             }
         }
+    }
+
+    @Test
+    public void testCacheTtlChanger() throws InterruptedException {
+
+        final int originTtl = 10;
+        final int changedTtl = 1;
+
+        CacheTtlChanger changer = Mockito.mock(CacheTtlChanger.class);
+        Mockito.when(changer.changeCacheTtl(host, RequestIpType.v4, originTtl)).thenReturn(changedTtl);
+
+        InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(host, originTtl);
+        repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
+        Thread.sleep(1000);
+        MatcherAssert.assertThat("没有设置ttlChanger时，ttl是" + originTtl + ", 1s内不会过期", !repo.getIps(host, RequestIpType.v4, null).isExpired());
+
+        repo.setCacheTtlChanger(changer);
+
+        repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
+        Thread.sleep(1000);
+        MatcherAssert.assertThat("设置ttlChanger时，ttl是" + changedTtl + ", 1s会过期", repo.getIps(host, RequestIpType.v4, null).isExpired());
+        Mockito.verify(changer).changeCacheTtl(host, RequestIpType.v4, originTtl);
+
+        repo.setCacheTtlChanger(null);
+        repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
+        Thread.sleep(1000);
+        MatcherAssert.assertThat("移除ttlchanger后，ttl是" + originTtl + ", 1s不会过期", !repo.getIps(host, RequestIpType.v4, null).isExpired());
+
+
+        final String resolveHost = RandomValue.randomHost();
+        ArrayList<String> hostList = new ArrayList<>();
+        hostList.add(resolveHost);
+        ResolveHostResponse resolveHostResponse = ServerHelper.randomResolveHostResponse(hostList, RequestIpType.v4, originTtl);
+
+        Mockito.when(changer.changeCacheTtl(resolveHost, RequestIpType.v4, originTtl)).thenReturn(changedTtl);
+        repo.setCacheTtlChanger(changer);
+
+        repo.save(Constants.REGION_DEFAULT, RequestIpType.v4, resolveHostResponse);
+        Mockito.verify(changer).changeCacheTtl(resolveHost, RequestIpType.v4, originTtl);
+        Thread.sleep(1000);
+        MatcherAssert.assertThat("设置ttlChanger时，ttl是" + changedTtl + ", 1s会过期", repo.getIps(resolveHost, RequestIpType.v4, null).isExpired());
+        Mockito.verify(changer).changeCacheTtl(resolveHost, RequestIpType.v4, originTtl);
+
     }
 
     private void assertExtras(String reason, Map<String, String> extras, String extraStr) throws JSONException {

@@ -13,6 +13,7 @@ import com.alibaba.sdk.android.httpdns.ILogger;
 import com.alibaba.sdk.android.httpdns.InitConfig;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.SyncService;
+import com.alibaba.sdk.android.httpdns.CacheTtlChanger;
 import com.alibaba.sdk.android.httpdns.cache.RecordDBHelper;
 import com.alibaba.sdk.android.httpdns.interpret.HostFilter;
 import com.alibaba.sdk.android.httpdns.interpret.InterpretHostCacheGroup;
@@ -519,6 +520,11 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             return interpretHostService.interpretHostAsync(host, type, null, null);
         }
         return interpretHostService.interpretHost(host, type, null, null);
+    }
+
+    @Override
+    public void configCacheTtlChanger(CacheTtlChanger changer) {
+        this.repo.setCacheTtlChanger(changer);
     }
 
     public void cleanHostCache(ArrayList<String> hosts) {

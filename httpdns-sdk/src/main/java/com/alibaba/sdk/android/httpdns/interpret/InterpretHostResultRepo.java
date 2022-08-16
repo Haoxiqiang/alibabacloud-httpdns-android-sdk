@@ -2,6 +2,7 @@ package com.alibaba.sdk.android.httpdns.interpret;
 
 import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
+import com.alibaba.sdk.android.httpdns.CacheTtlChanger;
 import com.alibaba.sdk.android.httpdns.cache.HostRecord;
 import com.alibaba.sdk.android.httpdns.cache.RecordDBHelper;
 import com.alibaba.sdk.android.httpdns.impl.HttpDnsConfig;
@@ -26,6 +27,7 @@ public class InterpretHostResultRepo {
     private HttpDnsConfig config;
     private ProbeService ipProbeService;
     private InterpretHostCacheGroup cacheGroup;
+    private CacheTtlChanger cacheTtlChanger;
 
     public InterpretHostResultRepo(HttpDnsConfig config, ProbeService ipProbeService, RecordDBHelper dbHelper, InterpretHostCacheGroup cacheGroup) {
         this.config = config;
@@ -69,6 +71,11 @@ public class InterpretHostResultRepo {
     }
 
     private HostRecord save(String region, String host, RequestIpType type, String extra, String cacheKey, String[] ips, int ttl) {
+
+        if (cacheTtlChanger != null) {
+            ttl = cacheTtlChanger.changeCacheTtl(host, type, ttl);
+        }
+
         InterpretHostCache cache = cacheGroup.getCache(cacheKey);
         return cache.update(region, host, type, extra, cacheKey, ips, ttl);
     }
@@ -250,5 +257,13 @@ public class InterpretHostResultRepo {
             });
         } catch (Throwable tr) {
         }
+    }
+
+    /**
+     * 设置自定义ttl的接口，用于控制缓存的时长
+     * @param changer
+     */
+    public void setCacheTtlChanger(CacheTtlChanger changer) {
+        cacheTtlChanger = changer;
     }
 }

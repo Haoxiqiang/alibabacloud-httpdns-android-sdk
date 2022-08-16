@@ -302,6 +302,24 @@ public class ServerHelper {
         return new ResolveHostResponse(hostItems);
     }
 
+    public static ResolveHostResponse randomResolveHostResponse(List<String> hostList, RequestIpType type, int ttl) {
+        ArrayList<ResolveHostResponse.HostItem> hostItems = new ArrayList<>();
+        for (String host : hostList) {
+            switch (type) {
+                case v4:
+                    hostItems.add(new ResolveHostResponse.HostItem(host, RandomValue.randomIpv4s(), null, ttl));
+                    break;
+                case v6:
+                    hostItems.add(new ResolveHostResponse.HostItem(host, null, RandomValue.randomIpv6s(), ttl));
+                    break;
+                default:
+                    hostItems.add(new ResolveHostResponse.HostItem(host, RandomValue.randomIpv4s(), RandomValue.randomIpv6s(), ttl));
+                    break;
+            }
+        }
+        return new ResolveHostResponse(hostItems);
+    }
+
     public static String toResponseBodyStr(ResolveHostResponse response) {
         ArrayList<ResolveItem> items = new ArrayList<>();
         for (String host : response.getHosts()) {

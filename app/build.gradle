@@ -23,6 +23,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         forTest {
+            // 注意这里的配置，并不是需要编译forTest的app，而是避免httpdns-sdk在AndroidStudio改为end2end运行测试时 BuildVariants报错
             initWith release
             debuggable true
         }
@@ -63,6 +64,7 @@ android {
         }
 
         end2end {
+            // 注意这里的配置，并不是需要编译end2end的app，而是避免httpdns-sdk在AndroidStudio改为end2end运行测试时 BuildVariants报错
         }
     }
 }

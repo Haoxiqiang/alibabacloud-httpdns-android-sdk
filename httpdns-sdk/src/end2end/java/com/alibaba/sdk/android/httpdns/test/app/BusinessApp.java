@@ -17,6 +17,7 @@ import com.alibaba.sdk.android.httpdns.ILogger;
 import com.alibaba.sdk.android.httpdns.InitManager;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.SyncService;
+import com.alibaba.sdk.android.httpdns.CacheTtlChanger;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import com.alibaba.sdk.android.httpdns.probe.IPProbeItem;
 import com.alibaba.sdk.android.httpdns.test.helper.ServerStatusHelper;
@@ -366,5 +367,9 @@ public class BusinessApp {
                 ((TestExecutorService) ((ApiForTest) httpDnsService).getWorker()).enableThreadCountCheck(check);
             }
         }
+    }
+
+    public void configTtlChanger(CacheTtlChanger changer) {
+        httpDnsService.configCacheTtlChanger(changer);
     }
 }
