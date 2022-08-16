@@ -180,14 +180,14 @@ public class RecordDBHelperTest {
     @Test
     public void readCacheByRegion() {
         // 初始数据
-        List<HostRecord> records = randomRecord(Constants.REGION_DEFAULT, 30);
+        List<HostRecord> records = randomRecord(Constants.REGION_MAINLAND, 30);
         helper.insertOrUpdate(records);
 
         List<HostRecord> recordsInHK = randomRecord(Constants.REGION_HK, 30);
         helper.insertOrUpdate(recordsInHK);
 
         // 读取
-        List<HostRecord> records3 = helper.readFromDb(Constants.REGION_DEFAULT);
+        List<HostRecord> records3 = helper.readFromDb(Constants.REGION_MAINLAND);
 
         ArrayList<HostRecord> saved = new ArrayList<>();
         saved.addAll(records);

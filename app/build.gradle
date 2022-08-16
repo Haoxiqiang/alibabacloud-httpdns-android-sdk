@@ -78,7 +78,9 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:2.15.0'
     testImplementation 'com.squareup.okhttp3:mockwebserver:3.9.0'
 
-    implementation project(':httpdns-sdk')
+    normalImplementation project(':httpdns-sdk')
+    intlImplementation project(':httpdns-sdk')
+    end2endImplementation "com.aliyun.ams:alicloud-android-httpdns:${httpdnsDebugVersion}"
 
     implementation("com.squareup.okhttp3:okhttp:3.9.0")
 }

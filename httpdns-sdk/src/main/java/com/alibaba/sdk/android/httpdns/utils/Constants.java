@@ -1,5 +1,6 @@
 package com.alibaba.sdk.android.httpdns.utils;
 
+import com.alibaba.sdk.android.httpdns.BuildConfig;
 import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
 import com.alibaba.sdk.android.httpdns.interpret.SniffException;
 import com.alibaba.sdk.android.httpdns.request.HttpRequestConfig;
@@ -13,9 +14,11 @@ import java.util.HashMap;
 public class Constants {
 
     // region 定义
-    // 国内
-    public static final String REGION_DEFAULT = "";
-    // 香港
+    // 默认的region
+    public static final String REGION_DEFAULT = BuildConfig.DEFAULT_REGION;
+    // 中国大陆
+    public static final String REGION_MAINLAND = "";
+    // 中国香港
     public static final String REGION_HK = "hk";
     // 新加坡
     public static final String REGION_SG = "sg";

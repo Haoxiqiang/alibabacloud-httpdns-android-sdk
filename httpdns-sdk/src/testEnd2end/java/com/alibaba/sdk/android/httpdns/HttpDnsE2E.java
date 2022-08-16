@@ -177,17 +177,17 @@ public class HttpDnsE2E {
     @Test
     public void changeRegionWillUpdateServerIp() {
         final String defaultRegion = Constants.REGION_DEFAULT;
-        final String hkRegion = Constants.REGION_HK;
+        final String otherRegion = Constants.REGION_HK == defaultRegion ? Constants.REGION_MAINLAND : Constants.REGION_HK;
 
         // 设置不同region对应的服务信息
-        prepareUpdateServerResponse(defaultRegion, hkRegion);
+        prepareUpdateServerResponse(defaultRegion, otherRegion);
 
         // 修改region
-        app.changeRegionTo(hkRegion);
+        app.changeRegionTo(otherRegion);
         // 连续请求多次 不影响
-        app.changeRegionTo(hkRegion);
-        app.changeRegionTo(hkRegion);
-        ServerStatusHelper.hasReceiveRegionChange("修改region会触发更新服务IP请求", app, server, hkRegion);
+        app.changeRegionTo(otherRegion);
+        app.changeRegionTo(otherRegion);
+        ServerStatusHelper.hasReceiveRegionChange("修改region会触发更新服务IP请求", app, server, otherRegion);
         // 请求域名解析
         app.requestInterpretHost();
         // 确认是另一个服务接受到请求
@@ -355,7 +355,7 @@ public class HttpDnsE2E {
     @Test
     public void updateServerIpWhenAllServerIpFail() {
         // 设置更新服务IP数据
-        prepareUpdateServerResponse("", "");
+        prepareUpdateServerResponse(Constants.REGION_DEFAULT, Constants.REGION_DEFAULT);
         // 前三个server设置为不可用
         ServerStatusHelper.degradeServer(server, app.getRequestHost(), -1);
         ServerStatusHelper.degradeServer(server1, app.getRequestHost(), -1);
@@ -426,20 +426,20 @@ public class HttpDnsE2E {
     @Test
     public void setRegionHasTimeInterval() {
         String defaultRegion = Constants.REGION_DEFAULT;
-        String hkRegion = Constants.REGION_HK;
+        String otherRegion = Constants.REGION_HK == defaultRegion ? Constants.REGION_MAINLAND : Constants.REGION_HK;
 
-        prepareUpdateServerResponse(defaultRegion, hkRegion);
+        prepareUpdateServerResponse(defaultRegion, otherRegion);
 
         // 切换到hk
-        app.changeRegionTo(hkRegion);
-        ServerStatusHelper.hasReceiveRegionChange("修改region会触发更新服务IP请求", app, server, hkRegion, true);
+        app.changeRegionTo(otherRegion);
+        ServerStatusHelper.hasReceiveRegionChange("修改region会触发更新服务IP请求", app, server, otherRegion, true);
         // 切回default
         app.changeRegionTo(defaultRegion);
         ServerStatusHelper.hasReceiveRegionChange("修改region会触发更新服务IP请求", app, server3, defaultRegion, true);
 
         // 再切换到hk，因为请求时间间隔太小，不会触发请求
-        app.changeRegionTo(hkRegion);
-        ServerStatusHelper.hasNotReceiveRegionChange("更新服务IP请求没有进行时间间隔限制", app, server, hkRegion);
+        app.changeRegionTo(otherRegion);
+        ServerStatusHelper.hasNotReceiveRegionChange("更新服务IP请求没有进行时间间隔限制", app, server, otherRegion);
 
         // 再切换回default，因为请求时间间隔太小，不会触发请求
         app.changeRegionTo(defaultRegion);
@@ -453,8 +453,8 @@ public class HttpDnsE2E {
             e.printStackTrace();
         }
         // 切换到hk
-        app.changeRegionTo(hkRegion);
-        ServerStatusHelper.hasReceiveRegionChange("更新服务IP请求超过时间间隔才允许请求", app, server, hkRegion);
+        app.changeRegionTo(otherRegion);
+        ServerStatusHelper.hasReceiveRegionChange("更新服务IP请求超过时间间隔才允许请求", app, server, otherRegion);
         // 切回default
         app.changeRegionTo(defaultRegion);
         ServerStatusHelper.hasReceiveRegionChange("更新服务IP请求超过时间间隔才允许请求", app, server3, defaultRegion);
@@ -536,9 +536,9 @@ public class HttpDnsE2E {
     @Test
     public void updateServerAllFailWhenRetryInitServer() {
 
-        String hkRegion = Constants.REGION_HK;
+        String otherRegion = Constants.REGION_HK == Constants.REGION_DEFAULT ? Constants.REGION_MAINLAND : Constants.REGION_HK;
         String defaultRegion = Constants.REGION_DEFAULT;
-        prepareUpdateServerResponseForGroup1(hkRegion);
+        prepareUpdateServerResponseForGroup1(otherRegion);
 
         // 设置服务不可用
         server3.getServerIpsServer().preSetRequestResponse(defaultRegion, 400, "whatever", 1);
@@ -546,8 +546,8 @@ public class HttpDnsE2E {
         server5.getServerIpsServer().preSetRequestResponse(defaultRegion, 400, "whatever", 1);
 
         // 先更新一次服务IP
-        app.changeRegionTo(hkRegion);
-        ServerStatusHelper.hasReceiveRegionChange("服务收到更新服务IP请求", app, server, hkRegion);
+        app.changeRegionTo(otherRegion);
+        ServerStatusHelper.hasReceiveRegionChange("服务收到更新服务IP请求", app, server, otherRegion);
 
         // 再触发一次服务IP更新，此时全部失败，会切换会初始服务请求
         app.changeRegionTo(defaultRegion);
@@ -564,12 +564,12 @@ public class HttpDnsE2E {
         ServerStatusHelper.requestInterpretAnotherHost("应用1域名解析服务正常", app1, server);
 
         String defaultRegion = Constants.REGION_DEFAULT;
-        String hkRegion = Constants.REGION_HK;
-        prepareUpdateServerResponse(defaultRegion, hkRegion);
+        String otherRegion = Constants.REGION_HK == Constants.REGION_DEFAULT ? Constants.REGION_MAINLAND : Constants.REGION_HK;
+        prepareUpdateServerResponse(defaultRegion, otherRegion);
 
         // 应用0切换到 hk
-        app.changeRegionTo(hkRegion);
-        ServerStatusHelper.hasReceiveRegionChange("应用0切换到hk", app, server, hkRegion);
+        app.changeRegionTo(otherRegion);
+        ServerStatusHelper.hasReceiveRegionChange("应用0切换到 其它region", app, server, otherRegion);
         // 应用1正常使用
         ServerStatusHelper.requestInterpretAnotherHost("应用1不受应用0切region影响", app1, server);
 
@@ -587,7 +587,7 @@ public class HttpDnsE2E {
 
         ServerStatusHelper.requestInterpretAnotherHost("应用0不受应用1嗅探状态影响", app, server3);
 
-        app1.changeRegionTo(hkRegion);
+        app1.changeRegionTo(otherRegion);
         app1.waitForAppThread();
 
         String sameHost = RandomValue.randomHost();
@@ -1453,7 +1453,8 @@ public class HttpDnsE2E {
     @Test
     public void testNotCrashWhenCallTwoManyTime() {
         app.checkThreadCount(false);
-        prepareUpdateServerResponse(Constants.REGION_DEFAULT, Constants.REGION_HK);
+        String otherRegion = Constants.REGION_HK == Constants.REGION_DEFAULT ? Constants.REGION_MAINLAND : Constants.REGION_HK;
+        prepareUpdateServerResponse(Constants.REGION_DEFAULT, otherRegion);
         try {
             for (int i = 0; i < 1000; i++) {
                 String host = RandomValue.randomHost();
@@ -1471,7 +1472,7 @@ public class HttpDnsE2E {
                         app.requestInterpretHostForIpv6();
                         break;
                     case 4:
-                        app.changeRegionTo(RandomValue.randomInt(2) == 0 ? Constants.REGION_DEFAULT : Constants.REGION_HK);
+                        app.changeRegionTo(RandomValue.randomInt(2) == 0 ? Constants.REGION_DEFAULT : otherRegion);
                         break;
                     case 5:
                         ArrayList<String> hostList = new ArrayList<>();
@@ -1687,13 +1688,13 @@ public class HttpDnsE2E {
     @Test
     public void stopInterpretHostWhenServerIpDoNotBelongCurrentRegion() {
         final String defaultRegion = Constants.REGION_DEFAULT;
-        final String hkRegion = Constants.REGION_HK;
+        final String otherRegion = Constants.REGION_HK == defaultRegion ? Constants.REGION_MAINLAND : Constants.REGION_HK;
 
         // 设置不同region对应的服务信息
-        prepareUpdateServerResponse(defaultRegion, hkRegion);
+        prepareUpdateServerResponse(defaultRegion, otherRegion);
 
         // 修改region
-        app.changeRegionTo(hkRegion);
+        app.changeRegionTo(otherRegion);
 
         // 修改region之后马上请求解析域名
         app.requestInterpretHost();
@@ -1710,9 +1711,9 @@ public class HttpDnsE2E {
     @Test
     public void changeRegionWillCleanCachePreventGetWrongIp() {
         final String defaultRegion = Constants.REGION_DEFAULT;
-        final String hkRegion = Constants.REGION_HK;
+        final String otherRegion =  Constants.REGION_HK == defaultRegion ? Constants.REGION_MAINLAND : Constants.REGION_HK;
         // 设置不同region对应的服务信息
-        prepareUpdateServerResponse(defaultRegion, hkRegion);
+        prepareUpdateServerResponse(defaultRegion, otherRegion);
 
         app.requestInterpretHost();
         app.waitForAppThread();
@@ -1721,7 +1722,7 @@ public class HttpDnsE2E {
         MatcherAssert.assertThat("已经有缓存", ips != null && ips.length > 0);
 
         // 修改region
-        app.changeRegionTo(hkRegion);
+        app.changeRegionTo(otherRegion);
         // 修改region之后马上请求解析域名
         String[] ipsAfterChagneRegion = app.requestInterpretHost();
 
@@ -1734,9 +1735,9 @@ public class HttpDnsE2E {
     @Test
     public void cacheWillLoadCurrentRegion() {
         final String defaultRegion = Constants.REGION_DEFAULT;
-        final String hkRegion = Constants.REGION_HK;
+        final String otherRegion = Constants.REGION_HK == defaultRegion ? Constants.REGION_MAINLAND : Constants.REGION_HK;
         // 设置不同region对应的服务信息
-        prepareUpdateServerResponse(defaultRegion, hkRegion);
+        prepareUpdateServerResponse(defaultRegion, otherRegion);
 
         app.enableCache(false);
         // 先发起一些请求，缓存一些Ip结果
@@ -1752,7 +1753,7 @@ public class HttpDnsE2E {
         // 重启应用，获取新的实例
         app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
         // 切换region
-        app.changeRegionTo(hkRegion);
+        app.changeRegionTo(otherRegion);
         // 再加载缓存
         app.enableCache(false);
 
@@ -1912,9 +1913,9 @@ public class HttpDnsE2E {
     @Test
     public void loadCacheAfterRegionChangeWhenInit() {
         final String defaultRegion = Constants.REGION_DEFAULT;
-        final String hkRegion = Constants.REGION_HK;
+        final String otherRegion = Constants.REGION_HK == defaultRegion ? Constants.REGION_MAINLAND : Constants.REGION_HK;
         // 设置不同region对应的服务信息
-        prepareUpdateServerResponse(defaultRegion, hkRegion);
+        prepareUpdateServerResponse(defaultRegion, otherRegion);
 
         String accountId = RandomValue.randomStringWithFixedLength(10);
         new InitConfig.Builder()
@@ -1934,7 +1935,7 @@ public class HttpDnsE2E {
 
         new InitConfig.Builder()
                 .setEnableCacheIp(true)
-                .setRegion(Constants.REGION_HK)
+                .setRegion(otherRegion)
                 .buildFor(accountId);
         // 这里上个实例刚更新过服务节点，所以本地启动不会更新服务节点
         app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, false);
@@ -1949,7 +1950,7 @@ public class HttpDnsE2E {
 
         new InitConfig.Builder()
                 .setEnableCacheIp(true)
-                .setRegion(Constants.REGION_HK)
+                .setRegion(otherRegion)
                 .buildFor(accountId);
         // 这里上个实例刚更新过服务节点，所以本地启动不会更新服务节点
         app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, false);

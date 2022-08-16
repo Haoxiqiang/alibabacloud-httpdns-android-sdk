@@ -34,7 +34,7 @@ public class UpdateServerLockerTest {
 
     @Test
     public void requestDifferentRegion() {
-        String region = Constants.REGION_DEFAULT;
+        String region = Constants.REGION_MAINLAND;
         String region1 = Constants.REGION_HK;
         UpdateServerLocker locker = new UpdateServerLocker();
 
@@ -55,6 +55,7 @@ public class UpdateServerLockerTest {
         MatcherAssert.assertThat("允许第一个请求", locker.begin(region));
         MatcherAssert.assertThat("第一个请求,未完成，其它请求不处理", !locker.begin(region));
         Thread.sleep(11);
+        // 设计上，我们在超时后第一次判断时，处理超时
         MatcherAssert.assertThat("第一个请求,未完成，其它请求不处理", !locker.begin(region));
         MatcherAssert.assertThat("超时，允许下一个请求", locker.begin(region));
     }
@@ -63,7 +64,7 @@ public class UpdateServerLockerTest {
     @Test
     public void multiThread() {
         final String region = Constants.REGION_DEFAULT;
-        final String region1 = Constants.REGION_HK;
+        final String region1 = Constants.REGION_HK == Constants.REGION_DEFAULT ? Constants.REGION_MAINLAND : Constants.REGION_HK;
         final AtomicInteger regionRequesting = new AtomicInteger(0);
         final AtomicInteger region1Requesting = new AtomicInteger(0);
         final UpdateServerLocker locker = new UpdateServerLocker();
