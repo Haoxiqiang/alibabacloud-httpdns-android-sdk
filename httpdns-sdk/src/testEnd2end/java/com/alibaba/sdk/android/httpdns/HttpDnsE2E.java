@@ -129,7 +129,7 @@ public class HttpDnsE2E {
         ips = app.requestInterpretHost();
         ServerStatusHelper.hasNotReceiveAppInterpretHostRequest("当有缓存时，不会请求服务器", app, server);
         // 结果和服务器返回一致
-        UnitTestUtil.assertIpsEqual("解析域名返回服务器结果", serverResponseIps, ips);
+        UnitTestUtil.assertIpsEqual("解析域名返回服务器结果", ips, serverResponseIps);
     }
 
     /**
@@ -1432,8 +1432,9 @@ public class HttpDnsE2E {
      * @throws InterruptedException
      */
     @Test
-    public void testSyncRequest() throws InterruptedException {
+    public void testSyncRequest() throws Throwable {
         final CountDownLatch countDownLatch = new CountDownLatch(1);
+        final Throwable[] exceptions = new Throwable[1];
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -1441,11 +1442,19 @@ public class HttpDnsE2E {
                 InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(host);
                 server.getInterpretHostServer().preSetRequestResponse(host, response, 1);
                 String[] ips = app.requestInterpretHostSync(host);
-                UnitTestUtil.assertIpsEqual("解析结果和预期相同", ips, response.getIps());
+                try {
+                    UnitTestUtil.assertIpsEqual("解析结果和预期相同", ips, response.getIps());
+                } catch (Throwable e) {
+                    exceptions[0] = e;
+                    e.printStackTrace();
+                }
                 countDownLatch.countDown();
             }
         }).start();
         countDownLatch.await();
+        if(exceptions[0] != null) {
+            throw exceptions[0];
+        }
     }
 
     /**
@@ -2023,4 +2032,45 @@ public class HttpDnsE2E {
         ServerStatusHelper.hasNotReceiveAppInterpretHostRequest("当有缓存时，不会请求服务器", app, server);
         UnitTestUtil.assertIpsEqual("解析域名返回缓存结果", ips1, response1.getIps());
     }
+
+//
+//    /**
+//     * 解析结果为空会使用本地存储
+//     */
+//    @Test
+//    public void testEmptyIpWillUseDiskCache() {
+//
+//        // 模拟 请求 解析结果为空
+//        server.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), ServerHelper.randomInterpretHostResponse(app.getRequestHost()), -1);
+//
+//        // 重新初始化实例
+//
+//        // 再次请求，使用的是缓存
+//
+//    }
+//
+//    /**
+//     * 当解析结果为空时，说明此域名的解析是无效的，我们期望根据ttl来存储，保证ttl时间内，不在发起此请求，即使应用杀死重启
+//     * 服务会基于此特性，下发较大的ttl，来降低无效请求
+//     */
+//    @Test
+//    public void testEmptyIpWillLastBetweenAppLifeCycle() {
+//
+//    }
+//
+//    /**
+//     * 当网络变化时，空IP不会被清除
+//     */
+//    @Test
+//    public void testEmptyIpWillNotBeCleanWhenNetworkChange() {
+//
+//    }
+//
+//    /**
+//     * 预解析过滤掉已经有缓存的域名，仅解析没有结果或者结果过期的域名和ip
+//     */
+//    @Test
+//    public void testResolveRequestWillFilterCache() {
+//
+//    }
 }

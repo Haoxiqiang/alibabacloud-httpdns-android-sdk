@@ -27,6 +27,12 @@ import okhttp3.mockwebserver.RecordedRequest;
  */
 public class ServerHelper {
 
+    /**
+     * 服务侧 校验 签名
+     * @param secretService
+     * @param recordedRequest
+     * @return
+     */
     public static boolean checkSign(SecretService secretService, RecordedRequest recordedRequest) {
         List<String> pathSegments = recordedRequest.getRequestUrl().pathSegments();
         if (pathSegments.size() == 2 && (pathSegments.contains("sign_resolve") || pathSegments.contains("sign_d"))) {
@@ -53,6 +59,11 @@ public class ServerHelper {
         return true;
     }
 
+    /**
+     * 服务侧 获取 解析请求参数
+     * @param recordedRequest
+     * @return
+     */
     public static String getArgForInterpretHostRequest(RecordedRequest recordedRequest) {
         List<String> pathSegments = recordedRequest.getRequestUrl().pathSegments();
         if (pathSegments.size() == 2 && (pathSegments.contains("d") || pathSegments.contains("sign_d"))) {
@@ -91,6 +102,14 @@ public class ServerHelper {
         return extras;
     }
 
+    /**
+     * 构造 服务侧 的参数字符串，是自定义的字符串，用于区分不同的请求和快速获取参数数据
+     * 可以用于匹配请求和获取参数
+     * @param host
+     * @param type
+     * @param extras
+     * @return
+     */
     public static String formInterpretHostArg(String host, RequestIpType type, HashMap<String, String> extras) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(host);
@@ -112,14 +131,34 @@ public class ServerHelper {
         return stringBuilder.toString();
     }
 
+    /**
+     * 通过自定义参数获取域名
+     * @param arg
+     * @return
+     */
     public static String getInterpretHost(String arg) {
         return arg.split("&")[0];
     }
 
+    /**
+     * 构建 自定义参数
+     * @param host
+     * @param type
+     * @return
+     */
     public static String formInterpretHostArg(String host, RequestIpType type) {
         return formInterpretHostArg(host, type, null);
     }
 
+    /**
+     * 构建 解析结果字符串builder
+     * @param targetHost
+     * @param resultIps
+     * @param resultIpv6s
+     * @param ttl
+     * @param extra
+     * @return
+     */
     public static StringBuilder constructInterpretHostResultBody(String targetHost, String[] resultIps, String[] resultIpv6s, int ttl, String extra) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("{\"host\":\"");
@@ -163,6 +202,15 @@ public class ServerHelper {
         return stringBuilder;
     }
 
+    /**
+     * 构建 调度接口结果字符串
+     * @param enable
+     * @param serverIps
+     * @param serverIpv6s
+     * @param ports
+     * @param v6ports
+     * @return
+     */
     public static StringBuilder constructUpdateServerResultBody(boolean enable, String[] serverIps, String[] serverIpv6s, int[] ports, int[] v6ports) {
         StringBuilder stringBuilder = new StringBuilder();
         // "{\"service_ip\":[\""+serverIp+"\"],\"service_ipv6\":[\"2401:b180:2000:20::10\"]}"
@@ -235,6 +283,11 @@ public class ServerHelper {
         return stringBuilder;
     }
 
+    /**
+     * 服务侧 从调度请求中获取 region 参数
+     * @param request
+     * @return
+     */
     public static String getRegionIfIsUpdateServerRequest(RecordedRequest request) {
         List<String> pathSegments = request.getRequestUrl().pathSegments();
         if (pathSegments.size() == 2 && pathSegments.contains("ss")) {
@@ -248,27 +301,70 @@ public class ServerHelper {
         return null;
     }
 
+    /**
+     * 服务侧 判断是否是 测试请求
+     * @param request
+     * @return
+     */
     public static boolean isDebugRequest(RecordedRequest request) {
         List<String> pathSegments = request.getRequestUrl().pathSegments();
         return pathSegments.size() == 1 && pathSegments.contains("debug");
     }
 
+    /**
+     * 构建 解析结果，数据随机
+     * @param host
+     * @return
+     */
     public static InterpretHostResponse randomInterpretHostResponse(String host) {
         return new InterpretHostResponse(host, RandomValue.randomIpv4s(), RandomValue.randomIpv6s(), RandomValue.randomInt(60), RandomValue.randomJsonMap());
     }
 
+    /**
+     * 构建 解析结果，ttl指定，ip数据随机
+     * @param host
+     * @param ttl
+     * @return
+     */
+    public static InterpretHostResponse randomInterpretHostResponse(String host, int ttl) {
+        return new InterpretHostResponse(host, RandomValue.randomIpv4s(), RandomValue.randomIpv6s(), ttl, RandomValue.randomJsonMap());
+    }
+
+    /**
+     * 将解析结果 改为 下行body字符串
+     * @param response
+     * @return
+     */
     public static String toResponseBodyStr(InterpretHostResponse response) {
         return constructInterpretHostResultBody(response.getHostName(), response.getIps(), response.getIpsv6(), (int) response.getTtl(), response.getExtras()).toString();
     }
 
+    /**
+     * 构建 调度结果 下行数据
+     * @param serverIps
+     * @param serverIpv6s
+     * @param ports
+     * @param v6ports
+     * @return
+     */
     public static String createUpdateServerResponse(String[] serverIps, String[] serverIpv6s, int[] ports, int[] v6ports) {
         return constructUpdateServerResultBody(true, serverIps, serverIpv6s, ports, v6ports).toString();
     }
 
+    /**
+     * 将调度结果 改为下行body字符串
+     * @param updateServerResponse
+     * @return
+     */
     public static String toResponseBodyStr(UpdateServerResponse updateServerResponse) {
         return constructUpdateServerResultBody(updateServerResponse.isEnable(), updateServerResponse.getServerIps(), updateServerResponse.getServerIpv6s(), updateServerResponse.getServerPorts(), updateServerResponse.getServerIpv6Ports()).toString();
     }
 
+    /**
+     * 根据 自定义请求参数 构建批量解析结果数据，数据随机
+     * @param resolveServerArg
+     * @return
+     */
     public static ResolveHostResponse randomResolveHostResponse(String resolveServerArg) {
         String[] args = resolveServerArg.split("&");
         String hosts = args[0];
@@ -284,6 +380,12 @@ public class ServerHelper {
         return randomResolveHostResponse(Arrays.asList(hosts.split(",")), type);
     }
 
+    /**
+     * 根据 域名列表和解析类型 构建批量解析结果数据，数据随机
+     * @param hostList
+     * @param type
+     * @return
+     */
     public static ResolveHostResponse randomResolveHostResponse(List<String> hostList, RequestIpType type) {
         ArrayList<ResolveHostResponse.HostItem> hostItems = new ArrayList<>();
         for (String host : hostList) {
@@ -302,6 +404,13 @@ public class ServerHelper {
         return new ResolveHostResponse(hostItems);
     }
 
+    /**
+     * 根据 域名列表和解析类型 构建批量解析结果数据，数据随机, ttl指定
+     * @param hostList
+     * @param type
+     * @param ttl
+     * @return
+     */
     public static ResolveHostResponse randomResolveHostResponse(List<String> hostList, RequestIpType type, int ttl) {
         ArrayList<ResolveHostResponse.HostItem> hostItems = new ArrayList<>();
         for (String host : hostList) {
@@ -320,6 +429,11 @@ public class ServerHelper {
         return new ResolveHostResponse(hostItems);
     }
 
+    /**
+     * 将批量解析结果 转化为下行字符串
+     * @param response
+     * @return
+     */
     public static String toResponseBodyStr(ResolveHostResponse response) {
         ArrayList<ResolveItem> items = new ArrayList<>();
         for (String host : response.getHosts()) {
@@ -363,6 +477,11 @@ public class ServerHelper {
         return stringBuilder.toString();
     }
 
+    /**
+     * 服务侧 构建 批量解析的 自定义参数字符串
+     * @param recordedRequest
+     * @return
+     */
     public static String getArgForResolveHostRequest(RecordedRequest recordedRequest) {
         List<String> pathSegments = recordedRequest.getRequestUrl().pathSegments();
         if (pathSegments.size() == 2 && (pathSegments.contains("resolve") || pathSegments.contains("sign_resolve"))) {
@@ -374,10 +493,10 @@ public class ServerHelper {
         return null;
     }
 
-    public static InterpretHostResponse randomInterpretHostResponse(String host, int ttl) {
-        return new InterpretHostResponse(host, RandomValue.randomIpv4s(), RandomValue.randomIpv6s(), ttl, RandomValue.randomJsonMap());
-    }
-
+    /**
+     * 创建含义为禁止服务的 调度解析结果
+     * @return
+     */
     public static String createUpdateServerDisableResponse() {
         return constructUpdateServerResultBody(false, null, null, null, null).toString();
     }
@@ -397,6 +516,12 @@ public class ServerHelper {
     }
 
 
+    /**
+     * 构建 批量解析的 自定义参数字符串
+     * @param hostList
+     * @param type
+     * @return
+     */
     public static String formResolveHostArg(List<String> hostList, RequestIpType type) {
         ArrayList<String> hosts = new ArrayList<>();
         hosts.addAll(hostList);

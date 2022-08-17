@@ -5,6 +5,7 @@ import android.content.Context;
 import com.alibaba.sdk.android.httpdns.HttpDnsService;
 
 /**
+ * 改为使用测试实例
  * @author zonglin.nzl
  * @date 2020/12/4
  */

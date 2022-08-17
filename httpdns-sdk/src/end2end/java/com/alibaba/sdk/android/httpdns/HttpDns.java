@@ -59,6 +59,9 @@ public class HttpDns {
         // do nothing as deprecated
     }
 
+    /**
+     * 重置httpdns，用于一些模拟应用重启的场景
+     */
     public static void resetInstance() {
         holder = new HttpDnsInstanceHolder(new InstanceCreator());
         NetworkStateManager.getInstance().reset();

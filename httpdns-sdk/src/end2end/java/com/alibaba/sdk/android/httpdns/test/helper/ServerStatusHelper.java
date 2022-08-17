@@ -11,6 +11,7 @@ import java.util.List;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
+ * 服务状态判读辅助类
  * @author zonglin.nzl
  * @date 2020/11/9
  */

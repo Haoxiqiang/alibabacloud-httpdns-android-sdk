@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
+ * 同步线程池
  * @author zonglin.nzl
  * @date 1/13/22
  */

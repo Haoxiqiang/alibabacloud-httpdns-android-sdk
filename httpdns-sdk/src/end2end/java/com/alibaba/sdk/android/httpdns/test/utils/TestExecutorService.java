@@ -15,7 +15,7 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * 测试使用的 线程池
- *
+ * 可以进行异步控制，等待异步逻辑处理完成
  * @author zonglin.nzl
  * @date 2020/9/3
  */

@@ -7,6 +7,7 @@ import org.robolectric.annotation.Implements;
 import org.robolectric.shadow.api.Shadow;
 
 /**
+ * robolectric 的NetworkInfo shadow 类
  * @author zonglin.nzl
  * @date 2020/9/8
  */

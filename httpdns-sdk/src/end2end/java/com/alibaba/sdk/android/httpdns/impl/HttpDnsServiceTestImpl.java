@@ -11,6 +11,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
+ * 测试时 使用的httpdns 实例
+ * 增加了一些用于测试的api和机制
  * @author zonglin.nzl
  * @date 2020/10/16
  */
@@ -22,6 +24,7 @@ public class HttpDnsServiceTestImpl extends HttpDnsServiceImpl implements ApiFor
     @Override
     protected void beforeInit() {
         super.beforeInit();
+        // 通过InitManager 在httpdns初始化之前 进行一些测试需要前置工作
         BeforeHttpDnsServiceInit init = InitManager.getInstance().getAndRemove(config.getAccountId());
 
         if (init != null) {

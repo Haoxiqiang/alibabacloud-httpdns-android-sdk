@@ -3,6 +3,8 @@ package com.alibaba.sdk.android.httpdns;
 import java.util.HashMap;
 
 /**
+ * 增加初始化逻辑的单例
+ * 用于在测试用的httpdns实例中增加测试需要的初始化逻辑
  * @author zonglin.nzl
  * @date 1/14/22
  */
