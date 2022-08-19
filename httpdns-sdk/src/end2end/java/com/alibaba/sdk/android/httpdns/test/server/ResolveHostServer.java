@@ -52,7 +52,7 @@ public class ResolveHostServer extends BaseDataServer<String, ResolveHostRespons
 
     @Override
     public boolean isMyBusinessRequest(RecordedRequest request) {
-        return ServerHelper.getArgForResolveHostRequest(request) != null && ServerHelper.checkSign(secretService, request);
+        return ServerHelper.getArgForResolveHostRequest(request) != null && SecretService.checkSign(secretService, request);
     }
 
     public ResolveHostResponse getReponseForHost(String host, RequestIpType type) {

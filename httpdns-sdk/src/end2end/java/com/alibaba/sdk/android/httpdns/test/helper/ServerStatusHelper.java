@@ -4,6 +4,7 @@ import com.alibaba.sdk.android.httpdns.interpret.InterpretHostResponse;
 import com.alibaba.sdk.android.httpdns.request.HttpException;
 import com.alibaba.sdk.android.httpdns.test.app.BusinessApp;
 import com.alibaba.sdk.android.httpdns.test.server.HttpDnsServer;
+import com.alibaba.sdk.android.httpdns.test.server.InterpretHostServer;
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
 
 import java.util.List;
@@ -49,7 +50,7 @@ public class ServerStatusHelper {
         assertThat(reason, server.getInterpretHostServer().hasRequestForArgWithResult(requestHost, response, -1, false));
     }
 
-    public static void hasReceiveAppInterpretHostRequestWithResult(String reason, BusinessApp app, String arg, HttpDnsServer server, InterpretHostResponse response, int count, boolean removeRecord) {
+    public static void hasReceiveAppInterpretHostRequestWithResult(String reason, BusinessApp app, InterpretHostServer.InterpretHostArg arg, HttpDnsServer server, InterpretHostResponse response, int count, boolean removeRecord) {
         app.waitForAppThread();
         assertThat(reason, server.getInterpretHostServer().hasRequestForArgWithResult(arg, response, count, removeRecord));
     }
@@ -74,7 +75,7 @@ public class ServerStatusHelper {
      * @param arg
      * @param server
      */
-    public static void hasNotReceiveAppInterpretHostRequest(String reason, BusinessApp app, String arg, HttpDnsServer server) {
+    public static void hasNotReceiveAppInterpretHostRequest(String reason, BusinessApp app, InterpretHostServer.InterpretHostArg arg, HttpDnsServer server) {
         app.waitForAppThread();
         assertThat(reason, !server.getInterpretHostServer().hasRequestForArg(arg, -1, false));
     }
@@ -136,7 +137,7 @@ public class ServerStatusHelper {
      */
     public static void requestInterpretAnotherHost(String reason, BusinessApp app, HttpDnsServer server) {
         String host = RandomValue.randomHost();
-        InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(host);
+        InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(host);
         server.getInterpretHostServer().preSetRequestResponse(host, response, 1);
         app.requestInterpretHost(host);
         app.waitForAppThread();

@@ -2,8 +2,8 @@ package com.alibaba.sdk.android.httpdns.test.server;
 
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.interpret.InterpretHostResponse;
-import com.alibaba.sdk.android.httpdns.test.helper.ServerHelper;
 import com.alibaba.sdk.android.httpdns.test.server.base.BaseDataServer;
+import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
 
 import org.json.JSONException;
 
@@ -31,7 +31,7 @@ public class InterpretHostServer extends BaseDataServer<InterpretHostServer.Inte
 
     @Override
     public String convert(InterpretHostResponse interpretHostResponse) {
-        return ServerHelper.toResponseBodyStr(interpretHostResponse);
+        return toResponseBodyStr(interpretHostResponse);
     }
 
     @Override
@@ -45,7 +45,7 @@ public class InterpretHostServer extends BaseDataServer<InterpretHostServer.Inte
 
     @Override
     public InterpretHostResponse randomData(InterpretHostServer.InterpretHostArg arg) {
-        return ServerHelper.randomInterpretHostResponse(arg.host);
+        return randomInterpretHostResponse(arg.host);
     }
 
     @Override
@@ -55,7 +55,89 @@ public class InterpretHostServer extends BaseDataServer<InterpretHostServer.Inte
 
     @Override
     public boolean isMyBusinessRequest(RecordedRequest request) {
-        return ServerHelper.getArgForInterpretHostRequest(request) != null && ServerHelper.checkSign(secretService, request);
+        return InterpretHostServer.InterpretHostArg.createFromInterpretHostRequest(request) != null && SecretService.checkSign(secretService, request);
+    }
+
+    /**
+     * 构建 解析结果字符串builder
+     * @param targetHost
+     * @param resultIps
+     * @param resultIpv6s
+     * @param ttl
+     * @param extra
+     * @return
+     */
+    public static StringBuilder constructInterpretHostResultBody(String targetHost, String[] resultIps, String[] resultIpv6s, int ttl, String extra) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("{\"host\":\"");
+        stringBuilder.append(targetHost);
+        stringBuilder.append("\",\"ips\":");
+        if (resultIps.length == 0) {
+            stringBuilder.append("[]");
+        } else {
+            for (int i = 0; i < resultIps.length; i++) {
+                if (i == 0) {
+                    stringBuilder.append("[\"");
+                }
+                stringBuilder.append(resultIps[i]);
+                if (i == resultIps.length - 1) {
+                    stringBuilder.append("\"]");
+                } else {
+                    stringBuilder.append("\",\"");
+                }
+            }
+        }
+        if (resultIpv6s != null && resultIpv6s.length != 0) {
+            stringBuilder.append(",\"ipsv6\":");
+            for (int i = 0; i < resultIpv6s.length; i++) {
+                if (i == 0) {
+                    stringBuilder.append("[\"");
+                }
+                stringBuilder.append(resultIpv6s[i]);
+                if (i == resultIpv6s.length - 1) {
+                    stringBuilder.append("\"]");
+                } else {
+                    stringBuilder.append("\",\"");
+                }
+            }
+        }
+        stringBuilder.append(",\"ttl\":");
+        stringBuilder.append(ttl);
+        if (extra != null) {
+            stringBuilder.append(",\"extra\":\"" + extra.replace("\"", "\\\"") + "\"");
+        }
+        stringBuilder.append(",\"origin_ttl\":60,\"client_ip\":\"106.11.41.215\"}");
+        return stringBuilder;
+    }
+
+
+    /**
+     * 将解析结果 改为 下行body字符串
+     * @param response
+     * @return
+     */
+    public static String toResponseBodyStr(InterpretHostResponse response) {
+        return constructInterpretHostResultBody(response.getHostName(), response.getIps(), response.getIpsv6(), (int) response.getTtl(), response.getExtras()).toString();
+    }
+
+
+    /**
+     * 构建 解析结果，数据随机
+     * @param host
+     * @return
+     */
+    public static InterpretHostResponse randomInterpretHostResponse(String host) {
+        return new InterpretHostResponse(host, RandomValue.randomIpv4s(), RandomValue.randomIpv6s(), RandomValue.randomInt(60), RandomValue.randomJsonMap());
+    }
+
+    /**
+     * 构建 解析结果，ttl指定，ip数据随机
+     * @param host
+     * @param ttl
+     * @return
+     */
+    public static InterpretHostResponse randomInterpretHostResponse(String host, int ttl) {
+        return new InterpretHostResponse(host, RandomValue.randomIpv4s(), RandomValue.randomIpv6s(), ttl, RandomValue.randomJsonMap());
     }
 
 

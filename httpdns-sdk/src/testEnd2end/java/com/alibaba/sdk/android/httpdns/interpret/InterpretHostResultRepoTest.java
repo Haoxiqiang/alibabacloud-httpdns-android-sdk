@@ -7,8 +7,10 @@ import com.alibaba.sdk.android.httpdns.cache.RecordDBHelper;
 import com.alibaba.sdk.android.httpdns.impl.HttpDnsConfig;
 import com.alibaba.sdk.android.httpdns.probe.ProbeService;
 import com.alibaba.sdk.android.httpdns.test.helper.ServerHelper;
+import com.alibaba.sdk.android.httpdns.test.server.InterpretHostServer;
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
 import com.alibaba.sdk.android.httpdns.test.utils.TestExecutorService;
+import com.alibaba.sdk.android.httpdns.test.utils.TestLogger;
 import com.alibaba.sdk.android.httpdns.test.utils.UnitTestUtil;
 import com.alibaba.sdk.android.httpdns.utils.Constants;
 
@@ -63,7 +65,7 @@ public class InterpretHostResultRepoTest {
         MatcherAssert.assertThat("没有解析过的域名返回空", repo.getIps(host, RequestIpType.v6, null) == null);
         MatcherAssert.assertThat("没有解析过的域名返回空", repo.getIps(host, RequestIpType.both, null) == null);
 
-        InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(host);
+        InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(host);
 
         repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
         UnitTestUtil.assertIpsEqual("解析过的域名返回上次的解析结果", repo.getIps(host, RequestIpType.v4, null).getIps(), response.getIps());
@@ -81,7 +83,7 @@ public class InterpretHostResultRepoTest {
         repo.update(host, RequestIpType.v6, null, ipv6s);
         UnitTestUtil.assertIpsEqual("更新结果之后再请求，返回更新后的结果", repo.getIps(host, RequestIpType.v6, null).getIpv6s(), ipv6s);
 
-        InterpretHostResponse response1 = ServerHelper.randomInterpretHostResponse(host);
+        InterpretHostResponse response1 = InterpretHostServer.randomInterpretHostResponse(host);
         repo.save(Constants.REGION_DEFAULT, host, RequestIpType.both, null, null, response1);
         UnitTestUtil.assertIpsEqual("新的解析结果会覆盖原来的解析结果", repo.getIps(host, RequestIpType.v4, null).getIps(), response1.getIps());
         UnitTestUtil.assertIpsEqual("新的解析结果会覆盖原来的解析结果", repo.getIps(host, RequestIpType.v6, null).getIpv6s(), response1.getIpsv6());
@@ -133,7 +135,7 @@ public class InterpretHostResultRepoTest {
         // 存储解析数据
         for (int i = 0; i < 50; i++) {
             String host = RandomValue.randomHost();
-            InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(host);
+            InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(host);
             boolean sdns = RandomValue.randomInt(1) == 1;
             String cacheKey = sdns ? RandomValue.randomStringWithMaxLength(10) : null;
             String extra = sdns ? RandomValue.randomJsonMap() : null;
@@ -149,7 +151,7 @@ public class InterpretHostResultRepoTest {
         // 更新30个记录
         for (int i = 0; i < 30; i++) {
             String host = hosts.get(RandomValue.randomInt(hosts.size()));
-            InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(host);
+            InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(host);
             repo.save(Constants.REGION_DEFAULT, host, types.get(host), extras.get(host), cacheKeys.get(host), response);
             responses.put(host, response);
         }
@@ -195,7 +197,7 @@ public class InterpretHostResultRepoTest {
         CacheTtlChanger changer = Mockito.mock(CacheTtlChanger.class);
         Mockito.when(changer.changeCacheTtl(host, RequestIpType.v4, originTtl)).thenReturn(changedTtl);
 
-        InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(host, originTtl);
+        InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(host, originTtl);
         repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
         Thread.sleep(1000);
         MatcherAssert.assertThat("没有设置ttlChanger时，ttl是" + originTtl + ", 1s内不会过期", !repo.getIps(host, RequestIpType.v4, null).isExpired());
@@ -203,7 +205,9 @@ public class InterpretHostResultRepoTest {
         repo.setCacheTtlChanger(changer);
 
         repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
-        Thread.sleep(1000);
+//        TestLogger.log("start " + System.currentTimeMillis() + " "+repo.getIps(host, RequestIpType.v4, null).isExpired());
+        Thread.sleep(1001);
+//        TestLogger.log("end " + System.currentTimeMillis());
         MatcherAssert.assertThat("设置ttlChanger时，ttl是" + changedTtl + ", 1s会过期", repo.getIps(host, RequestIpType.v4, null).isExpired());
         Mockito.verify(changer).changeCacheTtl(host, RequestIpType.v4, originTtl);
 
@@ -223,7 +227,7 @@ public class InterpretHostResultRepoTest {
 
         repo.save(Constants.REGION_DEFAULT, RequestIpType.v4, resolveHostResponse);
         Mockito.verify(changer).changeCacheTtl(resolveHost, RequestIpType.v4, originTtl);
-        Thread.sleep(1000);
+        Thread.sleep(1001);
         MatcherAssert.assertThat("设置ttlChanger时，ttl是" + changedTtl + ", 1s会过期", repo.getIps(resolveHost, RequestIpType.v4, null).isExpired());
         Mockito.verify(changer).changeCacheTtl(resolveHost, RequestIpType.v4, originTtl);
 

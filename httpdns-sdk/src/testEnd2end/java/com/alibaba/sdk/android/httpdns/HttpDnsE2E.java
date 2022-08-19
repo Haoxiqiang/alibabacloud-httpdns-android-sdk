@@ -11,6 +11,7 @@ import com.alibaba.sdk.android.httpdns.test.app.BusinessApp;
 import com.alibaba.sdk.android.httpdns.test.helper.ServerHelper;
 import com.alibaba.sdk.android.httpdns.test.helper.ServerStatusHelper;
 import com.alibaba.sdk.android.httpdns.test.server.HttpDnsServer;
+import com.alibaba.sdk.android.httpdns.test.server.InterpretHostServer;
 import com.alibaba.sdk.android.httpdns.test.server.MockSpeedTestServer;
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
 import com.alibaba.sdk.android.httpdns.test.utils.ShadowNetworkInfo;
@@ -262,7 +263,7 @@ public class HttpDnsE2E {
     public void interpretHostRequestWillRetryOnceWhenFailed() {
         // 预置第一次失败，第二次成功
         server.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), 400, "whatever", 1);
-        InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(app.getRequestHost());
+        InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(app.getRequestHost());
         server.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), response, 1);
 
         // 请求
@@ -306,7 +307,7 @@ public class HttpDnsE2E {
         // 预设服务0超时
         server.getInterpretHostServer().preSetRequestTimeout(app.getRequestHost(), -1);
         // 预设服务1正常返回
-        InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(app.getRequestHost());
+        InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(app.getRequestHost());
         server1.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), response, 1);
 
         // 设置超时，并请求
@@ -332,7 +333,7 @@ public class HttpDnsE2E {
         // 预设服务0降级
         ServerStatusHelper.degradeServer(server, app.getRequestHost(), 1);
         // 预设服务1正常返回
-        InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(app.getRequestHost());
+        InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(app.getRequestHost());
         server1.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), response, 1);
 
         // 设置超时，并请求
@@ -592,8 +593,8 @@ public class HttpDnsE2E {
         app1.waitForAppThread();
 
         String sameHost = RandomValue.randomHost();
-        InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(sameHost);
-        InterpretHostResponse response1 = ServerHelper.randomInterpretHostResponse(sameHost);
+        InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(sameHost);
+        InterpretHostResponse response1 = InterpretHostServer.randomInterpretHostResponse(sameHost);
         server3.getInterpretHostServer().preSetRequestResponse(sameHost, response, 1);
         server3.getInterpretHostServer().preSetRequestResponse(sameHost, response1, 1);
 
@@ -620,17 +621,17 @@ public class HttpDnsE2E {
      */
     @Test
     public void supportIpv6Interpret() {
-        InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(app.getRequestHost());
-        server.getInterpretHostServer().preSetRequestResponse(ServerHelper.formInterpretHostArg(app.getRequestHost(), RequestIpType.v6), response, -1);
+        InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(app.getRequestHost());
+        server.getInterpretHostServer().preSetRequestResponse(InterpretHostServer.InterpretHostArg.create(app.getRequestHost(), RequestIpType.v6), response, -1);
 
         // 请求域名解析，并返回空结果，因为是接口是异步的，所以第一次请求一个域名返回是空
         String[] ipv6s = app.requestInterpretHostForIpv6();
         UnitTestUtil.assertIpsEmpty("解析域名，没有缓存时，返回空", ipv6s);
         // 验证服务器收到了请求
-        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("服务应该收到ipv6域名解析请求", app, ServerHelper.formInterpretHostArg(app.getRequestHost(), RequestIpType.v6), server, response, 1, true);
+        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("服务应该收到ipv6域名解析请求", app, InterpretHostServer.InterpretHostArg.create(app.getRequestHost(), RequestIpType.v6), server, response, 1, true);
         // 再次请求，获取服务器返回的结果
         ipv6s = app.requestInterpretHostForIpv6();
-        ServerStatusHelper.hasNotReceiveAppInterpretHostRequest("有缓存，不会请求服务器", app, ServerHelper.formInterpretHostArg(app.getRequestHost(), RequestIpType.v6), server);
+        ServerStatusHelper.hasNotReceiveAppInterpretHostRequest("有缓存，不会请求服务器", app, InterpretHostServer.InterpretHostArg.create(app.getRequestHost(), RequestIpType.v6), server);
         UnitTestUtil.assertIpsEqual("解析结果是服务返回的值", ipv6s, response.getIpsv6());
     }
 
@@ -644,14 +645,14 @@ public class HttpDnsE2E {
         extras.put("key2", "value3");
         String cacheKey = "sdns1";
 
-        InterpretHostResponse normalResponse = ServerHelper.randomInterpretHostResponse(app.getRequestHost());
+        InterpretHostResponse normalResponse = InterpretHostServer.randomInterpretHostResponse(app.getRequestHost());
         server.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), normalResponse, -1);
-        InterpretHostResponse sdnsResponse = ServerHelper.randomInterpretHostResponse(app.getRequestHost());
-        server.getInterpretHostServer().preSetRequestResponse(ServerHelper.formInterpretHostArg(app.getRequestHost(), RequestIpType.v4, extras), sdnsResponse, -1);
+        InterpretHostResponse sdnsResponse = InterpretHostServer.randomInterpretHostResponse(app.getRequestHost());
+        server.getInterpretHostServer().preSetRequestResponse(InterpretHostServer.InterpretHostArg.create(app.getRequestHost(), RequestIpType.v4, extras), sdnsResponse, -1);
 
         HTTPDNSResult result = app.requestSDNSInterpretHost(extras, cacheKey);
         UnitTestUtil.assertIpsEmpty("和其它域名解析一样，sdns解析第一次没有缓存时，返回空", result.getIps());
-        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("服务器应该接收到sdns请求", app, ServerHelper.formInterpretHostArg(app.getRequestHost(), RequestIpType.v4, extras), server, sdnsResponse, 1, true);
+        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("服务器应该接收到sdns请求", app, InterpretHostServer.InterpretHostArg.create(app.getRequestHost(), RequestIpType.v4, extras), server, sdnsResponse, 1, true);
         result = app.requestSDNSInterpretHost(extras, cacheKey);
         UnitTestUtil.assertIpsEqual("sdns解析结果和预期值一致", result.getIps(), sdnsResponse.getIps());
 
@@ -681,19 +682,19 @@ public class HttpDnsE2E {
         String cacheKey2 = "sdns2";
 
         // 一般sdns结果
-        InterpretHostResponse sdnsResponse = ServerHelper.randomInterpretHostResponse(app.getRequestHost());
-        server.getInterpretHostServer().preSetRequestResponse(ServerHelper.formInterpretHostArg(app.getRequestHost(), RequestIpType.v4, extras), sdnsResponse, -1);
+        InterpretHostResponse sdnsResponse = InterpretHostServer.randomInterpretHostResponse(app.getRequestHost());
+        server.getInterpretHostServer().preSetRequestResponse(InterpretHostServer.InterpretHostArg.create(app.getRequestHost(), RequestIpType.v4, extras), sdnsResponse, -1);
 
         // 仅global参数
-        InterpretHostResponse gsdnsResponse = ServerHelper.randomInterpretHostResponse(app.getRequestHost());
-        server.getInterpretHostServer().preSetRequestResponse(ServerHelper.formInterpretHostArg(app.getRequestHost(), RequestIpType.v4, globalParams), gsdnsResponse, -1);
+        InterpretHostResponse gsdnsResponse = InterpretHostServer.randomInterpretHostResponse(app.getRequestHost());
+        server.getInterpretHostServer().preSetRequestResponse(InterpretHostServer.InterpretHostArg.create(app.getRequestHost(), RequestIpType.v4, globalParams), gsdnsResponse, -1);
 
         // global参数 + 一般参数
         HashMap<String, String> all = new HashMap();
         all.putAll(globalParams);
         all.putAll(extras);
-        InterpretHostResponse sdnsResponse1 = ServerHelper.randomInterpretHostResponse(app.getRequestHost());
-        server.getInterpretHostServer().preSetRequestResponse(ServerHelper.formInterpretHostArg(app.getRequestHost(), RequestIpType.v4, all), sdnsResponse1, -1);
+        InterpretHostResponse sdnsResponse1 = InterpretHostServer.randomInterpretHostResponse(app.getRequestHost());
+        server.getInterpretHostServer().preSetRequestResponse(InterpretHostServer.InterpretHostArg.create(app.getRequestHost(), RequestIpType.v4, all), sdnsResponse1, -1);
 
         app.requestSDNSInterpretHost(extras, cacheKey);
         app.waitForAppThread();
@@ -729,12 +730,12 @@ public class HttpDnsE2E {
         extras.put("key2", "value3");
         String cacheKey = "sdns1";
 
-        InterpretHostResponse sdnsResponse = ServerHelper.randomInterpretHostResponse(app.getRequestHost());
-        server.getInterpretHostServer().preSetRequestResponse(ServerHelper.formInterpretHostArg(app.getRequestHost(), RequestIpType.v6, extras), sdnsResponse, -1);
+        InterpretHostResponse sdnsResponse = InterpretHostServer.randomInterpretHostResponse(app.getRequestHost());
+        server.getInterpretHostServer().preSetRequestResponse(InterpretHostServer.InterpretHostArg.create(app.getRequestHost(), RequestIpType.v6, extras), sdnsResponse, -1);
 
         HTTPDNSResult result = app.requestSDNSInterpretHostForIpv6(extras, cacheKey);
         UnitTestUtil.assertIpsEmpty("和其它域名解析一样，sdns解析第一次没有缓存时，返回空", result.getIps());
-        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("服务器应该接收到sdns请求", app, ServerHelper.formInterpretHostArg(app.getRequestHost(), RequestIpType.v6, extras), server, sdnsResponse, 1, true);
+        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("服务器应该接收到sdns请求", app, InterpretHostServer.InterpretHostArg.create(app.getRequestHost(), RequestIpType.v6, extras), server, sdnsResponse, 1, true);
         result = app.requestSDNSInterpretHostForIpv6(extras, cacheKey);
         UnitTestUtil.assertIpsEqual("sdns解析结果和预期值一致", result.getIpv6s(), sdnsResponse.getIpsv6());
     }
@@ -913,13 +914,13 @@ public class HttpDnsE2E {
     @Test
     public void testIpTtl() throws InterruptedException {
         app.enableExpiredIp(false);
-        InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(app.getRequestHost(), 1);
+        InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(app.getRequestHost(), 1);
         server.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), response, -1);
         // 请求域名解析，并返回空结果，因为是接口是异步的，所以第一次请求一个域名返回是空
         String[] ips = app.requestInterpretHost();
         UnitTestUtil.assertIpsEmpty("第一次请求，没有缓存，应该返回空", ips);
         // 验证服务器收到了请求
-        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("当没有缓存时，会异步请求服务器", app, app.getRequestHost(), server, response, 1, true);
+        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("当没有缓存时，会异步请求服务器", app, InterpretHostServer.InterpretHostArg.create(app.getRequestHost()), server, response, 1, true);
         // 再次请求，获取服务器返回的结果
         ips = app.requestInterpretHost();
         ServerStatusHelper.hasNotReceiveAppInterpretHostRequest("当有缓存时，不会请求服务器", app, server);
@@ -930,7 +931,7 @@ public class HttpDnsE2E {
         // ttl 过期后请求ip
         ips = app.requestInterpretHost();
         UnitTestUtil.assertIpsEmpty("ip过期后，返回空", ips);
-        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("ttl过期后，再次请求会触发网络请求", app, app.getRequestHost(), server, response, 1, true);
+        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("ttl过期后，再次请求会触发网络请求", app, InterpretHostServer.InterpretHostArg.create(app.getRequestHost()), server, response, 1, true);
         // 再次请求，获取再次请求服务器返回的结果
         ips = app.requestInterpretHost();
         // 结果和服务器返回一致
@@ -945,8 +946,8 @@ public class HttpDnsE2E {
     @Test
     public void testEnableExpiredIp() throws InterruptedException {
         app.enableExpiredIp(true);
-        InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(app.getRequestHost(), 1);
-        InterpretHostResponse response1 = ServerHelper.randomInterpretHostResponse(app.getRequestHost());
+        InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(app.getRequestHost(), 1);
+        InterpretHostResponse response1 = InterpretHostServer.randomInterpretHostResponse(app.getRequestHost());
         server.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), response, 1);
         server.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), response1, -1);
         // 请求域名解析，并返回空结果，因为是接口是异步的，所以第一次请求一个域名返回是空
@@ -961,7 +962,7 @@ public class HttpDnsE2E {
         ips = app.requestInterpretHost();
         // 结果和服务器返回一致
         UnitTestUtil.assertIpsEqual("启用过期IP，请求时域名过期，仍会返回过期IP", response.getIps(), ips);
-        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("ttl过期后，再次请求会触发网络请求", app, app.getRequestHost(), server, response1, 1, true);
+        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("ttl过期后，再次请求会触发网络请求", app, InterpretHostServer.InterpretHostArg.create(app.getRequestHost()), server, response1, 1, true);
         // 再次请求，获取再次请求服务器返回的结果
         ips = app.requestInterpretHost();
         // 结果和服务器返回一致
@@ -975,7 +976,7 @@ public class HttpDnsE2E {
     public void testServerCache() {
         // 先通过请求失败，切换一次服务IP
         ServerStatusHelper.degradeServer(server, app.getRequestHost(), 1);
-        InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(app.getRequestHost());
+        InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(app.getRequestHost());
         server1.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), response, 1);
         app.requestInterpretHost();
         ServerStatusHelper.hasReceiveAppInterpretHostRequestWithDegrade(app, server);
@@ -1127,13 +1128,13 @@ public class HttpDnsE2E {
         app.enableCache(false);
         app.enableExpiredIp(false);
         // 先发起一些请求，缓存一些Ip结果
-        InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(app.getRequestHost(), 1);
-        InterpretHostResponse response1 = ServerHelper.randomInterpretHostResponse(app.getRequestHost(), 1);
+        InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(app.getRequestHost(), 1);
+        InterpretHostResponse response1 = InterpretHostServer.randomInterpretHostResponse(app.getRequestHost(), 1);
         server.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), response, 1);
         server.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), response1, -1);
         String[] ips = app.requestInterpretHost();
         UnitTestUtil.assertIpsEmpty("第一次请求，没有缓存，应该返回空", ips);
-        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("当没有缓存时，会异步请求服务器", app, app.getRequestHost(), server, response, 1, true);
+        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("当没有缓存时，会异步请求服务器", app, InterpretHostServer.InterpretHostArg.create(app.getRequestHost()), server, response, 1, true);
         ips = app.requestInterpretHost();
         ServerStatusHelper.hasNotReceiveAppInterpretHostRequest("当有缓存时，不会请求服务器", app, server);
         UnitTestUtil.assertIpsEqual("解析域名返回服务器结果", response.getIps(), ips);
@@ -1217,7 +1218,7 @@ public class HttpDnsE2E {
         params.add("s");
         params.add("t");
         params.add("host");
-        MatcherAssert.assertThat("请求服务器时，发出的是带签名的请求", server.getInterpretHostServer().hasRequestForArgWithParams(ServerHelper.formInterpretHostArg(host, RequestIpType.v4), params, 1, false));
+        MatcherAssert.assertThat("请求服务器时，发出的是带签名的请求", server.getInterpretHostServer().hasRequestForArgWithParams(InterpretHostServer.InterpretHostArg.create(host, RequestIpType.v4), params, 1, false));
     }
 
 
@@ -1241,7 +1242,7 @@ public class HttpDnsE2E {
         params.add("s");
         params.add("t");
         params.add("host");
-        MatcherAssert.assertThat("超过有效期，服务不处理", !server.getInterpretHostServer().hasRequestForArgWithParams(ServerHelper.formInterpretHostArg(host, RequestIpType.v4), params, 1, false));
+        MatcherAssert.assertThat("超过有效期，服务不处理", !server.getInterpretHostServer().hasRequestForArgWithParams(InterpretHostServer.InterpretHostArg.create(host, RequestIpType.v4), params, 1, false));
     }
 
     /**
@@ -1439,7 +1440,7 @@ public class HttpDnsE2E {
             @Override
             public void run() {
                 String host = RandomValue.randomHost();
-                InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(host);
+                InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(host);
                 server.getInterpretHostServer().preSetRequestResponse(host, response, 1);
                 String[] ips = app.requestInterpretHostSync(host);
                 try {
@@ -1840,8 +1841,8 @@ public class HttpDnsE2E {
 
         app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
 
-        InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(app.getRequestHost(), 1);
-        InterpretHostResponse response1 = ServerHelper.randomInterpretHostResponse(app.getRequestHost());
+        InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(app.getRequestHost(), 1);
+        InterpretHostResponse response1 = InterpretHostServer.randomInterpretHostResponse(app.getRequestHost());
         server.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), response, 1);
         server.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), response1, -1);
         // 请求域名解析，并返回空结果，因为是接口是异步的，所以第一次请求一个域名返回是空
@@ -1855,7 +1856,7 @@ public class HttpDnsE2E {
         // ttl 过期后请求ip
         ips = app.requestInterpretHost();
         UnitTestUtil.assertIpsEmpty("不启用过期IP，返回空", ips);
-        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("ttl过期后，请求会触发网络请求", app, app.getRequestHost(), server, response1, 1, true);
+        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("ttl过期后，请求会触发网络请求", app, InterpretHostServer.InterpretHostArg.create(app.getRequestHost()), server, response1, 1, true);
         // 再次请求，获取再次请求服务器返回的结果
         ips = app.requestInterpretHost();
         // 结果和服务器返回一致
@@ -1988,13 +1989,13 @@ public class HttpDnsE2E {
         app.enableExpiredIp(false);
         app.configTtlChanger(changer);
 
-        InterpretHostResponse response = ServerHelper.randomInterpretHostResponse(hostWithShorterTtl, 2);
+        InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(hostWithShorterTtl, 2);
         server.getInterpretHostServer().preSetRequestResponse(hostWithShorterTtl, response, -1);
         // 请求域名解析，并返回空结果，因为是接口是异步的，所以第一次请求一个域名返回是空
         String[] ips = app.requestInterpretHost(hostWithShorterTtl);
         UnitTestUtil.assertIpsEmpty("第一次请求，没有缓存，应该返回空", ips);
         // 验证服务器收到了请求
-        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("当没有缓存时，会异步请求服务器", app, hostWithShorterTtl, server, response, 1, true);
+        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("当没有缓存时，会异步请求服务器", app, InterpretHostServer.InterpretHostArg.create(hostWithShorterTtl), server, response, 1, true);
         // 再次请求，获取服务器返回的结果
         ips = app.requestInterpretHost(hostWithShorterTtl);
         ServerStatusHelper.hasNotReceiveAppInterpretHostRequest("当有缓存时，不会请求服务器", app, server);
@@ -2005,20 +2006,20 @@ public class HttpDnsE2E {
         // 由于修改了ttl, 过期了，请求ip
         ips = app.requestInterpretHost(hostWithShorterTtl);
         UnitTestUtil.assertIpsEmpty("ip过期后，返回空", ips);
-        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("ttl过期后，再次请求会触发网络请求", app, hostWithShorterTtl, server, response, 1, true);
+        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("ttl过期后，再次请求会触发网络请求", app, InterpretHostServer.InterpretHostArg.create(hostWithShorterTtl), server, response, 1, true);
         // 再次请求，获取再次请求服务器返回的结果
         ips = app.requestInterpretHost(hostWithShorterTtl);
         // 结果和服务器返回一致
         UnitTestUtil.assertIpsEqual("解析域名返回服务器结果", ips, response.getIps());
 
 
-        InterpretHostResponse response1 = ServerHelper.randomInterpretHostResponse(hostWithChangerTtl, 1);
+        InterpretHostResponse response1 = InterpretHostServer.randomInterpretHostResponse(hostWithChangerTtl, 1);
         server.getInterpretHostServer().preSetRequestResponse(hostWithChangerTtl, response1, -1);
         // 请求域名解析，并返回空结果，因为是接口是异步的，所以第一次请求一个域名返回是空
         String[] ips1 = app.requestInterpretHost(hostWithChangerTtl);
         UnitTestUtil.assertIpsEmpty("第一次请求，没有缓存，应该返回空", ips1);
         // 验证服务器收到了请求
-        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("当没有缓存时，会异步请求服务器", app, hostWithChangerTtl, server, response1, 1, true);
+        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("当没有缓存时，会异步请求服务器", app, InterpretHostServer.InterpretHostArg.create(hostWithChangerTtl), server, response1, 1, true);
         // 再次请求，获取服务器返回的结果
         ips1 = app.requestInterpretHost(hostWithChangerTtl);
         ServerStatusHelper.hasNotReceiveAppInterpretHostRequest("当有缓存时，不会请求服务器", app, server);
