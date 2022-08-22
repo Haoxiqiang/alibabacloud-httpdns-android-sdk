@@ -72,10 +72,6 @@ public class BusinessApp {
         this.secret = secret;
     }
 
-    public String getAccountId() {
-        return accountId;
-    }
-
     /**
      * 应用启动
      */
@@ -122,6 +118,15 @@ public class BusinessApp {
     public void stop() {
         testExecutorService.shutdownNow();
         httpDnsService = null;
+    }
+
+
+    /**
+     * 获取app使用httpdns accountId
+     * @return
+     */
+    public String getAccountId() {
+        return accountId;
     }
 
     /**

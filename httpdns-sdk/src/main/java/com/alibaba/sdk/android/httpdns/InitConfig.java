@@ -42,6 +42,7 @@ public class InitConfig {
     private List<IPProbeItem> ipProbeItems;
     private String region;
     private CacheTtlChanger cacheTtlChanger;
+    private List<String> hostListWithFixedIp;
 
     private InitConfig(Builder builder) {
         enableExpiredIp = builder.enableExpiredIp;
@@ -51,6 +52,7 @@ public class InitConfig {
         ipProbeItems = builder.ipProbeItems;
         region = builder.region;
         cacheTtlChanger = builder.cacheTtlChanger;
+        hostListWithFixedIp = builder.hostListWithFixedIp;
     }
 
     public boolean isEnableExpiredIp() {
@@ -81,6 +83,10 @@ public class InitConfig {
         return cacheTtlChanger;
     }
 
+    public List<String> getHostListWithFixedIp() {
+        return hostListWithFixedIp;
+    }
+
     public static class Builder {
         private boolean enableExpiredIp = Constants.DEFAULT_ENABLE_EXPIRE_IP;
         private boolean enableCacheIp = Constants.DEFAULT_ENABLE_CACHE_IP;
@@ -89,6 +95,7 @@ public class InitConfig {
         private List<IPProbeItem> ipProbeItems = null;
         private String region = Constants.REGION_DEFAULT;
         private CacheTtlChanger cacheTtlChanger = null;
+        private List<String> hostListWithFixedIp = null;
 
         public Builder setEnableExpiredIp(boolean enableExpiredIp) {
             this.enableExpiredIp = enableExpiredIp;
@@ -126,6 +133,15 @@ public class InitConfig {
          */
         public Builder configCacheTtlChanger(CacheTtlChanger cacheTtlChanger) {
             this.cacheTtlChanger = cacheTtlChanger;
+            return this;
+        }
+
+        /**
+         * 配置主站域名列表
+         * @param hostListWithFixedIp 主站域名列表
+         */
+        public Builder configHostWithFixedIp(List<String> hostListWithFixedIp) {
+            this.hostListWithFixedIp = hostListWithFixedIp;
             return this;
         }
 

@@ -54,6 +54,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * HTTPDNS 2.3.0 版本需求
  * 1. 缓存使用的ttl改为可配置
+ * 2. 主站域名的ip不经常变动，单独处理相关逻辑
  *
  * @author zonglin.nzl
  * @date 2020/10/15
@@ -172,6 +173,78 @@ public class V2_3_0 {
         // 服务没有收到请求
         ServerStatusHelper.hasNotReceiveAppInterpretHostRequest("当有缓存时，不会请求服务器", app, server);
         UnitTestUtil.assertIpsEqual("解析域名返回缓存结果", ips1, response1.getIps());
+    }
+
+
+    /**
+     * 主站域名的ip解析缓存 不会因为网络变化而清除
+     */
+    @Test
+    @Config(shadows = {ShadowNetworkInfo.class})
+    public void testCacheWillNotBeCleanWhenNetworkChangeAsIpIsFixed() {
+
+        // 重置，然后重新初始化httpdns
+        HttpDns.resetInstance();
+        ArrayList<String> hosts = new ArrayList<>();
+        hosts.add(app.getRequestHost());
+        new InitConfig.Builder().configHostWithFixedIp(hosts).buildFor(app.getAccountId());
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+
+        // 移动网络
+        app.changeToNetwork(ConnectivityManager.TYPE_MOBILE);
+
+        // 先请求一次，产生缓存
+        app.requestInterpretHost();
+        app.waitForAppThread();
+        String[] serverResponseIps = server.getInterpretHostServer().getResponse(app.getRequestHost(), 1, true).get(0).getIps();
+
+        // 修改为wifi
+        app.changeToNetwork(ConnectivityManager.TYPE_WIFI);
+
+        // 再请求一次，应该使用的是缓存
+        UnitTestUtil.assertIpsEqual("再次请求获取的是上次请求的缓存", app.requestInterpretHost(), serverResponseIps);
+    }
+
+    /**
+     * 主站域名的ip解析缓存 不会因为网络变化而预解析
+     */
+    @Test
+    @Config(shadows = {ShadowNetworkInfo.class})
+    public void testCacheWillNotBeRefreshWhenNetworkChangeAsIpIsFixed() {
+
+        // 重置，然后重新初始化httpdns
+        HttpDns.resetInstance();
+        ArrayList<String> hosts = new ArrayList<>();
+        hosts.add(app.getRequestHost());
+        new InitConfig.Builder().configHostWithFixedIp(hosts).buildFor(app.getAccountId());
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+
+        // 移动网络
+        app.changeToNetwork(ConnectivityManager.TYPE_MOBILE);
+
+        // 先请求一次，产生缓存
+        app.requestInterpretHost();
+        app.waitForAppThread();
+
+        // 修改为wifi
+        app.changeToNetwork(ConnectivityManager.TYPE_WIFI);
+        // TODO 判断预解析服务没有收到预解析请求
+    }
+
+    /**
+     * 主站域名的ip解析缓存 默认使用本地缓存
+     */
+    @Test
+    public void testDiskCacheAsDefaultAsIpIsFixed() {
+
+    }
+
+    /**
+     * 主站域名的ip解析缓存 本地缓存的ttl 不会失效
+     */
+    @Test
+    public void testTtlIsValidFromDiskCacheAsIpIsFixed() {
+
     }
 
 //
