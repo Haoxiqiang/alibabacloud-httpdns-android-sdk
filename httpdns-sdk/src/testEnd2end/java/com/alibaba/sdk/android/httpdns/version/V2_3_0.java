@@ -19,6 +19,7 @@ import com.alibaba.sdk.android.httpdns.test.helper.ServerStatusHelper;
 import com.alibaba.sdk.android.httpdns.test.server.HttpDnsServer;
 import com.alibaba.sdk.android.httpdns.test.server.InterpretHostServer;
 import com.alibaba.sdk.android.httpdns.test.server.MockSpeedTestServer;
+import com.alibaba.sdk.android.httpdns.test.server.ResolveHostServer;
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
 import com.alibaba.sdk.android.httpdns.test.utils.ShadowNetworkInfo;
 import com.alibaba.sdk.android.httpdns.test.utils.UnitTestUtil;
@@ -183,7 +184,7 @@ public class V2_3_0 {
     @Config(shadows = {ShadowNetworkInfo.class})
     public void testCacheWillNotBeCleanWhenNetworkChangeAsIpIsFixed() {
 
-        // 重置，然后重新初始化httpdns
+        // 重置，然后重新初始化httpdns, 配置主站域名
         HttpDns.resetInstance();
         ArrayList<String> hosts = new ArrayList<>();
         hosts.add(app.getRequestHost());
@@ -212,12 +213,14 @@ public class V2_3_0 {
     @Config(shadows = {ShadowNetworkInfo.class})
     public void testCacheWillNotBeRefreshWhenNetworkChangeAsIpIsFixed() {
 
-        // 重置，然后重新初始化httpdns
+        // 重置，然后重新初始化httpdns, 配置主站域名
         HttpDns.resetInstance();
         ArrayList<String> hosts = new ArrayList<>();
         hosts.add(app.getRequestHost());
         new InitConfig.Builder().configHostWithFixedIp(hosts).buildFor(app.getAccountId());
         app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+        // 这里设置为网络变化预解析，强化这个配置不影响主站域名
+        app.enableResolveAfterNetworkChange(true);
 
         // 移动网络
         app.changeToNetwork(ConnectivityManager.TYPE_MOBILE);
@@ -228,7 +231,7 @@ public class V2_3_0 {
 
         // 修改为wifi
         app.changeToNetwork(ConnectivityManager.TYPE_WIFI);
-        // TODO 判断预解析服务没有收到预解析请求
+        MatcherAssert.assertThat("不会触发预解析", server.getResolveHostServer().hasRequestForArg(ResolveHostServer.ResolveRequestArg.create(hosts, RequestIpType.v4), 0, false));
     }
 
     /**
@@ -237,6 +240,27 @@ public class V2_3_0 {
     @Test
     public void testDiskCacheAsDefaultAsIpIsFixed() {
 
+        // 重置，然后重新初始化httpdns, 配置主站域名
+        HttpDns.resetInstance();
+        ArrayList<String> hosts = new ArrayList<>();
+        hosts.add(app.getRequestHost());
+        // 这里配置关闭本地缓存，强化这个配置不影响主站域名
+        new InitConfig.Builder().configHostWithFixedIp(hosts).setEnableCacheIp(false).buildFor(app.getAccountId());
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+
+        // 先请求一次，产生缓存
+        app.requestInterpretHost();
+        app.waitForAppThread();
+        String[] serverResponseIps = server.getInterpretHostServer().getResponse(app.getRequestHost(), 1, true).get(0).getIps();
+
+        // 重置，重新初始化，触发读取缓存逻辑
+        HttpDns.resetInstance();
+        new InitConfig.Builder().configHostWithFixedIp(hosts).setEnableCacheIp(false).buildFor(app.getAccountId());
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+
+        // 请求一次，读取缓存
+        String[] ips = app.requestInterpretHost();
+        UnitTestUtil.assertIpsEqual("主站域名默认开启本地缓存", ips, serverResponseIps);
     }
 
     /**
@@ -245,6 +269,29 @@ public class V2_3_0 {
     @Test
     public void testTtlIsValidFromDiskCacheAsIpIsFixed() {
 
+        // 重置，然后重新初始化httpdns, 配置主站域名
+        HttpDns.resetInstance();
+        ArrayList<String> hosts = new ArrayList<>();
+        hosts.add(app.getRequestHost());
+        // 这里配置关闭本地缓存，强化这个配置不影响主站域名
+        new InitConfig.Builder().configHostWithFixedIp(hosts).setEnableCacheIp(false).buildFor(app.getAccountId());
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+
+        // 先请求一次，产生缓存
+        app.requestInterpretHost();
+        app.waitForAppThread();
+        // 移除服务的请求记录
+        server.getInterpretHostServer().hasRequestForArg(app.getRequestHost(), -1, true);
+
+        // 重置，重新初始化
+        HttpDns.resetInstance();
+        new InitConfig.Builder().configHostWithFixedIp(hosts).setEnableCacheIp(false).buildFor(app.getAccountId());
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+
+        // 请求一次，读取缓存，此时ttl有效不会触发 异步更新逻辑
+        app.requestInterpretHost();
+        app.waitForAppThread();
+        MatcherAssert.assertThat("主站域名的ttl在重启后也有效，不会触发异步解析", !server.getInterpretHostServer().hasRequestForArg(app.getRequestHost(), -1, false));
     }
 
 //
