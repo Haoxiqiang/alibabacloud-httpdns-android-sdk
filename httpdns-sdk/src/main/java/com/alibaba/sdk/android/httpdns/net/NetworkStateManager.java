@@ -18,9 +18,6 @@ import java.util.concurrent.ExecutorService;
 
 
 public class NetworkStateManager {
-
-    public final static String TYPE_UNKNOWN = "unknown";
-
     public static final String NONE_NETWORK = "None_Network";
     private Context context;
     private String lastConnectedNetwork = NONE_NETWORK;
@@ -131,10 +128,6 @@ public class NetworkStateManager {
             HttpDnsLog.w("check network info permission fail", e);
         }
         return false;
-    }
-
-    public String getSp() {
-        return TYPE_UNKNOWN;
     }
 
 

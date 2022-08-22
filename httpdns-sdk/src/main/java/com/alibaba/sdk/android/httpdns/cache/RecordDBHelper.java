@@ -46,6 +46,7 @@ public class RecordDBHelper extends SQLiteOpenHelper {
 
         static final String COL_CACHE_KEY = "cache_key";
 
+        // 旧版本 用于存储网络标识的字段，由于合规的影响，删除了相关代码，此字段变为固定字段，目前已经没有意义
         static final String COL_SP = "sp";
 
         static final String CREATE_HOST_TABLE_SQL = "CREATE TABLE " + TABLE_NAME + " ("
@@ -104,10 +105,9 @@ public class RecordDBHelper extends SQLiteOpenHelper {
 
             SQLiteDatabase db = null;
             Cursor cursor = null;
-            String sp = NetworkStateManager.getInstance().getSp();
             try {
                 db = getDB();
-                cursor = db.query(HOST.TABLE_NAME, null, HOST.COL_SP + " = ? AND " + HOST.COL_REGION + " = ?", new String[]{sp, region}, null, null, null);
+                cursor = db.query(HOST.TABLE_NAME, null, HOST.COL_REGION + " = ?", new String[]{region}, null, null, null);
                 if (cursor != null && cursor.getCount() > 0) {
                     cursor.moveToFirst();
                     do {
@@ -175,7 +175,6 @@ public class RecordDBHelper extends SQLiteOpenHelper {
     public void insertOrUpdate(List<HostRecord> records) {
         synchronized (lock) {
             SQLiteDatabase db = null;
-            String sp = NetworkStateManager.getInstance().getSp();
             try {
                 db = getDB();
                 db.beginTransaction();
@@ -189,7 +188,6 @@ public class RecordDBHelper extends SQLiteOpenHelper {
                     cv.put(HOST.COL_TIME, record.getQueryTime());
                     cv.put(HOST.COL_TYPE, record.getType());
                     cv.put(HOST.COL_TTL, record.getTtl());
-                    cv.put(HOST.COL_SP, sp);
 
                     if (record.getId() != -1) {
                         db.update(HOST.TABLE_NAME, cv, HOST.COL_ID + " = ?", new String[]{String.valueOf(record.getId())});
