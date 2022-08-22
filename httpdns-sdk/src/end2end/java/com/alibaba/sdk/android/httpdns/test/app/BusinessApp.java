@@ -72,6 +72,10 @@ public class BusinessApp {
         this.secret = secret;
     }
 
+    public String getAccountId() {
+        return accountId;
+    }
+
     /**
      * 应用启动
      */
@@ -367,9 +371,5 @@ public class BusinessApp {
                 ((TestExecutorService) ((ApiForTest) httpDnsService).getWorker()).enableThreadCountCheck(check);
             }
         }
-    }
-
-    public void configTtlChanger(CacheTtlChanger changer) {
-        httpDnsService.configCacheTtlChanger(changer);
     }
 }

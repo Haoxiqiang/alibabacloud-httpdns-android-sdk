@@ -142,11 +142,6 @@ public class ErrorImpl implements HttpDnsService, SyncService {
     }
 
     @Override
-    public void configCacheTtlChanger(CacheTtlChanger changer) {
-
-    }
-
-    @Override
     public void enableIPv6(boolean enable) {
 
     }

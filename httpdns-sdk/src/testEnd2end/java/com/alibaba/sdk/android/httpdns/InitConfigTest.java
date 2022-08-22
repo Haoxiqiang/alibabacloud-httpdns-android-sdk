@@ -9,6 +9,7 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
@@ -47,11 +48,13 @@ public class InitConfigTest {
         MatcherAssert.assertThat("默认region正确", config.getRegion(), Matchers.is(Constants.REGION_DEFAULT));
         MatcherAssert.assertThat("默认超时时间是15s", config.getTimeout(), Matchers.is(15 * 1000));
         MatcherAssert.assertThat("默认不测速", config.getIpProbeItems(), Matchers.nullValue());
+        MatcherAssert.assertThat("默认不修改缓存ttl配置", config.getCacheTtlChanger(), Matchers.nullValue());
     }
 
     @Test
     public void getConfigValue() {
         String accountId = RandomValue.randomStringWithFixedLength(10);
+        CacheTtlChanger ttlChanger = Mockito.mock(CacheTtlChanger.class);
         new InitConfig.Builder()
                 .setEnableExpiredIp(false)
                 .setEnableCacheIp(true)
@@ -59,6 +62,7 @@ public class InitConfigTest {
                 .setRegion(Constants.REGION_HK)
                 .setTimeout(5 * 1000)
                 .setIpProbeItems(Arrays.asList(new IPProbeItem("aa", 43)))
+                .configCacheTtlChanger(ttlChanger)
                 .buildFor(accountId);
         InitConfig config = InitConfig.getInitConfig(accountId);
 
@@ -69,5 +73,6 @@ public class InitConfigTest {
         MatcherAssert.assertThat("超时时间是5s", config.getTimeout(), Matchers.is(5 * 1000));
         MatcherAssert.assertThat("测速", config.getIpProbeItems().get(0).getHostName(), Matchers.is(Matchers.equalTo("aa")));
         MatcherAssert.assertThat("测速", config.getIpProbeItems().get(0).getPort(), Matchers.is(43));
+        MatcherAssert.assertThat("配置的有ttlChanger", config.getCacheTtlChanger(), Matchers.is(ttlChanger));
     }
 }

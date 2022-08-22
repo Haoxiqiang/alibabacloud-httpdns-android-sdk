@@ -88,13 +88,12 @@ public class V2_3_0 {
         HttpDns.resetInstance();
         // 重置配置
         InitConfig.removeConfig(null);
-        // 这里我们启动6个 服务节点用于测试
+        // 这里我们启动3个 服务节点用于测试
         server.start();
         server1.start();
         server2.start();
         ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
         application.grantPermissions(Manifest.permission.ACCESS_NETWORK_STATE);
-        // 启动两个httpdns实例用于测试
         app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
     }
 
@@ -125,8 +124,10 @@ public class V2_3_0 {
         Mockito.when(changer.changeCacheTtl(hostWithShorterTtl, RequestIpType.v4, 2)).thenReturn(1);
         Mockito.when(changer.changeCacheTtl(hostWithChangerTtl, RequestIpType.v4, 1)).thenReturn(2);
 
-        app.enableExpiredIp(false);
-        app.configTtlChanger(changer);
+        // 重置，然后重新初始化httpdns
+        HttpDns.resetInstance();
+        new InitConfig.Builder().configCacheTtlChanger(changer).setEnableExpiredIp(false).buildFor(app.getAccountId());
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
 
         InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(hostWithShorterTtl, 2);
         server.getInterpretHostServer().preSetRequestResponse(hostWithShorterTtl, response, -1);

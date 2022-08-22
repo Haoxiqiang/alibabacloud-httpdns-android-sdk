@@ -185,12 +185,6 @@ public interface HttpDnsService extends Net64Service {
     void setRegion(String region);
 
     /**
-     * 配置自定义ttl的逻辑
-     * @param changer 修改ttl的接口
-     */
-    void configCacheTtlChanger(CacheTtlChanger changer);
-
-    /**
      * 立即清除域名端侧内存和本地缓存。
      * 后续调用异步接口，会先返回空，触发域名解析
      *

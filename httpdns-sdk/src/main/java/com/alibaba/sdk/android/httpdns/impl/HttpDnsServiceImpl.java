@@ -106,6 +106,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             // 设置region 必须在 缓存之前
             this.config.setRegion(config.getRegion());
             setCachedIPEnabled(config.isEnableCacheIp());
+            this.repo.setCacheTtlChanger(config.getCacheTtlChanger());
         }
 
     }
@@ -520,11 +521,6 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             return interpretHostService.interpretHostAsync(host, type, null, null);
         }
         return interpretHostService.interpretHost(host, type, null, null);
-    }
-
-    @Override
-    public void configCacheTtlChanger(CacheTtlChanger changer) {
-        this.repo.setCacheTtlChanger(changer);
     }
 
     public void cleanHostCache(ArrayList<String> hosts) {

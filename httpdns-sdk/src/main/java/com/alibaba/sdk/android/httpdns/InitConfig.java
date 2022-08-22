@@ -41,6 +41,7 @@ public class InitConfig {
     private boolean enableHttps;
     private List<IPProbeItem> ipProbeItems;
     private String region;
+    private CacheTtlChanger cacheTtlChanger;
 
     private InitConfig(Builder builder) {
         enableExpiredIp = builder.enableExpiredIp;
@@ -49,6 +50,7 @@ public class InitConfig {
         enableHttps = builder.enableHttps;
         ipProbeItems = builder.ipProbeItems;
         region = builder.region;
+        cacheTtlChanger = builder.cacheTtlChanger;
     }
 
     public boolean isEnableExpiredIp() {
@@ -75,6 +77,10 @@ public class InitConfig {
         return region;
     }
 
+    public CacheTtlChanger getCacheTtlChanger() {
+        return cacheTtlChanger;
+    }
+
     public static class Builder {
         private boolean enableExpiredIp = Constants.DEFAULT_ENABLE_EXPIRE_IP;
         private boolean enableCacheIp = Constants.DEFAULT_ENABLE_CACHE_IP;
@@ -82,6 +88,7 @@ public class InitConfig {
         private boolean enableHttps = Constants.DEFAULT_ENABLE_HTTPS;
         private List<IPProbeItem> ipProbeItems = null;
         private String region = Constants.REGION_DEFAULT;
+        private CacheTtlChanger cacheTtlChanger = null;
 
         public Builder setEnableExpiredIp(boolean enableExpiredIp) {
             this.enableExpiredIp = enableExpiredIp;
@@ -110,6 +117,15 @@ public class InitConfig {
 
         public Builder setRegion(String region) {
             this.region = region;
+            return this;
+        }
+
+        /**
+         * 配置自定义ttl的逻辑
+         * @param cacheTtlChanger 修改ttl的接口
+         */
+        public Builder configCacheTtlChanger(CacheTtlChanger cacheTtlChanger) {
+            this.cacheTtlChanger = cacheTtlChanger;
             return this;
         }
 
