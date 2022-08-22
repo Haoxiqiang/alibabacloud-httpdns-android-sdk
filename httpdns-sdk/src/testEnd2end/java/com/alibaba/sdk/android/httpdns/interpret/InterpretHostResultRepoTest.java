@@ -6,11 +6,10 @@ import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.cache.RecordDBHelper;
 import com.alibaba.sdk.android.httpdns.impl.HttpDnsConfig;
 import com.alibaba.sdk.android.httpdns.probe.ProbeService;
-import com.alibaba.sdk.android.httpdns.test.helper.ServerHelper;
 import com.alibaba.sdk.android.httpdns.test.server.InterpretHostServer;
+import com.alibaba.sdk.android.httpdns.test.server.ResolveHostServer;
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
 import com.alibaba.sdk.android.httpdns.test.utils.TestExecutorService;
-import com.alibaba.sdk.android.httpdns.test.utils.TestLogger;
 import com.alibaba.sdk.android.httpdns.test.utils.UnitTestUtil;
 import com.alibaba.sdk.android.httpdns.utils.Constants;
 
@@ -116,7 +115,7 @@ public class InterpretHostResultRepoTest {
             for (int i = 0; i < preCount; i++) {
                 preHosts.add(RandomValue.randomHost());
             }
-            ResolveHostResponse resolveHostResponse = ServerHelper.randomResolveHostResponse(preHosts, type);
+            ResolveHostResponse resolveHostResponse = ResolveHostServer.randomResolveHostResponse(preHosts, type);
             repo.save(Constants.REGION_DEFAULT, type, resolveHostResponse);
             for (String host : resolveHostResponse.getHosts()) {
                 if (type == RequestIpType.v4) {
@@ -220,7 +219,7 @@ public class InterpretHostResultRepoTest {
         final String resolveHost = RandomValue.randomHost();
         ArrayList<String> hostList = new ArrayList<>();
         hostList.add(resolveHost);
-        ResolveHostResponse resolveHostResponse = ServerHelper.randomResolveHostResponse(hostList, RequestIpType.v4, originTtl);
+        ResolveHostResponse resolveHostResponse = ResolveHostServer.randomResolveHostResponse(hostList, RequestIpType.v4, originTtl);
 
         Mockito.when(changer.changeCacheTtl(resolveHost, RequestIpType.v4, originTtl)).thenReturn(changedTtl);
         repo.setCacheTtlChanger(changer);

@@ -13,6 +13,7 @@ import com.alibaba.sdk.android.httpdns.test.helper.ServerStatusHelper;
 import com.alibaba.sdk.android.httpdns.test.server.HttpDnsServer;
 import com.alibaba.sdk.android.httpdns.test.server.InterpretHostServer;
 import com.alibaba.sdk.android.httpdns.test.server.MockSpeedTestServer;
+import com.alibaba.sdk.android.httpdns.test.server.ResolveHostServer;
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
 import com.alibaba.sdk.android.httpdns.test.utils.ShadowNetworkInfo;
 import com.alibaba.sdk.android.httpdns.test.utils.UnitTestUtil;
@@ -25,7 +26,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
@@ -753,13 +753,13 @@ public class HttpDnsE2E {
         hostList.add(host2);
         hostList.add(host3);
 
-        ResolveHostResponse response = ServerHelper.randomResolveHostResponse(hostList, RequestIpType.v4);
+        ResolveHostResponse response = ResolveHostServer.randomResolveHostResponse(hostList, RequestIpType.v4);
 
-        server.getResolveHostServer().preSetRequestResponse(ServerHelper.formResolveHostArg(hostList, RequestIpType.v4), response, 1);
+        server.getResolveHostServer().preSetRequestResponse(ResolveHostServer.ResolveRequestArg.create(hostList, RequestIpType.v4), response, 1);
 
         app.preInterpreHost(hostList, RequestIpType.v4);
         app.waitForAppThread();
-        MatcherAssert.assertThat("预解析会触发批量请求", server.getResolveHostServer().hasRequestForArg(ServerHelper.formResolveHostArg(hostList, RequestIpType.v4), 1, false));
+        MatcherAssert.assertThat("预解析会触发批量请求", server.getResolveHostServer().hasRequestForArg(ResolveHostServer.ResolveRequestArg.create(hostList, RequestIpType.v4), 1, false));
 
         String[] ips1 = app.requestInterpretHost(host1);
         String[] ips2 = app.requestInterpretHost(host2);
@@ -782,13 +782,13 @@ public class HttpDnsE2E {
         hostList.add(host2);
         hostList.add(host3);
 
-        ResolveHostResponse response = ServerHelper.randomResolveHostResponse(hostList, RequestIpType.v6);
+        ResolveHostResponse response = ResolveHostServer.randomResolveHostResponse(hostList, RequestIpType.v6);
 
-        server.getResolveHostServer().preSetRequestResponse(ServerHelper.formResolveHostArg(hostList, RequestIpType.v6), response, 1);
+        server.getResolveHostServer().preSetRequestResponse(ResolveHostServer.ResolveRequestArg.create(hostList, RequestIpType.v6), response, 1);
 
         app.preInterpreHost(hostList, RequestIpType.v6);
         app.waitForAppThread();
-        MatcherAssert.assertThat("预解析会触发批量请求", server.getResolveHostServer().hasRequestForArg(ServerHelper.formResolveHostArg(hostList, RequestIpType.v6), 1, false));
+        MatcherAssert.assertThat("预解析会触发批量请求", server.getResolveHostServer().hasRequestForArg(ResolveHostServer.ResolveRequestArg.create(hostList, RequestIpType.v6), 1, false));
 
 
         String[] ips1 = app.requestInterpretHostForIpv6(host1);
@@ -813,13 +813,13 @@ public class HttpDnsE2E {
         hostList.add(host2);
         hostList.add(host3);
 
-        ResolveHostResponse response = ServerHelper.randomResolveHostResponse(hostList, RequestIpType.both);
+        ResolveHostResponse response = ResolveHostServer.randomResolveHostResponse(hostList, RequestIpType.both);
 
-        server.getResolveHostServer().preSetRequestResponse(ServerHelper.formResolveHostArg(hostList, RequestIpType.both), response, 1);
+        server.getResolveHostServer().preSetRequestResponse(ResolveHostServer.ResolveRequestArg.create(hostList, RequestIpType.both), response, 1);
 
         app.preInterpreHost(hostList, RequestIpType.both);
         app.waitForAppThread();
-        MatcherAssert.assertThat("预解析会触发批量请求", server.getResolveHostServer().hasRequestForArg(ServerHelper.formResolveHostArg(hostList, RequestIpType.both), 1, false));
+        MatcherAssert.assertThat("预解析会触发批量请求", server.getResolveHostServer().hasRequestForArg(ResolveHostServer.ResolveRequestArg.create(hostList, RequestIpType.both), 1, false));
 
         String[] ips1 = app.requestInterpretHost(host1);
         String[] ips2 = app.requestInterpretHost(host2);
@@ -860,19 +860,19 @@ public class HttpDnsE2E {
         hostList2.add(host6);
         hostList2.add(host7);
 
-        ResolveHostResponse response1 = ServerHelper.randomResolveHostResponse(hostList1, RequestIpType.both);
-        ResolveHostResponse response2 = ServerHelper.randomResolveHostResponse(hostList2, RequestIpType.both);
+        ResolveHostResponse response1 = ResolveHostServer.randomResolveHostResponse(hostList1, RequestIpType.both);
+        ResolveHostResponse response2 = ResolveHostServer.randomResolveHostResponse(hostList2, RequestIpType.both);
 
-        server.getResolveHostServer().preSetRequestResponse(ServerHelper.formResolveHostArg(hostList1, RequestIpType.both), response1, 1);
-        server.getResolveHostServer().preSetRequestResponse(ServerHelper.formResolveHostArg(hostList2, RequestIpType.both), response2, 1);
+        server.getResolveHostServer().preSetRequestResponse(ResolveHostServer.ResolveRequestArg.create(hostList1, RequestIpType.both), response1, 1);
+        server.getResolveHostServer().preSetRequestResponse(ResolveHostServer.ResolveRequestArg.create(hostList2, RequestIpType.both), response2, 1);
 
         ArrayList<String> hostList = new ArrayList<>();
         hostList.addAll(hostList1);
         hostList.addAll(hostList2);
         app.preInterpreHost(hostList, RequestIpType.both);
         app.waitForAppThread();
-        MatcherAssert.assertThat("预解析会触发批量请求,多于5个，会按5个一组拆分", server.getResolveHostServer().hasRequestForArg(ServerHelper.formResolveHostArg(hostList1, RequestIpType.both), 1, false));
-        MatcherAssert.assertThat("预解析会触发批量请求,多于5个，会按5个一组拆分", server.getResolveHostServer().hasRequestForArg(ServerHelper.formResolveHostArg(hostList2, RequestIpType.both), 1, false));
+        MatcherAssert.assertThat("预解析会触发批量请求,多于5个，会按5个一组拆分", server.getResolveHostServer().hasRequestForArg(ResolveHostServer.ResolveRequestArg.create(hostList1, RequestIpType.both), 1, false));
+        MatcherAssert.assertThat("预解析会触发批量请求,多于5个，会按5个一组拆分", server.getResolveHostServer().hasRequestForArg(ResolveHostServer.ResolveRequestArg.create(hostList2, RequestIpType.both), 1, false));
 
         String[] ips1 = app.requestInterpretHost(host1);
         String[] ips2 = app.requestInterpretHost(host2);
@@ -1195,9 +1195,9 @@ public class HttpDnsE2E {
         ServerStatusHelper.hasNotReceiveAppInterpretHostRequest("因为域名过滤了,不会请求服务器", app, server);
         UnitTestUtil.assertIpsEmpty("因为域名过滤了解析一直为空", ips);
 
-        MatcherAssert.assertThat("因为域名过滤了,不会请求到服务器", !server.getResolveHostServer().hasRequestForArg(ServerHelper.formResolveHostArg(list, RequestIpType.v4), 1, false));
+        MatcherAssert.assertThat("因为域名过滤了,不会请求到服务器", !server.getResolveHostServer().hasRequestForArg(ResolveHostServer.ResolveRequestArg.create(list, RequestIpType.v4), 1, false));
         list.remove(app.getRequestHost());
-        MatcherAssert.assertThat("没过滤的域名会请求到服务器", server.getResolveHostServer().hasRequestForArg(ServerHelper.formResolveHostArg(list, RequestIpType.v4), 1, false));
+        MatcherAssert.assertThat("没过滤的域名会请求到服务器", server.getResolveHostServer().hasRequestForArg(ResolveHostServer.ResolveRequestArg.create(list, RequestIpType.v4), 1, false));
     }
 
     /**
@@ -1412,8 +1412,8 @@ public class HttpDnsE2E {
         hostList.add(host1);
         hostList.add(host2);
         hostList.add(host3);
-        ResolveHostResponse response = ServerHelper.randomResolveHostResponse(hostList, RequestIpType.both);
-        server.getResolveHostServer().preSetRequestResponse(ServerHelper.formResolveHostArg(hostList, RequestIpType.both), response, 1);
+        ResolveHostResponse response = ResolveHostServer.randomResolveHostResponse(hostList, RequestIpType.both);
+        server.getResolveHostServer().preSetRequestResponse(ResolveHostServer.ResolveRequestArg.create(hostList, RequestIpType.both), response, 1);
         count = 100;
         while (count > 0) {
             count--;
@@ -1424,7 +1424,7 @@ public class HttpDnsE2E {
             }
         }
         app.waitForAppThread();
-        MatcherAssert.assertThat("预解析相同的域名也只会触发一次请求", server.getResolveHostServer().hasRequestForArg(ServerHelper.formResolveHostArg(hostList, RequestIpType.both), 1, false));
+        MatcherAssert.assertThat("预解析相同的域名也只会触发一次请求", server.getResolveHostServer().hasRequestForArg(ResolveHostServer.ResolveRequestArg.create(hostList, RequestIpType.both), 1, false));
     }
 
     /**
