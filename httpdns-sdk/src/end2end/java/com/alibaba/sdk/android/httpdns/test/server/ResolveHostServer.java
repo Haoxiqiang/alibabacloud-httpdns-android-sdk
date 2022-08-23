@@ -75,7 +75,7 @@ public class ResolveHostServer extends BaseDataServer<ResolveHostServer.ResolveR
      * @param type
      * @return
      */
-    public ResolveHostResponse getReponseForHost(String host, RequestIpType type) {
+    public ResolveHostResponse getResponseForHost(String host, RequestIpType type) {
         synchronized (records) {
             for (RequestRecord record : records) {
                 String hosts = record.getRecordedRequest().getRequestUrl().queryParameter("host");
@@ -83,12 +83,36 @@ public class ResolveHostServer extends BaseDataServer<ResolveHostServer.ResolveR
                 if (hosts.contains(host) && isRequestType(query, type)) {
                     return convert(record.getMockResponse().getBody().readString(Charset.forName("UTF-8")));
                 } else {
-                    TestLogger.log("getReponseForHost host " + host + " type " + type + " hosts " + hosts + " query " + query);
+                    TestLogger.log("getResponseForHost host " + host + " type " + type + " hosts " + hosts + " query " + query);
                 }
             }
         }
-        TestLogger.log("getReponseForHost host " + host + " type " + type + " return null!!");
+        TestLogger.log("getResponseForHost host " + host + " type " + type + " return null!!");
         return null;
+    }
+
+    public boolean hasRequestForHost(String host, RequestIpType type, int count, boolean removeRecord) {
+        synchronized (records) {
+            ArrayList<RequestRecord> targetRecords = new ArrayList<>();
+            for (RequestRecord record : records) {
+                String hosts = record.getRecordedRequest().getRequestUrl().queryParameter("host");
+                String query = record.getRecordedRequest().getRequestUrl().queryParameter("query");
+                if (hosts.contains(host) && isRequestType(query, type)) {
+                    targetRecords.add(record);
+                } else {
+                    TestLogger.log("hasRequestForHost host " + host + " type " + type + " hosts " + hosts + " query " + query);
+                }
+            }
+            if(removeRecord) {
+                records.removeAll(targetRecords);
+            }
+
+            if(count >= 0){
+                return targetRecords.size() == count;
+            } else {
+                return targetRecords.size() > 0;
+            }
+        }
     }
 
     private boolean isRequestType(String query, RequestIpType type) {

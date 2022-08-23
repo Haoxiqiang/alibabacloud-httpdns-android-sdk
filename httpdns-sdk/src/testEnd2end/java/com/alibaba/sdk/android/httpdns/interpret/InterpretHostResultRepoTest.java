@@ -14,6 +14,7 @@ import com.alibaba.sdk.android.httpdns.test.utils.UnitTestUtil;
 import com.alibaba.sdk.android.httpdns.utils.Constants;
 
 import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -57,6 +58,9 @@ public class InterpretHostResultRepoTest {
     }
 
 
+    /**
+     * 解析结果的 存 读 清除
+     */
     @Test
     public void testSaveUpdateGet() {
 
@@ -95,6 +99,11 @@ public class InterpretHostResultRepoTest {
         MatcherAssert.assertThat("清除记录之后返回空", repo.getIps(host, RequestIpType.both, null) == null);
     }
 
+    /**
+     * 解析结果的 存储 更新 本地缓存
+     *
+     * @throws JSONException
+     */
     @Test
     public void testLocalCache() throws JSONException {
         repo.setCachedIPEnabled(true, false);
@@ -187,6 +196,11 @@ public class InterpretHostResultRepoTest {
         }
     }
 
+    /**
+     * 测试定制ttl
+     *
+     * @throws InterruptedException
+     */
     @Test
     public void testCacheTtlChanger() throws InterruptedException {
 
@@ -231,6 +245,183 @@ public class InterpretHostResultRepoTest {
         Mockito.verify(changer).changeCacheTtl(resolveHost, RequestIpType.v4, originTtl);
 
     }
+
+    /**
+     * 清理特定host的缓存
+     */
+    @Test
+    public void testClearTargetHosts() {
+
+        ArrayList<String> hostToBeClear = new ArrayList<>();
+        ArrayList<String> hostNotClear = new ArrayList<>();
+
+        for (int i = 0; i < 10; i++) {
+            String host = RandomValue.randomHost();
+            InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(host);
+            repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
+            if (RandomValue.randomInt(2) % 2 == 0) {
+                hostToBeClear.add(host);
+            } else {
+                hostNotClear.add(host);
+            }
+        }
+        for (int i = 0; i < 4; i++) {
+            ArrayList<String> tmp = new ArrayList<>();
+            for (int j = 0; j < 5; j++) {
+                tmp.add(RandomValue.randomHost());
+            }
+            if (i % 2 == 0) {
+                hostToBeClear.addAll(tmp);
+            } else {
+                hostNotClear.addAll(tmp);
+            }
+            repo.save(Constants.REGION_DEFAULT, RequestIpType.both, ResolveHostServer.randomResolveHostResponse(tmp, RequestIpType.both));
+        }
+
+
+        repo.clear(hostToBeClear);
+
+        for (String hostCleared : hostToBeClear) {
+            MatcherAssert.assertThat("清除缓存后没有数据", repo.getIps(hostCleared, RequestIpType.v4, null) == null);
+        }
+
+        for (String hostNotCleared : hostNotClear) {
+            MatcherAssert.assertThat("未清除缓存的域名有数据", repo.getIps(hostNotCleared, RequestIpType.v4, null) != null);
+        }
+    }
+
+    /**
+     * 清理内存缓存
+     */
+    @Test
+    public void testClearMemoryCache() {
+        String host = RandomValue.randomHost();
+        InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(host);
+        ArrayList<String> hosts = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            hosts.add(RandomValue.randomHost());
+        }
+        // 开启本地缓存
+        repo.setCachedIPEnabled(true, false);
+        // 触发缓存
+        repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
+        repo.save(Constants.REGION_DEFAULT, RequestIpType.v4, ResolveHostServer.randomResolveHostResponse(hosts, RequestIpType.v4));
+        // 清除内存缓存
+        repo.clearMemoryCache();
+        MatcherAssert.assertThat("清除缓存后没有数据", repo.getIps(host, RequestIpType.v4, null) == null);
+
+        // 再次设置开启本地缓存，触发读取本地缓存操作
+        repo.setCachedIPEnabled(true, false);
+        try {
+            worker.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        UnitTestUtil.assertIpsEqual("本地缓存不会被清除", repo.getIps(host, RequestIpType.v4, null).getIps(), response.getIps());
+        for (String tmp : hosts) {
+            MatcherAssert.assertThat("本地缓存不会被清除", repo.getIps(tmp, RequestIpType.v4, null) != null);
+        }
+    }
+
+    /**
+     * 测试 主站域名的本地缓存，强制开启
+     */
+    @Test
+    public void testDiskCacheForHostWithFixedIP() {
+        ArrayList<String> hostsWithFixedIP = new ArrayList<>();
+
+        String hostWithFixedIP = RandomValue.randomHost();
+        InterpretHostResponse responseForHostWithFixedIP = InterpretHostServer.randomInterpretHostResponse(hostWithFixedIP);
+        hostsWithFixedIP.add(hostWithFixedIP);
+
+        String hostWithoutFixedIP = RandomValue.randomHost();
+
+        ArrayList<String> hosts = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            String tmp = RandomValue.randomHost();
+            hosts.add(tmp);
+            if (i % 2 == 0) {
+                hostsWithFixedIP.add(tmp);
+            }
+        }
+
+        // 设置主站域名
+        repo.setHostListWhichIpFixed(hostsWithFixedIP);
+
+        // 关闭本地缓存，避免干扰
+        repo.setCachedIPEnabled(false, false);
+        // 触发缓存
+        repo.save(Constants.REGION_DEFAULT, hostWithFixedIP, RequestIpType.v4, null, null, responseForHostWithFixedIP);
+        repo.save(Constants.REGION_DEFAULT, hostWithoutFixedIP, RequestIpType.v4, null, null, InterpretHostServer.randomInterpretHostResponse(hostWithoutFixedIP));
+        repo.save(Constants.REGION_DEFAULT, RequestIpType.v4, ResolveHostServer.randomResolveHostResponse(hosts, RequestIpType.v4));
+        String[] updatedIps = RandomValue.randomIpv4s();
+        repo.update(hostWithFixedIP, RequestIpType.v4, null, updatedIps);
+        // 等待本地缓存完成
+        try {
+            worker.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        // 清除内存缓存
+        repo.clearMemoryCache();
+
+        // 再次设置开启本地缓存，触发读取本地缓存操作
+        repo.setCachedIPEnabled(true, false);
+        try {
+            worker.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        MatcherAssert.assertThat("非主站域名缓存不存在", repo.getIps(hostWithoutFixedIP, RequestIpType.v4, null) == null);
+        for (String tmp : hostsWithFixedIP) {
+            MatcherAssert.assertThat("主站域名从本地缓存恢复", repo.getIps(tmp, RequestIpType.v4, null) != null);
+        }
+        UnitTestUtil.assertIpsEqual("主站域名从本地缓存恢复", repo.getIps(hostWithFixedIP, RequestIpType.v4, null).getIps(), updatedIps);
+    }
+
+    /**
+     * 测试 清除非主站域名的内存缓存
+     */
+    @Test
+    public void testClearMemoryCacheForHostWithoutFixedIP() {
+        String hostWithoutFixedIP = RandomValue.randomHost();
+        String hostWithFixedIP = RandomValue.randomHost();
+        ArrayList<String> hostListWithFixedIP = new ArrayList<>();
+        hostListWithFixedIP.add(hostWithFixedIP);
+
+        repo.setHostListWhichIpFixed(hostListWithFixedIP);
+
+        // 触发缓存
+        repo.save(Constants.REGION_DEFAULT, hostWithFixedIP, RequestIpType.v4, null, null, InterpretHostServer.randomInterpretHostResponse(hostWithFixedIP));
+        repo.save(Constants.REGION_DEFAULT, hostWithoutFixedIP, RequestIpType.v4, null, null, InterpretHostServer.randomInterpretHostResponse(hostWithoutFixedIP));
+        // 清除内存缓存
+        repo.clearMemoryCacheForHostWithoutFixedIP();
+        MatcherAssert.assertThat("主站域名没有被清除", repo.getIps(hostWithFixedIP, RequestIpType.v4, null) != null);
+        MatcherAssert.assertThat("清除缓存后没有数据", repo.getIps(hostWithoutFixedIP, RequestIpType.v4, null) == null);
+    }
+
+    /**
+     * 获取已缓存解析结果的非主站域名
+     */
+    @Test
+    public void testGetAllHostWithoutFixedIP() {
+        String hostWithoutFixedIP = RandomValue.randomHost();
+        String hostWithFixedIP = RandomValue.randomHost();
+        ArrayList<String> hostListWithFixedIP = new ArrayList<>();
+        hostListWithFixedIP.add(hostWithFixedIP);
+
+        repo.setHostListWhichIpFixed(hostListWithFixedIP);
+
+        // 触发缓存
+        repo.save(Constants.REGION_DEFAULT, hostWithFixedIP, RequestIpType.v4, null, null, InterpretHostServer.randomInterpretHostResponse(hostWithFixedIP));
+        repo.save(Constants.REGION_DEFAULT, hostWithoutFixedIP, RequestIpType.v4, null, null, InterpretHostServer.randomInterpretHostResponse(hostWithoutFixedIP));
+
+        HashMap<String, RequestIpType> result = repo.getAllHostWithoutFixedIP();
+        MatcherAssert.assertThat("仅能获取一个非主站域名", result.size() == 1);
+        MatcherAssert.assertThat("仅能获取非主站域名", result.get(hostWithoutFixedIP), Matchers.is(RequestIpType.v4));
+    }
+
 
     private void assertExtras(String reason, Map<String, String> extras, String extraStr) throws JSONException {
         JSONObject jsonObject = new JSONObject(extraStr);

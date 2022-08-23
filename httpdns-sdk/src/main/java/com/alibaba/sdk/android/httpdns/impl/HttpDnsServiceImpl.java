@@ -13,7 +13,6 @@ import com.alibaba.sdk.android.httpdns.ILogger;
 import com.alibaba.sdk.android.httpdns.InitConfig;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.SyncService;
-import com.alibaba.sdk.android.httpdns.CacheTtlChanger;
 import com.alibaba.sdk.android.httpdns.cache.RecordDBHelper;
 import com.alibaba.sdk.android.httpdns.interpret.HostFilter;
 import com.alibaba.sdk.android.httpdns.interpret.InterpretHostCacheGroup;
@@ -103,8 +102,11 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             if (config.getIpProbeItems() != null) {
                 setIPProbeList(config.getIpProbeItems());
             }
-            // 设置region 必须在 缓存之前
+            // 设置region 必须在 读取缓存之前
             this.config.setRegion(config.getRegion());
+            // 设置 主站域名 需要在 读取缓存之前
+            this.repo.setHostListWhichIpFixed(config.getHostListWithFixedIp());
+            // 设置缓存控制，并读取缓存
             setCachedIPEnabled(config.isEnableCacheIp());
             this.repo.setCacheTtlChanger(config.getCacheTtlChanger());
         }
@@ -465,9 +467,9 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             config.getWorker().execute(new Runnable() {
                 @Override
                 public void run() {
-                    HashMap<String, RequestIpType> allHost = repo.getAllHost();
+                    HashMap<String, RequestIpType> allHost = repo.getAllHostWithoutFixedIP();
                     HttpDnsLog.d("network change, clean record");
-                    repo.clearMemoryCache();
+                    repo.clearMemoryCacheForHostWithoutFixedIP();
                     if (resolveAfterNetworkChange && config.isEnabled()) {
                         ArrayList<String> v4List = new ArrayList<>();
                         ArrayList<String> v6List = new ArrayList<>();

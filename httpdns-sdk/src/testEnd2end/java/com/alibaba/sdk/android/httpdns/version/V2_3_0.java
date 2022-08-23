@@ -191,19 +191,25 @@ public class V2_3_0 {
         new InitConfig.Builder().configHostWithFixedIp(hosts).buildFor(app.getAccountId());
         app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
 
+        // 用于和主站域名的效果进行对比
+        final String hostWithoutFixedIP = RandomValue.randomHost();
+
         // 移动网络
         app.changeToNetwork(ConnectivityManager.TYPE_MOBILE);
 
         // 先请求一次，产生缓存
         app.requestInterpretHost();
+        app.requestInterpretHost(hostWithoutFixedIP);
         app.waitForAppThread();
         String[] serverResponseIps = server.getInterpretHostServer().getResponse(app.getRequestHost(), 1, true).get(0).getIps();
+        String[] serverResponseIpsWillChange = server.getInterpretHostServer().getResponse(hostWithoutFixedIP, 1, true).get(0).getIps();
 
         // 修改为wifi
         app.changeToNetwork(ConnectivityManager.TYPE_WIFI);
 
         // 再请求一次，应该使用的是缓存
         UnitTestUtil.assertIpsEqual("再次请求获取的是上次请求的缓存", app.requestInterpretHost(), serverResponseIps);
+        MatcherAssert.assertThat("非主站域名再次请求获取的是不一样的IP", app.requestInterpretHost(hostWithoutFixedIP), Matchers.not(Matchers.arrayContainingInAnyOrder(serverResponseIpsWillChange)));
     }
 
     /**
@@ -222,16 +228,21 @@ public class V2_3_0 {
         // 这里设置为网络变化预解析，强化这个配置不影响主站域名
         app.enableResolveAfterNetworkChange(true);
 
+        // 用于和主站域名的效果进行对比
+        final String hostWithoutFixedIP = RandomValue.randomHost();
+
         // 移动网络
         app.changeToNetwork(ConnectivityManager.TYPE_MOBILE);
 
         // 先请求一次，产生缓存
         app.requestInterpretHost();
+        app.requestInterpretHost(hostWithoutFixedIP);
         app.waitForAppThread();
 
         // 修改为wifi
         app.changeToNetwork(ConnectivityManager.TYPE_WIFI);
-        MatcherAssert.assertThat("不会触发预解析", server.getResolveHostServer().hasRequestForArg(ResolveHostServer.ResolveRequestArg.create(hosts, RequestIpType.v4), 0, false));
+        MatcherAssert.assertThat("不会触发预解析", server.getResolveHostServer().hasRequestForHost(app.getRequestHost(), RequestIpType.v4, 0, false));
+        MatcherAssert.assertThat("非主站域名会触发预解析", server.getResolveHostServer().hasRequestForHost(hostWithoutFixedIP, RequestIpType.v4, 1, false));
     }
 
     /**
@@ -248,8 +259,12 @@ public class V2_3_0 {
         new InitConfig.Builder().configHostWithFixedIp(hosts).setEnableCacheIp(false).buildFor(app.getAccountId());
         app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
 
+        // 非主站域名用于对比
+        final String hostWithoutFixedIP = RandomValue.randomHost();
+
         // 先请求一次，产生缓存
         app.requestInterpretHost();
+        app.requestInterpretHost(hostWithoutFixedIP);
         app.waitForAppThread();
         String[] serverResponseIps = server.getInterpretHostServer().getResponse(app.getRequestHost(), 1, true).get(0).getIps();
 
@@ -261,6 +276,7 @@ public class V2_3_0 {
         // 请求一次，读取缓存
         String[] ips = app.requestInterpretHost();
         UnitTestUtil.assertIpsEqual("主站域名默认开启本地缓存", ips, serverResponseIps);
+        UnitTestUtil.assertIpsEmpty("非主站域名没有开启本地缓存", app.requestInterpretHost(hostWithoutFixedIP));
     }
 
     /**

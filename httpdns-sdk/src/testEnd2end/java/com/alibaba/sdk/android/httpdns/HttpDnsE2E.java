@@ -1272,12 +1272,12 @@ public class HttpDnsE2E {
 
         app.changeToNetwork(ConnectivityManager.TYPE_MOBILE);
         app.waitForAppThread();
-        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host1), server.getResolveHostServer().getReponseForHost(host1, RequestIpType.v4).getItem(host1).getIps());
-        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host2), server.getResolveHostServer().getReponseForHost(host2, RequestIpType.v4).getItem(host2).getIps());
-        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host3), server.getResolveHostServer().getReponseForHost(host3, RequestIpType.v4).getItem(host3).getIps());
-        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host4), server.getResolveHostServer().getReponseForHost(host4, RequestIpType.v4).getItem(host4).getIps());
-        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host5), server.getResolveHostServer().getReponseForHost(host5, RequestIpType.v4).getItem(host5).getIps());
-        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host6), server.getResolveHostServer().getReponseForHost(host6, RequestIpType.v4).getItem(host6).getIps());
+        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host1), server.getResolveHostServer().getResponseForHost(host1, RequestIpType.v4).getItem(host1).getIps());
+        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host2), server.getResolveHostServer().getResponseForHost(host2, RequestIpType.v4).getItem(host2).getIps());
+        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host3), server.getResolveHostServer().getResponseForHost(host3, RequestIpType.v4).getItem(host3).getIps());
+        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host4), server.getResolveHostServer().getResponseForHost(host4, RequestIpType.v4).getItem(host4).getIps());
+        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host5), server.getResolveHostServer().getResponseForHost(host5, RequestIpType.v4).getItem(host5).getIps());
+        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host6), server.getResolveHostServer().getResponseForHost(host6, RequestIpType.v4).getItem(host6).getIps());
 
         app.enableResolveAfterNetworkChange(false);
         app.changeToNetwork(ConnectivityManager.TYPE_WIFI);

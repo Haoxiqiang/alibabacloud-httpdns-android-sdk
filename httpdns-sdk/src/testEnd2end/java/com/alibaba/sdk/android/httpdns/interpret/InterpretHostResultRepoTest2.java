@@ -49,6 +49,9 @@ public class InterpretHostResultRepoTest2 {
         repo = new InterpretHostResultRepo(config, Mockito.mock(ProbeService.class), dbHelper, new InterpretHostCacheGroup());
     }
 
+    /**
+     * 命中缓存 使用相同的对象
+     */
     @Test
     public void cacheHitWillReturnSameObject() {
 
@@ -63,6 +66,9 @@ public class InterpretHostResultRepoTest2 {
 
     }
 
+    /**
+     * 更新时，更新对象的属性，不修改对象
+     */
     @Test
     public void saveWillUpdateCacheContentNotInstance() {
         final String host = RandomValue.randomHost();
@@ -83,6 +89,10 @@ public class InterpretHostResultRepoTest2 {
         MatcherAssert.assertThat("缓存更新时，更新的是缓存内容，不重新创建缓存对象", result == result1);
     }
 
+    /**
+     * 超过ttl 会过期
+     * @throws InterruptedException
+     */
     @Test
     public void httpDnsResultExpiredAfterTtl() throws InterruptedException {
         final String host = RandomValue.randomHost();
