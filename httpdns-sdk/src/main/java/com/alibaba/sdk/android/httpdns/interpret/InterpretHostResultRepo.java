@@ -145,28 +145,10 @@ public class InterpretHostResultRepo {
      */
     public void save(String region, RequestIpType type, ResolveHostResponse resolveHostResponse) {
         final ArrayList<HostRecord> records = new ArrayList<>();
-        for (String host : resolveHostResponse.getHosts()) {
-            switch (type) {
-                case v4:
-                    HostRecord v4Record = save(region, host, RequestIpType.v4, null, null, resolveHostResponse.getItem(host).getIps(), resolveHostResponse.getItem(host).getTtl());
-                    if (enableCache || hostListWhichIpFixed.contains(host)) {
-                        records.add(v4Record);
-                    }
-                    break;
-                case v6:
-                    HostRecord v6Record = save(region, host, RequestIpType.v6, null, null, resolveHostResponse.getItem(host).getIpv6s(), resolveHostResponse.getItem(host).getTtl());
-                    if (enableCache || hostListWhichIpFixed.contains(host)) {
-                        records.add(v6Record);
-                    }
-                    break;
-                case both:
-                    HostRecord v4tmp = save(region, host, RequestIpType.v4, null, null, resolveHostResponse.getItem(host).getIps(), resolveHostResponse.getItem(host).getTtl());
-                    HostRecord v6tmp = save(region, host, RequestIpType.v6, null, null, resolveHostResponse.getItem(host).getIpv6s(), resolveHostResponse.getItem(host).getTtl());
-                    if (enableCache || hostListWhichIpFixed.contains(host)) {
-                        records.add(v4tmp);
-                        records.add(v6tmp);
-                    }
-                    break;
+        for (ResolveHostResponse.HostItem item : resolveHostResponse.getItems()) {
+            HostRecord record = save(region, item.getHost(), item.getType(), null, null, item.getIps(), item.getTtl());
+            if (enableCache || hostListWhichIpFixed.contains(item.getHost())) {
+                records.add(record);
             }
         }
         if (records.size() > 0) {

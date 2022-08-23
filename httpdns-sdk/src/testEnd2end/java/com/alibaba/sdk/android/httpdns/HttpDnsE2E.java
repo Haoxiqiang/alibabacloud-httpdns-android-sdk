@@ -764,9 +764,9 @@ public class HttpDnsE2E {
         String[] ips1 = app.requestInterpretHost(host1);
         String[] ips2 = app.requestInterpretHost(host2);
         String[] ips3 = app.requestInterpretHost(host3);
-        UnitTestUtil.assertIpsEqual("预解析ipv4之后，可以直接获取解析结果", ips1, response.getItem(host1).getIps());
-        UnitTestUtil.assertIpsEqual("预解析ipv4之后，可以直接获取解析结果", ips2, response.getItem(host2).getIps());
-        UnitTestUtil.assertIpsEqual("预解析ipv4之后，可以直接获取解析结果", ips3, response.getItem(host3).getIps());
+        UnitTestUtil.assertIpsEqual("预解析ipv4之后，可以直接获取解析结果", ips1, response.getItem(host1, RequestIpType.v4).getIps());
+        UnitTestUtil.assertIpsEqual("预解析ipv4之后，可以直接获取解析结果", ips2, response.getItem(host2, RequestIpType.v4).getIps());
+        UnitTestUtil.assertIpsEqual("预解析ipv4之后，可以直接获取解析结果", ips3, response.getItem(host3, RequestIpType.v4).getIps());
     }
 
     /**
@@ -794,9 +794,9 @@ public class HttpDnsE2E {
         String[] ips1 = app.requestInterpretHostForIpv6(host1);
         String[] ips2 = app.requestInterpretHostForIpv6(host2);
         String[] ips3 = app.requestInterpretHostForIpv6(host3);
-        UnitTestUtil.assertIpsEqual("预解析ipv6之后，可以直接获取解析结果", ips1, response.getItem(host1).getIpv6s());
-        UnitTestUtil.assertIpsEqual("预解析ipv6之后，可以直接获取解析结果", ips2, response.getItem(host2).getIpv6s());
-        UnitTestUtil.assertIpsEqual("预解析ipv6之后，可以直接获取解析结果", ips3, response.getItem(host3).getIpv6s());
+        UnitTestUtil.assertIpsEqual("预解析ipv6之后，可以直接获取解析结果", ips1, response.getItem(host1, RequestIpType.v6).getIps());
+        UnitTestUtil.assertIpsEqual("预解析ipv6之后，可以直接获取解析结果", ips2, response.getItem(host2, RequestIpType.v6).getIps());
+        UnitTestUtil.assertIpsEqual("预解析ipv6之后，可以直接获取解析结果", ips3, response.getItem(host3, RequestIpType.v6).getIps());
     }
 
 
@@ -824,16 +824,16 @@ public class HttpDnsE2E {
         String[] ips1 = app.requestInterpretHost(host1);
         String[] ips2 = app.requestInterpretHost(host2);
         String[] ips3 = app.requestInterpretHost(host3);
-        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips1, response.getItem(host1).getIps());
-        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips2, response.getItem(host2).getIps());
-        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips3, response.getItem(host3).getIps());
+        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips1, response.getItem(host1, RequestIpType.v4).getIps());
+        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips2, response.getItem(host2, RequestIpType.v4).getIps());
+        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips3, response.getItem(host3, RequestIpType.v4).getIps());
 
         String[] ips4 = app.requestInterpretHostForIpv6(host1);
         String[] ips5 = app.requestInterpretHostForIpv6(host2);
         String[] ips6 = app.requestInterpretHostForIpv6(host3);
-        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips4, response.getItem(host1).getIpv6s());
-        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips5, response.getItem(host2).getIpv6s());
-        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips6, response.getItem(host3).getIpv6s());
+        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips4, response.getItem(host1, RequestIpType.v6).getIps());
+        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips5, response.getItem(host2, RequestIpType.v6).getIps());
+        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips6, response.getItem(host3, RequestIpType.v6).getIps());
     }
 
 
@@ -881,13 +881,13 @@ public class HttpDnsE2E {
         String[] ips5 = app.requestInterpretHost(host5);
         String[] ips6 = app.requestInterpretHost(host6);
         String[] ips7 = app.requestInterpretHost(host7);
-        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips1, response1.getItem(host1).getIps());
-        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips2, response1.getItem(host2).getIps());
-        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips3, response1.getItem(host3).getIps());
-        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips4, response1.getItem(host4).getIps());
-        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips5, response1.getItem(host5).getIps());
-        UnitTestUtil.assertIpsEqual("超过5个，预解析之后，可以直接获取解析结果", ips6, response2.getItem(host6).getIps());
-        UnitTestUtil.assertIpsEqual("超过5个，预解析之后，可以直接获取解析结果", ips7, response2.getItem(host7).getIps());
+        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips1, response1.getItem(host1, RequestIpType.v4).getIps());
+        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips2, response1.getItem(host2, RequestIpType.v4).getIps());
+        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips3, response1.getItem(host3, RequestIpType.v4).getIps());
+        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips4, response1.getItem(host4, RequestIpType.v4).getIps());
+        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ips5, response1.getItem(host5, RequestIpType.v4).getIps());
+        UnitTestUtil.assertIpsEqual("超过5个，预解析之后，可以直接获取解析结果", ips6, response2.getItem(host6, RequestIpType.v4).getIps());
+        UnitTestUtil.assertIpsEqual("超过5个，预解析之后，可以直接获取解析结果", ips7, response2.getItem(host7, RequestIpType.v4).getIps());
 
 
         String[] ipv6s1 = app.requestInterpretHostForIpv6(host1);
@@ -897,13 +897,13 @@ public class HttpDnsE2E {
         String[] ipv6s5 = app.requestInterpretHostForIpv6(host5);
         String[] ipv6s6 = app.requestInterpretHostForIpv6(host6);
         String[] ipv6s7 = app.requestInterpretHostForIpv6(host7);
-        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ipv6s1, response1.getItem(host1).getIpv6s());
-        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ipv6s2, response1.getItem(host2).getIpv6s());
-        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ipv6s3, response1.getItem(host3).getIpv6s());
-        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ipv6s4, response1.getItem(host4).getIpv6s());
-        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ipv6s5, response1.getItem(host5).getIpv6s());
-        UnitTestUtil.assertIpsEqual("超过5个，预解析之后，可以直接获取解析结果", ipv6s6, response2.getItem(host6).getIpv6s());
-        UnitTestUtil.assertIpsEqual("超过5个，预解析之后，可以直接获取解析结果", ipv6s7, response2.getItem(host7).getIpv6s());
+        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ipv6s1, response1.getItem(host1, RequestIpType.v6).getIps());
+        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ipv6s2, response1.getItem(host2, RequestIpType.v6).getIps());
+        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ipv6s3, response1.getItem(host3, RequestIpType.v6).getIps());
+        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ipv6s4, response1.getItem(host4, RequestIpType.v6).getIps());
+        UnitTestUtil.assertIpsEqual("预解析之后，可以直接获取解析结果", ipv6s5, response1.getItem(host5, RequestIpType.v6).getIps());
+        UnitTestUtil.assertIpsEqual("超过5个，预解析之后，可以直接获取解析结果", ipv6s6, response2.getItem(host6, RequestIpType.v6).getIps());
+        UnitTestUtil.assertIpsEqual("超过5个，预解析之后，可以直接获取解析结果", ipv6s7, response2.getItem(host7, RequestIpType.v6).getIps());
     }
 
     /**
@@ -1272,12 +1272,12 @@ public class HttpDnsE2E {
 
         app.changeToNetwork(ConnectivityManager.TYPE_MOBILE);
         app.waitForAppThread();
-        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host1), server.getResolveHostServer().getResponseForHost(host1, RequestIpType.v4).getItem(host1).getIps());
-        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host2), server.getResolveHostServer().getResponseForHost(host2, RequestIpType.v4).getItem(host2).getIps());
-        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host3), server.getResolveHostServer().getResponseForHost(host3, RequestIpType.v4).getItem(host3).getIps());
-        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host4), server.getResolveHostServer().getResponseForHost(host4, RequestIpType.v4).getItem(host4).getIps());
-        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host5), server.getResolveHostServer().getResponseForHost(host5, RequestIpType.v4).getItem(host5).getIps());
-        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host6), server.getResolveHostServer().getResponseForHost(host6, RequestIpType.v4).getItem(host6).getIps());
+        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host1), server.getResolveHostServer().getResponseForHost(host1, RequestIpType.v4).getItem(host1, RequestIpType.v4).getIps());
+        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host2), server.getResolveHostServer().getResponseForHost(host2, RequestIpType.v4).getItem(host2, RequestIpType.v4).getIps());
+        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host3), server.getResolveHostServer().getResponseForHost(host3, RequestIpType.v4).getItem(host3, RequestIpType.v4).getIps());
+        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host4), server.getResolveHostServer().getResponseForHost(host4, RequestIpType.v4).getItem(host4, RequestIpType.v4).getIps());
+        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host5), server.getResolveHostServer().getResponseForHost(host5, RequestIpType.v4).getItem(host5, RequestIpType.v4).getIps());
+        UnitTestUtil.assertIpsEqual("网络变化之后，会重新解析已解析的域名", app.requestInterpretHost(host6), server.getResolveHostServer().getResponseForHost(host6, RequestIpType.v4).getItem(host6, RequestIpType.v4).getIps());
 
         app.enableResolveAfterNetworkChange(false);
         app.changeToNetwork(ConnectivityManager.TYPE_WIFI);

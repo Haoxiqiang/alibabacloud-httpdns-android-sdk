@@ -126,17 +126,19 @@ public class InterpretHostResultRepoTest {
             }
             ResolveHostResponse resolveHostResponse = ResolveHostServer.randomResolveHostResponse(preHosts, type);
             repo.save(Constants.REGION_DEFAULT, type, resolveHostResponse);
-            for (String host : resolveHostResponse.getHosts()) {
-                if (type == RequestIpType.v4) {
-                    responses.put(host, new InterpretHostResponse(host, resolveHostResponse.getItem(host).getIps(), null, resolveHostResponse.getItem(host).getTtl(), null));
-                } else if (type == RequestIpType.v6) {
-                    responses.put(host, new InterpretHostResponse(host, null, resolveHostResponse.getItem(host).getIpv6s(), resolveHostResponse.getItem(host).getTtl(), null));
-                } else {
-                    responses.put(host, new InterpretHostResponse(host, resolveHostResponse.getItem(host).getIps(), resolveHostResponse.getItem(host).getIpv6s(), resolveHostResponse.getItem(host).getTtl(), null));
+
+            for (ResolveHostResponse.HostItem item: resolveHostResponse.getItems()) {
+                if(item.getType() == RequestIpType.v4) {
+                    InterpretHostResponse tmp = responses.get(item.getHost());
+                    responses.put(item.getHost(), new InterpretHostResponse(item.getHost(), item.getIps(), tmp != null ? tmp.getIpsv6() : null, item.getTtl(), null));
+                    types.put(item.getHost(), tmp != null ? RequestIpType.both : item.getType());
+                } else if (item.getType() == RequestIpType.v6) {
+                    InterpretHostResponse tmp = responses.get(item.getHost());
+                    responses.put(item.getHost(), new InterpretHostResponse(item.getHost(), tmp != null ? tmp.getIps() : null, item.getIps(), item.getTtl(), null));
+                    types.put(item.getHost(), tmp != null ? RequestIpType.both : item.getType());
                 }
-                types.put(host, type);
-                cacheKeys.put(host, null);
-                extras.put(host, null);
+                cacheKeys.put(item.getHost(), null);
+                extras.put(item.getHost(), null);
             }
         }
 

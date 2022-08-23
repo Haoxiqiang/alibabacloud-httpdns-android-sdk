@@ -37,13 +37,12 @@ public class ResolveHostServer extends BaseDataServer<ResolveHostServer.ResolveR
     @Override
     public String convert(ResolveHostResponse resolveHostResponse) {
         ArrayList<ResolveItem> items = new ArrayList<>();
-        for (String host : resolveHostResponse.getHosts()) {
-            ResolveHostResponse.HostItem item = resolveHostResponse.getItem(host);
-            if (item.getIps() != null) {
-                items.add(new ResolveItem(host, 1, item.getTtl(), item.getIps()));
+        for (ResolveHostResponse.HostItem item : resolveHostResponse.getItems()) {
+            if (item.getType() == RequestIpType.v4) {
+                items.add(new ResolveItem(item.getHost(), 1, item.getTtl(), item.getIps()));
             }
-            if (item.getIpv6s() != null) {
-                items.add(new ResolveItem(host, 28, item.getTtl(), item.getIpv6s()));
+            if (item.getType() == RequestIpType.v6) {
+                items.add(new ResolveItem(item.getHost(), 28, item.getTtl(), item.getIps()));
             }
         }
         return constructResolveHostResultBody(items);
@@ -142,13 +141,14 @@ public class ResolveHostServer extends BaseDataServer<ResolveHostServer.ResolveR
         for (String host : hostList) {
             switch (type) {
                 case v4:
-                    hostItems.add(new ResolveHostResponse.HostItem(host, RandomValue.randomIpv4s(), null, RandomValue.randomInt(300)));
+                    hostItems.add(new ResolveHostResponse.HostItem(host, RequestIpType.v4, RandomValue.randomIpv4s(), RandomValue.randomInt(300)));
                     break;
                 case v6:
-                    hostItems.add(new ResolveHostResponse.HostItem(host, null, RandomValue.randomIpv6s(), RandomValue.randomInt(300)));
+                    hostItems.add(new ResolveHostResponse.HostItem(host, RequestIpType.v6, RandomValue.randomIpv6s(), RandomValue.randomInt(300)));
                     break;
                 default:
-                    hostItems.add(new ResolveHostResponse.HostItem(host, RandomValue.randomIpv4s(), RandomValue.randomIpv6s(), RandomValue.randomInt(300)));
+                    hostItems.add(new ResolveHostResponse.HostItem(host, RequestIpType.v4, RandomValue.randomIpv4s(), RandomValue.randomInt(300)));
+                    hostItems.add(new ResolveHostResponse.HostItem(host, RequestIpType.v6, RandomValue.randomIpv6s(), RandomValue.randomInt(300)));
                     break;
             }
         }
@@ -167,13 +167,14 @@ public class ResolveHostServer extends BaseDataServer<ResolveHostServer.ResolveR
         for (String host : hostList) {
             switch (type) {
                 case v4:
-                    hostItems.add(new ResolveHostResponse.HostItem(host, RandomValue.randomIpv4s(), null, ttl));
+                    hostItems.add(new ResolveHostResponse.HostItem(host, RequestIpType.v4, RandomValue.randomIpv4s(), ttl));
                     break;
                 case v6:
-                    hostItems.add(new ResolveHostResponse.HostItem(host, null, RandomValue.randomIpv6s(), ttl));
+                    hostItems.add(new ResolveHostResponse.HostItem(host, RequestIpType.v6, RandomValue.randomIpv6s(), ttl));
                     break;
                 default:
-                    hostItems.add(new ResolveHostResponse.HostItem(host, RandomValue.randomIpv4s(), RandomValue.randomIpv6s(), ttl));
+                    hostItems.add(new ResolveHostResponse.HostItem(host, RequestIpType.v4, RandomValue.randomIpv4s(), ttl));
+                    hostItems.add(new ResolveHostResponse.HostItem(host, RequestIpType.v6, RandomValue.randomIpv6s(), ttl));
                     break;
             }
         }

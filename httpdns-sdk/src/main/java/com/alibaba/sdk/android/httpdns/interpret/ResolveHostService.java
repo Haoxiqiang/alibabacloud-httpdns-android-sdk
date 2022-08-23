@@ -79,13 +79,15 @@ public class ResolveHostService {
                     }
                     repo.save(region, type, resolveHostResponse);
                     if (type == RequestIpType.v4 || type == RequestIpType.both) {
-                        for (String host : resolveHostResponse.getHosts()) {
-                            ipProbeService.probleIpv4(host, resolveHostResponse.getItem(host).getIps(), new ProbeCallback() {
-                                @Override
-                                public void onResult(String host, String[] sortedIps) {
-                                    repo.update(host, RequestIpType.v4, null, sortedIps);
-                                }
-                            });
+                        for(final ResolveHostResponse.HostItem item : resolveHostResponse.getItems()) {
+                            if(item.getType() == RequestIpType.v4) {
+                                ipProbeService.probleIpv4(item.getHost(), item.getIps(), new ProbeCallback() {
+                                    @Override
+                                    public void onResult(String host, String[] sortedIps) {
+                                        repo.update(item.getHost(), item.getType(), null, sortedIps);
+                                    }
+                                });
+                            }
                         }
                     }
                     for (String host : targetHost) {

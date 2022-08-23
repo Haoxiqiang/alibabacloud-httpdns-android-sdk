@@ -1,11 +1,12 @@
 package com.alibaba.sdk.android.httpdns.interpret;
 
+import com.alibaba.sdk.android.httpdns.RequestIpType;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -16,36 +17,35 @@ import java.util.List;
  */
 public class ResolveHostResponse {
 
-    private HashMap<String, HostItem> items = new HashMap<>();
-
-    private ResolveHostResponse(HashMap<String, HostItem> items) {
-        this.items = items;
-    }
+    private ArrayList<HostItem> hostItems;
 
     public ResolveHostResponse(ArrayList<HostItem> items) {
-        for (HostItem item : items) {
-            this.items.put(item.host, item);
+        this.hostItems = items;
+    }
+
+    public HostItem getItem(String host, RequestIpType type) {
+        for (HostItem item : hostItems) {
+            if (item.host.equals(host) && item.type == type) {
+                return item;
+            }
         }
+        return null;
     }
 
-    public HostItem getItem(String host) {
-        return items.get(host);
-    }
-
-    public List<String> getHosts() {
-        return new ArrayList<>(items.keySet());
+    public List<HostItem> getItems() {
+        return hostItems;
     }
 
     public static class HostItem {
         private String host;
+        private RequestIpType type;
         private String[] ips;
-        private String[] ipv6s;
         private int ttl;
 
-        public HostItem(String host, String[] ips, String[] ipv6s, int ttl) {
+        public HostItem(String host, RequestIpType type, String[] ips, int ttl) {
             this.host = host;
+            this.type = type;
             this.ips = ips;
-            this.ipv6s = ipv6s;
             if (ttl <= 0) {
                 this.ttl = 60;
             } else {
@@ -53,12 +53,16 @@ public class ResolveHostResponse {
             }
         }
 
-        public String[] getIps() {
-            return ips;
+        public String getHost() {
+            return host;
         }
 
-        public String[] getIpv6s() {
-            return ipv6s;
+        public RequestIpType getType() {
+            return type;
+        }
+
+        public String[] getIps() {
+            return ips;
         }
 
         public int getTtl() {
@@ -74,9 +78,9 @@ public class ResolveHostResponse {
             return null;
         }
         JSONArray dns = jsonObject.getJSONArray("dns");
-        HashMap<String, HostItem> items = new HashMap<>();
+        ArrayList<HostItem> items = new ArrayList<>();
         String host;
-        String[] ips = null;
+        String[] ips;
         int type;
         int ttl;
         for (int i = 0; i < dns.length(); i++) {
@@ -84,6 +88,7 @@ public class ResolveHostResponse {
             host = itemJson.getString("host");
             type = itemJson.getInt("type");
             ttl = itemJson.getInt("ttl");
+            ips = null;
             if (itemJson.has("ips")) {
                 JSONArray ipsArray = itemJson.getJSONArray("ips");
                 int len = ipsArray.length();
@@ -92,15 +97,15 @@ public class ResolveHostResponse {
                     ips[j] = ipsArray.getString(j);
                 }
             }
-            HostItem item = items.get(host);
-            if (item == null) {
-                item = new HostItem(host, null, null, ttl);
-                items.put(host, item);
-            }
+
+            HostItem item = null;
             if (type == 1) {
-                item.ips = ips;
+                item = new HostItem(host, RequestIpType.v4, ips, ttl);
             } else if (type == 28) {
-                item.ipv6s = ips;
+                item = new HostItem(host, RequestIpType.v6, ips, ttl);
+            }
+            if (item != null) {
+                items.add(item);
             }
         }
         return new ResolveHostResponse(items);
