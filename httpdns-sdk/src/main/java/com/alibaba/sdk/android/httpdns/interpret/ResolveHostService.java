@@ -45,22 +45,71 @@ public class ResolveHostService {
         if (HttpDnsLog.isPrint()) {
             HttpDnsLog.d("resolve host " + hostList.toString() + " " + type);
         }
-        ArrayList<String> allHosts = new ArrayList<>(hostList);
-        int count = hostList.size() / 5 + 1;
-        for (int i = 0; i < count; i++) {
-            final ArrayList<String> targetHost = new ArrayList<>();
-            while (targetHost.size() < 5 && allHosts.size() > 0) {
-                String host = allHosts.remove(0);
+
+        ArrayList<String> hostsRequestV4 = new ArrayList<>();
+        ArrayList<String> hostsRequestV6 = new ArrayList<>();
+        ArrayList<String> hostsRequestBoth = new ArrayList<>();
+
+        for (String host : hostList) {
+            if (!CommonUtil.isAHost(host)
+                    || CommonUtil.isAnIP(host)
+                    || this.filter.isFiltered(host)) {
+                // 过滤掉不需要的域名
+                if (HttpDnsLog.isPrint()) {
+                    HttpDnsLog.d("resolve ignore host as not invalid " + host);
+                }
+                continue;
+            }
+
+            // 过滤掉有缓存的域名
+
+            if (type == RequestIpType.v4) {
                 HTTPDNSResult result = repo.getIps(host, type, null);
-                if (CommonUtil.isAHost(host)
-                        && !CommonUtil.isAnIP(host)
-                        && !this.filter.isFiltered(host)
-                        && (result == null || result.isExpired())
-                        && recorder.beginInterpret(host, type)) {
+                if(result == null || result.isExpired()) {
+                    // 需要解析
+                    hostsRequestV4.add(host);
+                }
+            } else if (type == RequestIpType.v6) {
+                HTTPDNSResult result = repo.getIps(host, type, null);
+                if(result == null || result.isExpired()) {
+                    // 需要解析
+                    hostsRequestV6.add(host);
+                }
+            } else {
+                HTTPDNSResult resultV4 = repo.getIps(host, RequestIpType.v4, null);
+                HTTPDNSResult resultV6 = repo.getIps(host, RequestIpType.v6, null);
+                if((resultV4 == null || resultV4.isExpired()) && (resultV6 == null || resultV6.isExpired())) {
+                    // 都需要解析
+                    hostsRequestBoth.add(host);
+                } else if (resultV4 == null || resultV4.isExpired()) {
+                    hostsRequestV4.add(host);
+                } else if (resultV6 == null || resultV6.isExpired()) {
+                    hostsRequestV6.add(host);
+                }
+            }
+        }
+        resolveHost(hostsRequestV4, RequestIpType.v4);
+        resolveHost(hostsRequestV6, RequestIpType.v6);
+        resolveHost(hostsRequestBoth, RequestIpType.both);
+    }
+
+    private void resolveHost(ArrayList<String> hostList, final RequestIpType type) {
+        if(hostList == null || hostList.size() == 0) {
+            return;
+        }
+        ArrayList<String> allHosts = new ArrayList<>(hostList);
+        // 预解析每次最多5个域名
+        final int maxCountPerRequest = 5;
+        int requestCount = (hostList.size() + maxCountPerRequest - 1) / maxCountPerRequest ;
+        for (int i = 0; i < requestCount; i++) {
+            final ArrayList<String> targetHost = new ArrayList<>();
+            while (targetHost.size() < maxCountPerRequest && allHosts.size() > 0) {
+                String host = allHosts.remove(0);
+                if (recorder.beginInterpret(host, type)) {
                     targetHost.add(host);
                 } else {
                     if (HttpDnsLog.isPrint()) {
-                        HttpDnsLog.d("resolve ignore host " + host);
+                        HttpDnsLog.d("resolve ignore host as already interpret " + host);
                     }
                 }
             }
@@ -79,8 +128,8 @@ public class ResolveHostService {
                     }
                     repo.save(region, type, resolveHostResponse);
                     if (type == RequestIpType.v4 || type == RequestIpType.both) {
-                        for(final ResolveHostResponse.HostItem item : resolveHostResponse.getItems()) {
-                            if(item.getType() == RequestIpType.v4) {
+                        for (final ResolveHostResponse.HostItem item : resolveHostResponse.getItems()) {
+                            if (item.getType() == RequestIpType.v4) {
                                 ipProbeService.probleIpv4(item.getHost(), item.getIps(), new ProbeCallback() {
                                     @Override
                                     public void onResult(String host, String[] sortedIps) {

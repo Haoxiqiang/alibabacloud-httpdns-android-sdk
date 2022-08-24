@@ -12,6 +12,7 @@ import com.alibaba.sdk.android.httpdns.probe.ProbeService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -29,6 +30,9 @@ public class InterpretHostResultRepo {
     private InterpretHostCacheGroup cacheGroup;
     private CacheTtlChanger cacheTtlChanger;
     private ArrayList<String> hostListWhichIpFixed = new ArrayList<>();
+    private HashSet<String> emptyIpHostForV4 = new HashSet<>();
+    private HashSet<String> emptyIpHostForV6 = new HashSet<>();
+
 
     public InterpretHostResultRepo(HttpDnsConfig config, ProbeService ipProbeService, RecordDBHelper dbHelper, InterpretHostCacheGroup cacheGroup) {
         this.config = config;
@@ -60,13 +64,22 @@ public class InterpretHostResultRepo {
             cacheGroup.clearAll();
         }
         for (final HostRecord record : records) {
-            if (!record.isExpired() && RequestIpType.values()[record.getType()] == RequestIpType.v4) {
+            RequestIpType type = RequestIpType.values()[record.getType()];
+            if (!record.isExpired() && type == RequestIpType.v4) {
                 ipProbeService.probleIpv4(record.getHost(), record.getIps(), new ProbeCallback() {
                     @Override
                     public void onResult(String host, String[] sortedIps) {
                         update(host, RequestIpType.v4, record.getCacheKey(), sortedIps);
                     }
                 });
+            }
+            if(record.getIps() == null || record.getIps().length == 0) {
+                // 空解析结果
+                if(type == RequestIpType.v4) {
+                    emptyIpHostForV4.add(record.getHost());
+                } else if(type == RequestIpType.v6) {
+                    emptyIpHostForV6.add(record.getHost());
+                }
             }
         }
     }
@@ -111,19 +124,51 @@ public class InterpretHostResultRepo {
         final ArrayList<HostRecord> records = new ArrayList<>();
         switch (type) {
             case v4:
-                records.add(save(region, host, RequestIpType.v4, extra, cacheKey, response.getIps(), response.getTtl()));
+                HostRecord v4tmp = save(region, host, RequestIpType.v4, extra, cacheKey, response.getIps(), response.getTtl());
+                if (response.getIps() == null || response.getIps().length == 0) {
+                    emptyIpHostForV4.add(host);
+                } else if (emptyIpHostForV4.contains(host)) {
+                    emptyIpHostForV4.remove(host);
+                }
+                if (enableCache || hostListWhichIpFixed.contains(host) || emptyIpHostForV4.contains(host)) {
+                    records.add(v4tmp);
+                }
                 break;
             case v6:
-                records.add(save(region, host, RequestIpType.v6, extra, cacheKey, response.getIpsv6(), response.getTtl()));
+                HostRecord v6tmp = save(region, host, RequestIpType.v6, extra, cacheKey, response.getIpsv6(), response.getTtl());
+                if (response.getIpsv6() == null || response.getIpsv6().length == 0) {
+                    emptyIpHostForV6.add(host);
+                } else if (emptyIpHostForV6.contains(host)) {
+                    emptyIpHostForV6.remove(host);
+                }
+                if (enableCache || hostListWhichIpFixed.contains(host) || emptyIpHostForV6.contains(host)) {
+                    records.add(v6tmp);
+                }
                 break;
             case both:
                 HostRecord v4Record = save(region, host, RequestIpType.v4, extra, cacheKey, response.getIps(), response.getTtl());
-                records.add(v4Record);
                 HostRecord v6Record = save(region, host, RequestIpType.v6, extra, cacheKey, response.getIpsv6(), response.getTtl());
-                records.add(v6Record);
+                if (response.getIps() == null || response.getIps().length == 0) {
+                    emptyIpHostForV4.add(host);
+                } else if (emptyIpHostForV4.contains(host)) {
+                    emptyIpHostForV4.remove(host);
+                }
+                if (response.getIpsv6() == null || response.getIpsv6().length == 0) {
+                    emptyIpHostForV6.add(host);
+                } else if (emptyIpHostForV6.contains(host)) {
+                    emptyIpHostForV6.remove(host);
+                }
+                if (enableCache || hostListWhichIpFixed.contains(host) || (emptyIpHostForV4.contains(host) && emptyIpHostForV6.contains(host))) {
+                    records.add(v4Record);
+                    records.add(v6Record);
+                } else if (emptyIpHostForV4.contains(host)) {
+                    records.add(v4Record);
+                } else if (emptyIpHostForV6.contains(host)) {
+                    records.add(v6Record);
+                }
                 break;
         }
-        if (enableCache || hostListWhichIpFixed.contains(host)) {
+        if (records.size() > 0) {
             try {
                 config.getDbWorker().execute(new Runnable() {
                     @Override
@@ -147,7 +192,18 @@ public class InterpretHostResultRepo {
         final ArrayList<HostRecord> records = new ArrayList<>();
         for (ResolveHostResponse.HostItem item : resolveHostResponse.getItems()) {
             HostRecord record = save(region, item.getHost(), item.getType(), null, null, item.getIps(), item.getTtl());
-            if (enableCache || hostListWhichIpFixed.contains(item.getHost())) {
+            if (item.getIps() == null || item.getIps().length == 0) {
+                if (item.getType() == RequestIpType.v4) {
+                    emptyIpHostForV4.add(item.getHost());
+                } else if (item.getType() == RequestIpType.v6) {
+                    emptyIpHostForV6.add(item.getHost());
+                }
+            }
+            if (enableCache
+                    || hostListWhichIpFixed.contains(item.getHost())
+                    || (item.getType() == RequestIpType.v4 && emptyIpHostForV4.contains(item.getHost()))
+                    || (item.getType() == RequestIpType.v6 && emptyIpHostForV6.contains(item.getHost()))
+            ) {
                 records.add(record);
             }
         }
@@ -263,6 +319,20 @@ public class InterpretHostResultRepo {
         HashMap<String, RequestIpType> result = cacheGroup.getCache(null).getAllHost();
         for (String host : hostListWhichIpFixed) {
             result.remove(host);
+        }
+        for (String host : emptyIpHostForV4) {
+            if (result.get(host) == RequestIpType.v4) {
+                result.remove(host);
+            } else if (result.get(host) == RequestIpType.both) {
+                result.put(host, RequestIpType.v6);
+            }
+        }
+        for (String host : emptyIpHostForV6) {
+            if (result.get(host) == RequestIpType.v6) {
+                result.remove(host);
+            } else if (result.get(host) == RequestIpType.both) {
+                result.put(host, RequestIpType.v4);
+            }
         }
         return result;
     }

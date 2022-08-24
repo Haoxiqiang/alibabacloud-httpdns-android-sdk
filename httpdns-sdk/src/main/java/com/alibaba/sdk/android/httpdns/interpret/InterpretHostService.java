@@ -62,7 +62,42 @@ public class InterpretHostService {
         if (HttpDnsLog.isPrint()) {
             HttpDnsLog.d("host " + host + " result is " + CommonUtil.toString(result));
         }
-        if ((result == null || result.isExpired()) && recorder.beginInterpret(host, type, cacheKey)) {
+        if ((result == null || result.isExpired())) {
+            if (type == RequestIpType.both) {
+                // 过滤掉 未过期的请求
+                HTTPDNSResult resultV4 = repo.getIps(host, RequestIpType.v4, cacheKey);
+                HTTPDNSResult resultV6 = repo.getIps(host, RequestIpType.v6, cacheKey);
+                boolean v4Invalid = resultV4 == null || resultV4.isExpired();
+                boolean v6Invalid = resultV6 == null || resultV6.isExpired();
+                if(v4Invalid && v6Invalid) {
+                    // 都过期，不过滤
+                    interpretHostInner(host, type, extras, cacheKey);
+                } else if(v4Invalid) {
+                    // 仅v4过期
+                    interpretHostInner(host, RequestIpType.v4, extras, cacheKey);
+                } else if(v6Invalid) {
+                    // 仅v6过期
+                    interpretHostInner(host, RequestIpType.v6, extras, cacheKey);
+                }
+            } else {
+                interpretHostInner(host, type, extras, cacheKey);
+            }
+        }
+        if (result != null && (!result.isExpired() || enableExpiredIp || result.isFromDB())) {
+            if (HttpDnsLog.isPrint()) {
+                HttpDnsLog.i("request host " + host + " for " + type + " and return " + result.toString() + " immediately");
+            }
+            return result;
+        } else {
+            if (HttpDnsLog.isPrint()) {
+                HttpDnsLog.i("request host " + host + " and return empty immediately");
+            }
+            return Constants.EMPTY;
+        }
+    }
+
+    private void interpretHostInner(final String host, final RequestIpType type, Map<String, String> extras, final String cacheKey) {
+        if (recorder.beginInterpret(host, type, cacheKey)) {
             final String region = config.getRegion();
             requestHandler.requestInterpretHost(host, type, extras, cacheKey, new RequestCallback<InterpretHostResponse>() {
                 @Override
@@ -91,17 +126,6 @@ public class InterpretHostService {
                     recorder.endInterpret(host, type, cacheKey);
                 }
             });
-        }
-        if (result != null && (!result.isExpired() || enableExpiredIp || result.isFromDB())) {
-            if (HttpDnsLog.isPrint()) {
-                HttpDnsLog.i("request host " + host + " for " + type + " and return " + result.toString() + " immediately");
-            }
-            return result;
-        } else {
-            if (HttpDnsLog.isPrint()) {
-                HttpDnsLog.i("request host " + host + " and return empty immediately");
-            }
-            return Constants.EMPTY;
         }
     }
 

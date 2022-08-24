@@ -4,7 +4,6 @@ import android.Manifest;
 import android.net.ConnectivityManager;
 
 import com.alibaba.sdk.android.httpdns.CacheTtlChanger;
-import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
 import com.alibaba.sdk.android.httpdns.HttpDns;
 import com.alibaba.sdk.android.httpdns.ILogger;
 import com.alibaba.sdk.android.httpdns.InitConfig;
@@ -12,9 +11,7 @@ import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.interpret.InterpretHostResponse;
 import com.alibaba.sdk.android.httpdns.interpret.ResolveHostResponse;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
-import com.alibaba.sdk.android.httpdns.probe.IPProbeItem;
 import com.alibaba.sdk.android.httpdns.test.app.BusinessApp;
-import com.alibaba.sdk.android.httpdns.test.helper.ServerHelper;
 import com.alibaba.sdk.android.httpdns.test.helper.ServerStatusHelper;
 import com.alibaba.sdk.android.httpdns.test.server.HttpDnsServer;
 import com.alibaba.sdk.android.httpdns.test.server.InterpretHostServer;
@@ -23,13 +20,11 @@ import com.alibaba.sdk.android.httpdns.test.server.ResolveHostServer;
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
 import com.alibaba.sdk.android.httpdns.test.utils.ShadowNetworkInfo;
 import com.alibaba.sdk.android.httpdns.test.utils.UnitTestUtil;
-import com.alibaba.sdk.android.httpdns.utils.Constants;
 
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -38,24 +33,17 @@ import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowApplication;
-import org.robolectric.shadows.ShadowLog;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * HTTPDNS 2.3.0 版本需求
  * 1. 缓存使用的ttl改为可配置
  * 2. 主站域名的ip不经常变动，单独处理相关逻辑
+ * 3. 没有解析结果的域名解析，算是一种无效请求，也按主站域名处理。因为没有解析结果，也可以认为是一种固定的解析结果
+ * 1. 但是这里有一种特殊情况，即同时解析v4、v6的情况，有可能v6是无效的，而v4是有效的，此时需要根据缓存把解析改为仅解析v4
  *
  * @author zonglin.nzl
  * @date 2020/10/15
@@ -280,74 +268,320 @@ public class V2_3_0 {
     }
 
     /**
-     * 主站域名的ip解析缓存 本地缓存的ttl 不会失效
+     * 空解析缓存 不会因为网络变化而预解析
      */
     @Test
-    public void testTtlIsValidFromDiskCacheAsIpIsFixed() {
+    @Config(shadows = {ShadowNetworkInfo.class})
+    public void testCacheWillNotBeRefreshWhenNetworkChangeAsEmptyIP() {
 
-        // 重置，然后重新初始化httpdns, 配置主站域名
+        final String hostWithEmptyIP = RandomValue.randomHost();
+        server.getInterpretHostServer().preSetRequestResponse(hostWithEmptyIP, InterpretHostServer.createResponseWithEmptyIp(hostWithEmptyIP, 100), -1);
+
+        // 这里设置为网络变化预解析，强化这个配置不影响主站域名
+        app.enableResolveAfterNetworkChange(true);
+
+        // 移动网络
+        app.changeToNetwork(ConnectivityManager.TYPE_MOBILE);
+
+        // 先请求一次，产生缓存
+        app.requestInterpretHost(hostWithEmptyIP);
+        app.waitForAppThread();
+
+        // 修改为wifi
+        app.changeToNetwork(ConnectivityManager.TYPE_WIFI);
+
+        MatcherAssert.assertThat("不会触发预解析", server.getResolveHostServer().hasRequestForHost(hostWithEmptyIP, RequestIpType.v4, 0, false));
+
+        // 再请求一次，直接返回的应该是缓存。 这里的目的是强化目前是有缓存的
+        app.requestInterpretHost(hostWithEmptyIP);
+        app.waitForAppThread();
+        MatcherAssert.assertThat("服务只接收到第一次请求", server.getInterpretHostServer().hasRequestForArg(hostWithEmptyIP, 1, true));
+    }
+
+    /**
+     * 空解析缓存 强制使用本地缓存
+     */
+    @Test
+    public void testDiskCacheAsDefaultAsEmptyIP() {
+
+        final String hostWithEmptyIP = RandomValue.randomHost();
+        server.getInterpretHostServer().preSetRequestResponse(hostWithEmptyIP, InterpretHostServer.createResponseWithEmptyIp(hostWithEmptyIP, 100), -1);
+
+        // 显式设置 不开启本地缓存，避免测试干扰
         HttpDns.resetInstance();
-        ArrayList<String> hosts = new ArrayList<>();
-        hosts.add(app.getRequestHost());
-        // 这里配置关闭本地缓存，强化这个配置不影响主站域名
-        new InitConfig.Builder().configHostWithFixedIp(hosts).setEnableCacheIp(false).buildFor(app.getAccountId());
+        new InitConfig.Builder().setEnableCacheIp(false).buildFor(app.getAccountId());
         app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
 
         // 先请求一次，产生缓存
-        app.requestInterpretHost();
+        app.requestInterpretHost(hostWithEmptyIP);
         app.waitForAppThread();
-        // 移除服务的请求记录
-        server.getInterpretHostServer().hasRequestForArg(app.getRequestHost(), -1, true);
 
-        // 重置，重新初始化
+        // 重置，重新初始化，触发读取缓存逻辑
         HttpDns.resetInstance();
-        new InitConfig.Builder().configHostWithFixedIp(hosts).setEnableCacheIp(false).buildFor(app.getAccountId());
+        new InitConfig.Builder().setEnableCacheIp(false).buildFor(app.getAccountId());
         app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
 
-        // 请求一次，读取缓存，此时ttl有效不会触发 异步更新逻辑
-        app.requestInterpretHost();
+        // 请求一次，读取缓存
+        app.requestInterpretHost(hostWithEmptyIP);
         app.waitForAppThread();
-        MatcherAssert.assertThat("主站域名的ttl在重启后也有效，不会触发异步解析", !server.getInterpretHostServer().hasRequestForArg(app.getRequestHost(), -1, false));
+        MatcherAssert.assertThat("服务只接收到第一次请求", server.getInterpretHostServer().hasRequestForArg(hostWithEmptyIP, 1, true));
     }
 
-//
-//    /**
-//     * 解析结果为空会使用本地存储
-//     */
-//    @Test
-//    public void testEmptyIpWillUseDiskCache() {
-//
-//        // 模拟 请求 解析结果为空
-//        server.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), ServerHelper.randomInterpretHostResponse(app.getRequestHost()), -1);
-//
-//        // 重新初始化实例
-//
-//        // 再次请求，使用的是缓存
-//
-//    }
-//
-//    /**
-//     * 当解析结果为空时，说明此域名的解析是无效的，我们期望根据ttl来存储，保证ttl时间内，不在发起此请求，即使应用杀死重启
-//     * 服务会基于此特性，下发较大的ttl，来降低无效请求
-//     */
-//    @Test
-//    public void testEmptyIpWillLastBetweenAppLifeCycle() {
-//
-//    }
-//
-//    /**
-//     * 当网络变化时，空IP不会被清除
-//     */
-//    @Test
-//    public void testEmptyIpWillNotBeCleanWhenNetworkChange() {
-//
-//    }
-//
-//    /**
-//     * 预解析过滤掉已经有缓存的域名，仅解析没有结果或者结果过期的域名和ip
-//     */
-//    @Test
-//    public void testResolveRequestWillFilterCache() {
-//
-//    }
+    /**
+     * 预解析时，对于v4和v6结果的ttl 独立
+     */
+    @Test
+    public void testTtlDiffFromType() throws InterruptedException {
+        ArrayList<String> hosts = new ArrayList<>();
+        String host = RandomValue.randomHost();
+        hosts.add(host);
+        ArrayList<ResolveHostResponse.HostItem> items = new ArrayList<>();
+        items.add(new ResolveHostResponse.HostItem(host, RequestIpType.v4, RandomValue.randomIpv4s(), 1));
+        items.add(new ResolveHostResponse.HostItem(host, RequestIpType.v6, RandomValue.randomIpv6s(), 300));
+        server.getResolveHostServer().preSetRequestResponse(
+                ResolveHostServer.ResolveRequestArg.create(hosts, RequestIpType.both),
+                new ResolveHostResponse(items),
+                -1);
+        server.getInterpretHostServer().preSetRequestResponse(
+                host,
+                InterpretHostServer.createResponse(host, RandomValue.randomIpv4s(), null, 1, null),
+                -1);
+        server.getInterpretHostServer().preSetRequestResponse(
+                InterpretHostServer.InterpretHostArg.create(host, RequestIpType.v6),
+                InterpretHostServer.createResponse(host, null, RandomValue.randomIpv6s(), 300, null),
+                -1);
+
+        // 预解析
+        app.preInterpreHost(hosts, RequestIpType.both);
+        app.waitForAppThread();
+
+        // 等待ttl过期
+        Thread.sleep(1000);
+
+        // 请求v4 会触发异步请求
+        app.requestInterpretHost(host);
+        app.waitForAppThread();
+        MatcherAssert.assertThat("ttl过期后，异步请求", server.getInterpretHostServer().hasRequestForArg(host, 1, true));
+
+        // 请求v6，因为没有过期 不会触发异步请求
+        app.requestInterpretHostForIpv6(host);
+        app.waitForAppThread();
+        MatcherAssert.assertThat("v6的ttl与v4不同，未过期，不会触发异步请求", server.getInterpretHostServer().hasRequestForArg(InterpretHostServer.InterpretHostArg.create(host, RequestIpType.v6), 0, false));
+    }
+
+    /**
+     * 预解析会过滤掉空解析域名,
+     * 其实这里本质上是过滤掉了有缓存的域名解析
+     */
+    @Test
+    public void testResolveFilterEmptyIP() {
+
+        ArrayList<String> v6EmptyHost = new ArrayList<>();
+        ArrayList<String> v4EmptyHost = new ArrayList<>();
+        ArrayList<String> normalHost = new ArrayList<>();
+        ArrayList<String> allHost = new ArrayList<>();
+
+        // 创建不同情况的域名和服务数据
+        int count = RandomValue.randomInt(5) + 5;
+        for (int i = 0; i < count; i++) {
+            String host = RandomValue.randomHost();
+            server.getInterpretHostServer().preSetRequestResponse(
+                    InterpretHostServer.InterpretHostArg.create(host, RequestIpType.both),
+                    InterpretHostServer.createResponse(host, RandomValue.randomIpv4s(), null, 300, null),
+                    -1);
+            v6EmptyHost.add(host);
+            allHost.add(host);
+        }
+
+        count = RandomValue.randomInt(5) + 5;
+        for (int i = 0; i < count; i++) {
+            String host = RandomValue.randomHost();
+            server.getInterpretHostServer().preSetRequestResponse(
+                    InterpretHostServer.InterpretHostArg.create(host, RequestIpType.both),
+                    InterpretHostServer.createResponse(host, null, RandomValue.randomIpv6s(), 300, null),
+                    -1);
+            v4EmptyHost.add(host);
+            allHost.add(host);
+        }
+
+        count = RandomValue.randomInt(5) + 5;
+        for (int i = 0; i < count; i++) {
+            String host = RandomValue.randomHost();
+            server.getInterpretHostServer().preSetRequestResponse(
+                    InterpretHostServer.InterpretHostArg.create(host, RequestIpType.both),
+                    InterpretHostServer.createResponse(host, RandomValue.randomIpv4s(), RandomValue.randomIpv6s(), 300, null),
+                    -1);
+            normalHost.add(host);
+            allHost.add(host);
+        }
+
+        // 请求所有的域名，产生缓存
+        for (String host : allHost) {
+            app.requestInterpretHost(host, RequestIpType.both);
+            app.waitForAppThread();
+        }
+
+        // 修改域名的顺序
+        allHost = UnitTestUtil.changeArrayListSort(allHost);
+
+        // 重置，重新初始化，清空内存缓存，重新从本地缓存读取
+        HttpDns.resetInstance();
+        new InitConfig.Builder().setEnableCacheIp(false).buildFor(app.getAccountId());
+        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+
+        // 预解析所有的域名
+        app.preInterpreHost(allHost, RequestIpType.both);
+        app.waitForAppThread();
+
+        // 检测预解析是否符合预期
+        for (String host : v6EmptyHost) {
+            MatcherAssert.assertThat("v6为空的，只会发起v4解析", server.getResolveHostServer().hasRequestForHost(host, RequestIpType.v4, 1, false));
+        }
+        for (String host : v4EmptyHost) {
+            MatcherAssert.assertThat("v4为空的，只会发起v6解析", server.getResolveHostServer().hasRequestForHost(host, RequestIpType.v6, 1, false));
+        }
+        for (String host : normalHost) {
+            MatcherAssert.assertThat("v4 v6都有的，不过滤", server.getResolveHostServer().hasRequestForHost(host, RequestIpType.both, 1, false));
+        }
+    }
+
+    /**
+     * 预解析时 过滤掉有效的缓存，仅解析过期的或者不存在的域名
+     */
+    @Test
+    public void testResolveFilterValidCache() {
+
+        ArrayList<String> v4Host = new ArrayList<>();
+        ArrayList<String> v6Host = new ArrayList<>();
+        ArrayList<String> bothHost = new ArrayList<>();
+        ArrayList<String> allHost = new ArrayList<>();
+
+        // 创建不同情况的域名和服务数据
+        int count = RandomValue.randomInt(5) + 5;
+        for (int i = 0; i < count; i++) {
+            String host = RandomValue.randomHost();
+            server.getInterpretHostServer().preSetRequestResponse(
+                    InterpretHostServer.InterpretHostArg.create(host, RequestIpType.v4),
+                    InterpretHostServer.createResponse(host, RandomValue.randomIpv4s(), null, 300, null),
+                    -1);
+            v4Host.add(host);
+            allHost.add(host);
+        }
+
+        count = RandomValue.randomInt(5) + 5;
+        for (int i = 0; i < count; i++) {
+            String host = RandomValue.randomHost();
+            server.getInterpretHostServer().preSetRequestResponse(
+                    InterpretHostServer.InterpretHostArg.create(host, RequestIpType.v6),
+                    InterpretHostServer.createResponse(host, null, RandomValue.randomIpv6s(), 300, null),
+                    -1);
+            v6Host.add(host);
+            allHost.add(host);
+        }
+
+        count = RandomValue.randomInt(5) + 5;
+        for (int i = 0; i < count; i++) {
+            String host = RandomValue.randomHost();
+            server.getInterpretHostServer().preSetRequestResponse(
+                    InterpretHostServer.InterpretHostArg.create(host, RequestIpType.both),
+                    InterpretHostServer.createResponse(host, RandomValue.randomIpv4s(), RandomValue.randomIpv6s(), 300, null),
+                    -1);
+            bothHost.add(host);
+            allHost.add(host);
+        }
+
+        // 请求所有的域名，产生缓存
+        for (String host : v4Host) {
+            app.requestInterpretHost(host, RequestIpType.v4);
+            app.waitForAppThread();
+        }
+        for (String host : v6Host) {
+            app.requestInterpretHost(host, RequestIpType.v6);
+            app.waitForAppThread();
+        }
+        for (String host : bothHost) {
+            app.requestInterpretHost(host, RequestIpType.both);
+            app.waitForAppThread();
+        }
+
+        // 修改域名的顺序
+        allHost = UnitTestUtil.changeArrayListSort(allHost);
+
+        // 预解析所有的域名
+        app.preInterpreHost(allHost, RequestIpType.both);
+        app.waitForAppThread();
+
+        // 检测预解析是否符合预期
+        for (String host : v4Host) {
+            MatcherAssert.assertThat("v4有效，只会发起v6请求", server.getResolveHostServer().hasRequestForHost(host, RequestIpType.v6, 1, false));
+        }
+        for (String host : v6Host) {
+            MatcherAssert.assertThat("v6有效，只会发起v4解析", server.getResolveHostServer().hasRequestForHost(host, RequestIpType.v4, 1, false));
+        }
+        for (String host : bothHost) {
+            MatcherAssert.assertThat("v4 v6都有效，不会请求", server.getResolveHostServer().hasRequestForHost(host, RequestIpType.both, 0, false)
+                    && server.getResolveHostServer().hasRequestForHost(host, RequestIpType.v4, 0, false)
+                    && server.getResolveHostServer().hasRequestForHost(host, RequestIpType.v6, 0, false));
+        }
+    }
+
+    @Test
+    public void testInterpretFilterValidCache() {
+
+        ArrayList<String> v4Host = new ArrayList<>();
+        ArrayList<String> v6Host = new ArrayList<>();
+        ArrayList<String> allHost = new ArrayList<>();
+
+        // 创建不同情况的域名和服务数据
+        int count = RandomValue.randomInt(5) + 5;
+        for (int i = 0; i < count; i++) {
+            String host = RandomValue.randomHost();
+            server.getInterpretHostServer().preSetRequestResponse(
+                    InterpretHostServer.InterpretHostArg.create(host, RequestIpType.v4),
+                    InterpretHostServer.createResponse(host, RandomValue.randomIpv4s(), null, 300, null),
+                    -1);
+            v4Host.add(host);
+            allHost.add(host);
+        }
+
+        count = RandomValue.randomInt(5) + 5;
+        for (int i = 0; i < count; i++) {
+            String host = RandomValue.randomHost();
+            server.getInterpretHostServer().preSetRequestResponse(
+                    InterpretHostServer.InterpretHostArg.create(host, RequestIpType.v6),
+                    InterpretHostServer.createResponse(host, null, RandomValue.randomIpv6s(), 300, null),
+                    -1);
+            v6Host.add(host);
+            allHost.add(host);
+        }
+
+        // 请求所有的域名，产生缓存
+        for (String host : v4Host) {
+            app.requestInterpretHost(host, RequestIpType.v4);
+            app.waitForAppThread();
+        }
+        for (String host : v6Host) {
+            app.requestInterpretHost(host, RequestIpType.v6);
+            app.waitForAppThread();
+        }
+
+        // 修改域名的顺序
+        allHost = UnitTestUtil.changeArrayListSort(allHost);
+
+        // 解析所有的域名
+        for (String host : allHost) {
+            app.requestInterpretHost(host, RequestIpType.both);
+            app.waitForAppThread();
+        }
+
+        // 检测预解析是否符合预期
+        for (String host : v4Host) {
+            MatcherAssert.assertThat("v4缓存有效，只会发起v6请求", server.getInterpretHostServer().hasRequestForArg(InterpretHostServer.InterpretHostArg.create(host, RequestIpType.v6), 1, true));
+        }
+        for (String host : v6Host) {
+            MatcherAssert.assertThat("v6缓存有效，只会发起v4请求", server.getInterpretHostServer().hasRequestForArg(InterpretHostServer.InterpretHostArg.create(host, RequestIpType.v4), 1, true));
+        }
+    }
+
+
 }

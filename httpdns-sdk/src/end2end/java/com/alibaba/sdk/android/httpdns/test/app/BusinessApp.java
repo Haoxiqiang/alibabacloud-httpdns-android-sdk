@@ -188,6 +188,16 @@ public class BusinessApp {
     }
 
     /**
+     * 指定类型解析
+     * @param host
+     * @param type
+     * @return
+     */
+    public HTTPDNSResult requestInterpretHost(String host, RequestIpType type) {
+        return httpDnsService.getIpsByHostAsync(host, type, null, null);
+    }
+
+    /**
      * 设置日志接口
      */
     public void setLogger() {

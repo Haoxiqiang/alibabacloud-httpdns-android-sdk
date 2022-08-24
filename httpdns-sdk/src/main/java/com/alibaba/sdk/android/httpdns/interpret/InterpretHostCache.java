@@ -37,6 +37,13 @@ public class InterpretHostCache {
     private ConcurrentHashMap<String, HTTPDNSResult> bothHttpDnsResults = new ConcurrentHashMap<>();
 
     public HTTPDNSResult getResult(String host, RequestIpType type) {
+        HTTPDNSResult result = obtainHttpResult(host, type);
+        result = buildHttpResult(host, type, result);
+        cacheResult(host, type, result);
+        return result;
+    }
+
+    private HTTPDNSResult obtainHttpResult(String host, RequestIpType type) {
         HTTPDNSResult result = null;
         switch (type) {
             case v6:
@@ -49,41 +56,43 @@ public class InterpretHostCache {
                 result = bothHttpDnsResults.get(host);
                 break;
         }
-        if (result == null) {
-            result = buildHttpResult(host, type);
-            if (result != null) {
-                switch (type) {
-                    case v6:
-                        v6HttpDnsResults.put(host, result);
-                        break;
-                    case v4:
-                        v4HttpDnsResults.put(host, result);
-                        break;
-                    case both:
-                        bothHttpDnsResults.put(host, result);
-                        break;
-                }
-
-            }
-        }
         return result;
     }
 
-    private HTTPDNSResult buildHttpResult(String host, RequestIpType type) {
+    private void cacheResult(String host, RequestIpType type, HTTPDNSResult result) {
+        if (result != null) {
+            switch (type) {
+                case v6:
+                    v6HttpDnsResults.put(host, result);
+                    break;
+                case v4:
+                    v4HttpDnsResults.put(host, result);
+                    break;
+                case both:
+                    bothHttpDnsResults.put(host, result);
+                    break;
+            }
+        }
+    }
+
+    private HTTPDNSResult buildHttpResult(String host, RequestIpType type, HTTPDNSResult result) {
         HostRecord record;
-        HTTPDNSResult result = null;
         switch (type) {
             case v6:
                 record = v6Records.get(host);
                 if (record != null) {
-                    result = new HTTPDNSResult(host);
+                    if (result == null) {
+                        result = new HTTPDNSResult(host);
+                    }
                     result.update(record);
                 }
                 break;
             case v4:
                 record = v4Records.get(host);
                 if (record != null) {
-                    result = new HTTPDNSResult(host);
+                    if (result == null) {
+                        result = new HTTPDNSResult(host);
+                    }
                     result.update(record);
                 }
                 break;
@@ -93,7 +102,9 @@ public class InterpretHostCache {
                 if (record == null || recordv6 == null) {
                     return result;
                 }
-                result = new HTTPDNSResult(host);
+                if (result == null) {
+                    result = new HTTPDNSResult(host);
+                }
                 ArrayList<HostRecord> records = new ArrayList<>();
                 records.add(record);
                 records.add(recordv6);
@@ -137,26 +148,7 @@ public class InterpretHostCache {
             default:
                 throw new IllegalStateException("type should be v4 or b6");
         }
-        updateResult(host, type, record);
         return record;
-    }
-
-    private void updateResult(String host, RequestIpType type, HostRecord record) {
-        if (type == RequestIpType.v4) {
-            HTTPDNSResult result = v4HttpDnsResults.get(host);
-            if (result != null) {
-                result.update(record);
-            }
-        } else if (type == RequestIpType.v6) {
-            HTTPDNSResult result = v6HttpDnsResults.get(host);
-            if (result != null) {
-                result.update(record);
-            }
-        }
-        HTTPDNSResult result = bothHttpDnsResults.get(host);
-        if (result != null) {
-            result.update(record);
-        }
     }
 
     public void put(HostRecord record) {
@@ -187,26 +179,7 @@ public class InterpretHostCache {
             default:
                 throw new IllegalStateException("type should be v4 or b6");
         }
-        updateResultIps(host, type, ips);
         return record;
-    }
-
-    private void updateResultIps(String host, RequestIpType type, String[] ips) {
-        if (type == RequestIpType.v4) {
-            HTTPDNSResult result = v4HttpDnsResults.get(host);
-            if (result != null) {
-                result.updateIps(ips, type);
-            }
-        } else if (type == RequestIpType.v6) {
-            HTTPDNSResult result = v6HttpDnsResults.get(host);
-            if (result != null) {
-                result.updateIps(ips, type);
-            }
-        }
-        HTTPDNSResult result = bothHttpDnsResults.get(host);
-        if (result != null) {
-            result.updateIps(ips, type);
-        }
     }
 
     public List<HostRecord> clear() {

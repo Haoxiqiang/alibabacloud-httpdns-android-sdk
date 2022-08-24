@@ -1618,7 +1618,9 @@ public class HttpDnsE2E {
         app.setTimeout(10 * 1000);
         HttpDnsLog.enable(false);
 
+        // 测试时总的域名数
         final int hostCount = 10;
+        // 会超时的域名数
         final int timeoutCount = 3;
         final String timeoutPrefix = "TIMEOUT";
         final ArrayList<String> hosts = new ArrayList<>(hostCount);
@@ -1628,36 +1630,43 @@ public class HttpDnsE2E {
         for (int i = 0; i < timeoutCount; i++) {
             hosts.add(timeoutPrefix + RandomValue.randomHost());
         }
+
+        // 预置超时响应
         for (int i = 0; i < hostCount; i++) {
             if (hosts.get(i).startsWith(timeoutPrefix)) {
                 server.getInterpretHostServer().preSetRequestTimeout(hosts.get(i), -1);
             } else {
                 // random response
+                server.getInterpretHostServer().preSetRequestResponse(hosts.get(i), InterpretHostServer.randomInterpretHostResponse(hosts.get(i), 5), -1);
             }
         }
 
-        final int count = 10;
-        final int time = 5 * 60 * 1000;
-        final CountDownLatch testLatch = new CountDownLatch(count);
+        // 并发线程数
+        final int threadCount = 10;
+        // 测试时长 ms
+        final int time = 1 * 60 * 1000;
+        // 测试结束锁
+        final CountDownLatch testLatch = new CountDownLatch(threadCount);
         final AtomicInteger slowCount = new AtomicInteger(0);
-        ExecutorService service = Executors.newFixedThreadPool(count);
-        final CountDownLatch countDownLatch = new CountDownLatch(count);
-        for (int i = 0; i < count; i++) {
+        ExecutorService service = Executors.newFixedThreadPool(threadCount);
+        // 并发启动锁
+        final CountDownLatch startLatch = new CountDownLatch(threadCount);
+        for (int i = 0; i < threadCount; i++) {
             service.execute(new Runnable() {
                 @Override
                 public void run() {
-                    countDownLatch.countDown();
+                    startLatch.countDown();
                     try {
-                        countDownLatch.await();
+                        startLatch.await();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                     System.out.println(Thread.currentThread().getId() + " begin");
-                    int all = 0;
-                    int slow = 0;
-                    int nullCount = 0;
-                    int emptyCount = 0;
-                    long maxSlot = 0;
+                    int allRequestCount = 0;
+                    int slowRequestCount = 0;
+                    int nullResponseCount = 0;
+                    int emptyResponseCount = 0;
+                    long longestCostTime = 0;
                     long begin = System.currentTimeMillis();
                     while (System.currentTimeMillis() - begin < time) {
                         String host = hosts.get(RandomValue.randomInt(hostCount));
@@ -1665,20 +1674,20 @@ public class HttpDnsE2E {
                         String[] ips = app.requestInterpretHost(host);
                         long end = System.currentTimeMillis();
                         if (end - start > 100) {
-                            slow++;
-                            if (maxSlot < end - start) {
-                                maxSlot = end - start;
+                            slowRequestCount++;
+                            if (longestCostTime < end - start) {
+                                longestCostTime = end - start;
                             }
                         }
                         if (ips == null) {
-                            nullCount++;
+                            nullResponseCount++;
                         } else if (ips.length == 0) {
-                            emptyCount++;
+                            emptyResponseCount++;
                         }
-                        all++;
+                        allRequestCount++;
                     }
-                    System.out.println(Thread.currentThread().getId() + " all: " + all + ", slow: " + slow + ", null: " + nullCount + ", empty: " + emptyCount + ", max : " + maxSlot);
-                    slowCount.addAndGet(slow);
+                    System.out.println(Thread.currentThread().getId() + " all: " + allRequestCount + ", slow: " + slowRequestCount + ", null: " + nullResponseCount + ", empty: " + emptyResponseCount + ", max : " + longestCostTime);
+                    slowCount.addAndGet(slowRequestCount);
                     testLatch.countDown();
                 }
             });

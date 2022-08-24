@@ -94,6 +94,17 @@ public class UnitTestUtil {
         return result;
     }
 
+    public static <T> ArrayList<T> changeArrayListSort(ArrayList<T> list) {
+        for (int i = 0; i < list.size() / 2; i++) {
+            int index = RandomValue.randomInt(list.size());
+            int swapIndex = RandomValue.randomInt(list.size());
+            T t = list.get(index);
+            list.set(index, list.get(swapIndex));
+            list.set(swapIndex, t);
+        }
+        return list;
+    }
+
     public static void assertIntArrayEquals(int[] expected, int[] result) {
         if (expected == result) {
             return;

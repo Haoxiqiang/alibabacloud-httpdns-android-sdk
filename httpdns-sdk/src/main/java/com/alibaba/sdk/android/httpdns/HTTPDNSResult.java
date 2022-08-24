@@ -26,8 +26,8 @@ public class HTTPDNSResult {
         this.ips = Constants.NO_IPS;
         this.ipv6s = Constants.NO_IPS;
         this.extra = Constants.NO_EXTRA;
-        queryTime = System.currentTimeMillis();
-        ttl = 60;
+        queryTime = 0;
+        ttl = 0;
         fromDB = false;
     }
 
@@ -56,17 +56,6 @@ public class HTTPDNSResult {
             queryTime = record.getQueryTime();
             ttl = record.getTtl();
             fromDB = record.isFromDB();
-        }
-    }
-
-    public void updateIps(String[] ips, RequestIpType type) {
-        switch (type) {
-            case v4:
-                this.ips = ips;
-                break;
-            case v6:
-                this.ipv6s = ips;
-                break;
         }
     }
 
