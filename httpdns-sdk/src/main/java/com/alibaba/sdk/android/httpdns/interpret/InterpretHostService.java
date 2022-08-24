@@ -149,52 +149,26 @@ public class InterpretHostService {
         }
         if ((result == null || result.isExpired())) {
             // 没有缓存，或者缓存过期，需要解析
-            if (locker.beginInterpret(host, type, cacheKey)) {
-                final String region = config.getRegion();
-                // 没有正在进行的解析，发起新的解析
-                requestHandler.requestInterpretHost(host, type, extras, cacheKey, new RequestCallback<InterpretHostResponse>() {
-                    @Override
-                    public void onSuccess(final InterpretHostResponse interpretHostResponse) {
-                        if (HttpDnsLog.isPrint()) {
-                            HttpDnsLog.i("ip request for " + host + " " + type + " return " + interpretHostResponse.toString());
-                        }
-                        repo.save(region, host, type, interpretHostResponse.getExtras(), cacheKey, interpretHostResponse);
-                        if (type == RequestIpType.v4 || type == RequestIpType.both) {
-                            ipProbeService.probleIpv4(host, interpretHostResponse.getIps(), new ProbeCallback() {
-                                @Override
-                                public void onResult(String host, String[] sortedIps) {
-                                    if (HttpDnsLog.isPrint()) {
-                                        HttpDnsLog.i("ip probe for " + host + " " + type + " return " + CommonUtil.translateStringArray(sortedIps));
-                                    }
-                                    repo.update(host, RequestIpType.v4, cacheKey, sortedIps);
-                                }
-                            });
-                        }
-                        locker.endInterpret(host, type, cacheKey);
-                    }
 
-                    @Override
-                    public void onFail(Throwable throwable) {
-                        HttpDnsLog.w("ip request for " + host + " fail", throwable);
-                        locker.endInterpret(host, type, cacheKey);
-                    }
-                });
-            }
-
-            if (result == null || !enableExpiredIp) {
-                // 有结果，但是过期了，不允许返回过期结果，等请求结束
-                if (HttpDnsLog.isPrint()) {
-                    HttpDnsLog.d("wait for request finish");
+            if (type == RequestIpType.both) {
+                // 过滤掉 未过期的请求
+                HTTPDNSResult resultV4 = repo.getIps(host, RequestIpType.v4, cacheKey);
+                HTTPDNSResult resultV6 = repo.getIps(host, RequestIpType.v6, cacheKey);
+                boolean v4Invalid = resultV4 == null || resultV4.isExpired();
+                boolean v6Invalid = resultV6 == null || resultV6.isExpired();
+                if(v4Invalid && v6Invalid) {
+                    // 都过期，不过滤
+                    syncInterpretHostInner(host, type, extras, cacheKey, result);
+                } else if(v4Invalid) {
+                    // 仅v4过期
+                    syncInterpretHostInner(host, RequestIpType.v4, extras, cacheKey, result);
+                } else if(v6Invalid) {
+                    // 仅v6过期
+                    syncInterpretHostInner(host, RequestIpType.v6, extras, cacheKey, result);
                 }
-                try {
-                    locker.await(host, type, cacheKey, 15, TimeUnit.SECONDS);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                // 不管什么情况释放锁
-                locker.endInterpret(host, type, cacheKey);
+            } else {
+                syncInterpretHostInner(host, type, extras, cacheKey, result);
             }
-
         } else {
             if (HttpDnsLog.isPrint()) {
                 HttpDnsLog.i("request host " + host + " for " + type + " and return " + result.toString() + " immediately");
@@ -213,6 +187,54 @@ public class InterpretHostService {
                 HttpDnsLog.i("request host " + host + " and return empty after request");
             }
             return Constants.EMPTY;
+        }
+    }
+
+    private void syncInterpretHostInner(final String host, final RequestIpType type, Map<String, String> extras, final String cacheKey, HTTPDNSResult result) {
+        if (locker.beginInterpret(host, type, cacheKey)) {
+            final String region = config.getRegion();
+            // 没有正在进行的解析，发起新的解析
+            requestHandler.requestInterpretHost(host, type, extras, cacheKey, new RequestCallback<InterpretHostResponse>() {
+                @Override
+                public void onSuccess(final InterpretHostResponse interpretHostResponse) {
+                    if (HttpDnsLog.isPrint()) {
+                        HttpDnsLog.i("ip request for " + host + " " + type + " return " + interpretHostResponse.toString());
+                    }
+                    repo.save(region, host, type, interpretHostResponse.getExtras(), cacheKey, interpretHostResponse);
+                    if (type == RequestIpType.v4 || type == RequestIpType.both) {
+                        ipProbeService.probleIpv4(host, interpretHostResponse.getIps(), new ProbeCallback() {
+                            @Override
+                            public void onResult(String host, String[] sortedIps) {
+                                if (HttpDnsLog.isPrint()) {
+                                    HttpDnsLog.i("ip probe for " + host + " " + type + " return " + CommonUtil.translateStringArray(sortedIps));
+                                }
+                                repo.update(host, RequestIpType.v4, cacheKey, sortedIps);
+                            }
+                        });
+                    }
+                    locker.endInterpret(host, type, cacheKey);
+                }
+
+                @Override
+                public void onFail(Throwable throwable) {
+                    HttpDnsLog.w("ip request for " + host + " fail", throwable);
+                    locker.endInterpret(host, type, cacheKey);
+                }
+            });
+        }
+
+        if (result == null || !enableExpiredIp) {
+            // 有结果，但是过期了，不允许返回过期结果，等请求结束
+            if (HttpDnsLog.isPrint()) {
+                HttpDnsLog.d("wait for request finish");
+            }
+            try {
+                locker.await(host, type, cacheKey, 15, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            // 不管什么情况释放锁
+            locker.endInterpret(host, type, cacheKey);
         }
     }
 

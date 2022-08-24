@@ -141,4 +141,33 @@ public class UnitTestUtil {
         });
     }
 
+    /**
+     * 用于测试只能在子线程执行的代码
+     * @param work
+     * @throws Throwable
+     */
+    public static void testInSubThread(final Runnable work) throws Throwable {
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        final Throwable[] tr = new Throwable[]{null};
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                try {
+                    work.run();
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                    tr[0] = e;
+                }
+
+                countDownLatch.countDown();
+            }
+        }).start();
+
+        countDownLatch.await();
+        if(tr[0] != null) {
+            throw tr[0];
+        }
+    }
+
 }

@@ -380,6 +380,13 @@ public class BusinessApp {
         return new String[0];
     }
 
+    public HTTPDNSResult requestInterpretHostSync(String host, RequestIpType type) {
+        if (httpDnsService instanceof SyncService) {
+            return ((SyncService) httpDnsService).getByHost(host, type);
+        }
+        return HTTPDNSResult.empty(host);
+    }
+
     public void checkThreadCount(boolean check) {
         if (httpDnsService instanceof ApiForTest) {
             if (((ApiForTest) httpDnsService).getWorker() instanceof TestExecutorService) {

@@ -525,6 +525,9 @@ public class V2_3_0 {
         }
     }
 
+    /**
+     * 域名解析时，过滤已有缓存的域名
+     */
     @Test
     public void testInterpretFilterValidCache() {
 
@@ -581,6 +584,69 @@ public class V2_3_0 {
         for (String host : v6Host) {
             MatcherAssert.assertThat("v6缓存有效，只会发起v4请求", server.getInterpretHostServer().hasRequestForArg(InterpretHostServer.InterpretHostArg.create(host, RequestIpType.v4), 1, true));
         }
+    }
+
+
+    /**
+     * 同步解析过滤已有缓存的域名
+     */
+    @Test
+    public void testSyncInterpretFilterValidCache() throws Throwable {
+        UnitTestUtil.testInSubThread(new Runnable() {
+            @Override
+            public void run() {
+                ArrayList<String> v4Host = new ArrayList<>();
+                ArrayList<String> v6Host = new ArrayList<>();
+                ArrayList<String> allHost = new ArrayList<>();
+
+                // 创建不同情况的域名和服务数据
+                int count = RandomValue.randomInt(5) + 5;
+                for (int i = 0; i < count; i++) {
+                    String host = RandomValue.randomHost();
+                    server.getInterpretHostServer().preSetRequestResponse(
+                            InterpretHostServer.InterpretHostArg.create(host, RequestIpType.v4),
+                            InterpretHostServer.createResponse(host, RandomValue.randomIpv4s(), null, 300, null),
+                            -1);
+                    v4Host.add(host);
+                    allHost.add(host);
+                }
+
+                count = RandomValue.randomInt(5) + 5;
+                for (int i = 0; i < count; i++) {
+                    String host = RandomValue.randomHost();
+                    server.getInterpretHostServer().preSetRequestResponse(
+                            InterpretHostServer.InterpretHostArg.create(host, RequestIpType.v6),
+                            InterpretHostServer.createResponse(host, null, RandomValue.randomIpv6s(), 300, null),
+                            -1);
+                    v6Host.add(host);
+                    allHost.add(host);
+                }
+
+                // 请求所有的域名，产生缓存
+                for (String host : v4Host) {
+                    app.requestInterpretHostSync(host, RequestIpType.v4);
+                }
+                for (String host : v6Host) {
+                    app.requestInterpretHostSync(host, RequestIpType.v6);
+                }
+
+                // 修改域名的顺序
+                allHost = UnitTestUtil.changeArrayListSort(allHost);
+
+                // 解析所有的域名
+                for (String host : allHost) {
+                    app.requestInterpretHostSync(host, RequestIpType.both);
+                }
+
+                // 检测预解析是否符合预期
+                for (String host : v4Host) {
+                    MatcherAssert.assertThat("v4缓存有效，只会发起v6请求", server.getInterpretHostServer().hasRequestForArg(InterpretHostServer.InterpretHostArg.create(host, RequestIpType.v6), 1, true));
+                }
+                for (String host : v6Host) {
+                    MatcherAssert.assertThat("v6缓存有效，只会发起v4请求", server.getInterpretHostServer().hasRequestForArg(InterpretHostServer.InterpretHostArg.create(host, RequestIpType.v4), 1, true));
+                }
+            }
+        });
     }
 
 
