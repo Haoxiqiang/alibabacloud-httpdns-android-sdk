@@ -110,4 +110,17 @@ public class ResolveHostResponse {
         }
         return new ResolveHostResponse(items);
     }
+
+    public static ResolveHostResponse createEmpty(List<String> hostList, RequestIpType type, int ttl) {
+        ArrayList<HostItem> list = new ArrayList<>();
+        for (String host: hostList) {
+            if(type == RequestIpType.v4 || type == RequestIpType.both) {
+                list.add(new HostItem(host, RequestIpType.v4, null, ttl));
+            }
+            if(type == RequestIpType.v6 || type == RequestIpType.both) {
+                list.add(new HostItem(host, RequestIpType.v6, null, ttl));
+            }
+        }
+        return new ResolveHostResponse(list);
+    }
 }

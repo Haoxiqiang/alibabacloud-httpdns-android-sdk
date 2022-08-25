@@ -7,6 +7,7 @@ import com.alibaba.sdk.android.httpdns.impl.HttpDnsConfig;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import com.alibaba.sdk.android.httpdns.probe.ProbeCallback;
 import com.alibaba.sdk.android.httpdns.probe.ProbeService;
+import com.alibaba.sdk.android.httpdns.request.HttpException;
 import com.alibaba.sdk.android.httpdns.request.RequestCallback;
 import com.alibaba.sdk.android.httpdns.utils.CommonUtil;
 
@@ -147,6 +148,10 @@ public class ResolveHostService {
                 @Override
                 public void onFail(Throwable throwable) {
                     HttpDnsLog.w("resolve hosts for " + targetHost.toString() + " fail", throwable);
+                    if(throwable instanceof HttpException && ((HttpException) throwable).shouldCreateEmptyCache()) {
+                        ResolveHostResponse emptyResponse = ResolveHostResponse.createEmpty(targetHost, type, 60 * 60);
+                        repo.save(region, type, emptyResponse);
+                    }
                     for (String host : targetHost) {
                         recorder.endInterpret(host, type);
                     }

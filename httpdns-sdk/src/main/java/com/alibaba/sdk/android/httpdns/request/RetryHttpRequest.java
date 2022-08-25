@@ -21,12 +21,25 @@ public class RetryHttpRequest<T> extends HttpRequestWrapper<T> {
             try {
                 return super.request();
             } catch (Throwable throwable) {
-                if (retryCount > 0) {
-                    retryCount--;
+                if(shouldRetry(throwable)) {
+                    if (retryCount > 0) {
+                        retryCount--;
+                    } else {
+                        throw throwable;
+                    }
                 } else {
                     throw throwable;
                 }
             }
+        }
+    }
+
+    private boolean shouldRetry(Throwable throwable) {
+        if(throwable instanceof HttpException) {
+            return ((HttpException) throwable).shouldRetry();
+        } else {
+            // 其它异常都可以重试
+            return true;
         }
     }
 }

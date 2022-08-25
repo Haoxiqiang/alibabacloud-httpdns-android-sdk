@@ -237,6 +237,25 @@ public class BusinessApp {
     }
 
     /**
+     * check logger收到日志
+     */
+    public void hasReceiveLogInLogger(String logKey) {
+        ArgumentCaptor<String> logArgument = ArgumentCaptor.forClass(String.class);
+        verify(mockLogger, atLeastOnce()).log(logArgument.capture());
+        assertThat(logArgument.getAllValues().size(), greaterThan(1));
+        assertThat("有特定的日志"+logKey, stringListContain(logArgument.getAllValues(), logKey));
+    }
+
+    private boolean stringListContain(List<String> list, String msg) {
+        for (String tmp : list) {
+            if (tmp.contains(msg)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * 切换region
      *
      * @param region

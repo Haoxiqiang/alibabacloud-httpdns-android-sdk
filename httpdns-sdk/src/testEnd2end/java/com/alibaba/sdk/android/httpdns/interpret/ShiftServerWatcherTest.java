@@ -69,7 +69,7 @@ public class ShiftServerWatcherTest {
 
     @Test
     public void shiftServerWhenServerDegradeAndTurnDownStatus() {
-        watcher.onFail(requestConfig, HttpException.create(HttpException.DEGRADE_CODE, HttpException.DEGRADE_MESSAGE));
+        watcher.onFail(requestConfig, HttpException.create(HttpException.ERROR_CODE_403, HttpException.ERROR_MSG_SERVICE_LEVEL_DENY));
         Mockito.verify(serverConfig).shiftServer(ip, port);
         Mockito.verify(requestConfig).setIp(ip);
         Mockito.verify(requestConfig).setPort(port);

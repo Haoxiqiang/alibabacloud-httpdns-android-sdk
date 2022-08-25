@@ -101,4 +101,10 @@ public interface ServerApi<ARG, DATA> {
      */
     List<DATA> getResponse(ARG arg, int count, boolean removeRecord);
 
+
+    /**
+     * 清除服务目前的所有请求记录
+     */
+    void cleanRecord();
+
 }

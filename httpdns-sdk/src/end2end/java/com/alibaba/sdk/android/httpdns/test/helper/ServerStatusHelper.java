@@ -31,7 +31,7 @@ public class ServerStatusHelper {
     }
 
     public static void hasReceiveAppInterpretHostRequestWithDegrade(BusinessApp app, HttpDnsServer server) {
-        hasReceiveAppInterpretHostRequestWithResult(app, server, HttpException.DEGRADE_CODE, HttpException.DEGRADE_MESSAGE, -1, false);
+        hasReceiveAppInterpretHostRequestWithResult(app, server, HttpException.ERROR_CODE_403, HttpException.ERROR_MSG_SERVICE_LEVEL_DENY, -1, false);
     }
 
     public static void hasReceiveAppInterpretHostRequestWithResult(BusinessApp app, HttpDnsServer server, int httpcode, String body) {
@@ -145,7 +145,7 @@ public class ServerStatusHelper {
     }
 
     public static void degradeServer(HttpDnsServer server, String requestHost, int count) {
-        server.getInterpretHostServer().preSetRequestResponse(requestHost, HttpException.DEGRADE_CODE, HttpException.DEGRADE_MESSAGE, count);
+        server.getInterpretHostServer().preSetRequestResponse(requestHost, HttpException.ERROR_CODE_403, HttpException.ERROR_MSG_SERVICE_LEVEL_DENY, count);
     }
 
     public static void setError(HttpDnsServer server, String requestHost, int httpCode, String httpMsg, int count) {

@@ -1,5 +1,6 @@
 package com.alibaba.sdk.android.httpdns.interpret;
 
+import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.utils.CommonUtil;
 
 import org.json.JSONArray;
@@ -62,6 +63,10 @@ public class InterpretHostResponse {
         }
         ttl = jsonObject.getInt("ttl");
         return new InterpretHostResponse(hostName, ips, ipsv6, ttl, extra);
+    }
+
+    public static InterpretHostResponse createEmpty(String host, int ttl) {
+        return new InterpretHostResponse(host, null, null, ttl, null);
     }
 
     public InterpretHostResponse(String hostName, String[] ips, String[] ipsv6, int ttl, String extra) {

@@ -11,6 +11,7 @@ import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.interpret.InterpretHostResponse;
 import com.alibaba.sdk.android.httpdns.interpret.ResolveHostResponse;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
+import com.alibaba.sdk.android.httpdns.request.HttpException;
 import com.alibaba.sdk.android.httpdns.test.app.BusinessApp;
 import com.alibaba.sdk.android.httpdns.test.helper.ServerStatusHelper;
 import com.alibaba.sdk.android.httpdns.test.server.HttpDnsServer;
@@ -43,7 +44,9 @@ import java.util.Date;
  * 1. 缓存使用的ttl改为可配置
  * 2. 主站域名的ip不经常变动，单独处理相关逻辑
  * 3. 没有解析结果的域名解析，算是一种无效请求，也按主站域名处理。因为没有解析结果，也可以认为是一种固定的解析结果
- * 1. 但是这里有一种特殊情况，即同时解析v4、v6的情况，有可能v6是无效的，而v4是有效的，此时需要根据缓存把解析改为仅解析v4
+ * 3.1 但是这里有一种特殊情况，即同时解析v4、v6的情况，有可能v6是无效的，而v4是有效的，此时需要根据缓存把解析改为仅解析v4
+ * 4. 缓存有效时，过滤掉相关的解析，比如 解析v4 v6， v4有效，就只解析v6 反之亦然
+ * 5. 测试异常情况下的反应，包括 日志输出 是否重试 是否切换服务IP 是否生成一个空缓存
  *
  * @author zonglin.nzl
  * @date 2020/10/15
@@ -649,5 +652,131 @@ public class V2_3_0 {
         });
     }
 
+
+    /**
+     * 测试不需要 重试和切换服务IP 的错误场景
+     */
+    @Test
+    public void testUnsignedInterfaceDisabled() {
+        testErrorNoRetryNoChangeServerIP(HttpException.ERROR_CODE_403, HttpException.ERROR_MSG_UNSIGNED);
+        testErrorWillCreateEmptyCache(HttpException.ERROR_CODE_403, HttpException.ERROR_MSG_UNSIGNED);
+    }
+
+    @Test
+    public void testSignatureExpired() {
+        testErrorNoRetryNoChangeServerIP(HttpException.ERROR_CODE_403, HttpException.ERROR_MSG_SIGNATURE_EXPIRED);
+    }
+
+    @Test
+    public void testInvalidSignature() {
+        testErrorNoRetryNoChangeServerIP(HttpException.ERROR_CODE_403, HttpException.ERROR_MSG_INVALID_SIGNATURE);
+    }
+
+    @Test
+    public void testInvalidAccount() {
+        testErrorNoRetryNoChangeServerIP(HttpException.ERROR_CODE_403, HttpException.ERROR_MSG_INVALID_ACCOUNT);
+        testErrorWillCreateEmptyCache(HttpException.ERROR_CODE_403, HttpException.ERROR_MSG_INVALID_ACCOUNT);
+    }
+
+    @Test
+    public void testAccountNotExists() {
+        testErrorNoRetryNoChangeServerIP(HttpException.ERROR_CODE_403, HttpException.ERROR_MSG_ACCOUNT_NOT_EXISTS);
+        testErrorWillCreateEmptyCache(HttpException.ERROR_CODE_403, HttpException.ERROR_MSG_ACCOUNT_NOT_EXISTS);
+    }
+
+    @Test
+    public void testInvalidDuration() {
+        testErrorNoRetryNoChangeServerIP(HttpException.ERROR_CODE_403, HttpException.ERROR_MSG_INVALID_DURATION);
+    }
+
+    @Test
+    public void testInvalidHost() {
+        testErrorNoRetryNoChangeServerIP(HttpException.ERROR_CODE_403, HttpException.ERROR_MSG_INVALID_HOST);
+    }
+
+    @Test
+    public void testRetryAndChangeServerIPForOtherError() {
+        testErrorRetryChangeServerIP(HttpException.ERROR_CODE_403, "whatever");
+    }
+
+    private void testErrorNoRetryNoChangeServerIP(int statusCode, String code) {
+        String host = RandomValue.randomHost();
+        server.getInterpretHostServer().preSetRequestResponse(host, statusCode, getErrorBody(code), -1);
+        server1.getInterpretHostServer().preSetRequestResponse(host, statusCode, getErrorBody(code), -1);
+        server2.getInterpretHostServer().preSetRequestResponse(host, statusCode, getErrorBody(code), -1);
+
+        app.setLogger();
+
+        // 请求解析，触发错误处理逻辑
+        app.requestInterpretHost(host);
+        app.waitForAppThread();
+
+        MatcherAssert.assertThat("应该没有重试", server.getInterpretHostServer().hasRequestForArg(host, 1, true));
+        MatcherAssert.assertThat("也没有切换服务重试", server1.getInterpretHostServer().hasRequestForArg(host, 0, false));
+
+        String anotherHost = RandomValue.randomHost();
+        app.requestInterpretHost(anotherHost);
+        app.waitForAppThread();
+        MatcherAssert.assertThat("没有切换服务IP", server.getInterpretHostServer().hasRequestForArg(anotherHost, 1, true));
+
+        // 日志
+        app.hasReceiveLogInLogger(code);
+        app.removeLogger();
+    }
+
+
+    private void testErrorRetryChangeServerIP(int statusCode, String code) {
+        String host = RandomValue.randomHost();
+        server.getInterpretHostServer().preSetRequestResponse(host, statusCode, getErrorBody(code), -1);
+        server1.getInterpretHostServer().preSetRequestResponse(host, statusCode, getErrorBody(code), -1);
+        server2.getInterpretHostServer().preSetRequestResponse(host, statusCode, getErrorBody(code), -1);
+
+        app.setLogger();
+
+        // 请求解析，触发错误处理逻辑
+        app.requestInterpretHost(host);
+        app.waitForAppThread();
+
+        MatcherAssert.assertThat("因为切换服务，第一个服务节点只请求了一次", server.getInterpretHostServer().hasRequestForArg(host, 1, true));
+        MatcherAssert.assertThat("切换服务重试", server1.getInterpretHostServer().hasRequestForArg(host, 1, true));
+
+        String anotherHost = RandomValue.randomHost();
+        app.requestInterpretHost(anotherHost);
+        app.waitForAppThread();
+        MatcherAssert.assertThat("切换服务IP", server2.getInterpretHostServer().hasRequestForArg(anotherHost, 1, true));
+
+        // 日志
+        app.hasReceiveLogInLogger(code);
+        app.removeLogger();
+    }
+
+    private String getErrorBody(String code) {
+        return "{\"code\":\"" + code + "\"}";
+    }
+
+
+    private void testErrorWillCreateEmptyCache(int statusCode, String code) {
+        String host = RandomValue.randomHost();
+        server.getInterpretHostServer().preSetRequestResponse(host, statusCode, getErrorBody(code), -1);
+        server1.getInterpretHostServer().preSetRequestResponse(host, statusCode, getErrorBody(code), -1);
+        server2.getInterpretHostServer().preSetRequestResponse(host, statusCode, getErrorBody(code), -1);
+
+        // 请求解析，触发错误处理逻辑
+        app.requestInterpretHost(host);
+        app.waitForAppThread();
+
+        // 清除服务记录
+        server.getInterpretHostServer().cleanRecord();
+        server1.getInterpretHostServer().cleanRecord();
+        server2.getInterpretHostServer().cleanRecord();
+
+        // 再次请求
+        String[] ips = app.requestInterpretHost(host);
+        app.waitForAppThread();
+        UnitTestUtil.assertIpsEmpty("生成的应该是空记录", ips);
+        MatcherAssert.assertThat("没有服务接收到请求", server.getInterpretHostServer().hasRequestForArg(host, 0, false)
+                && server1.getInterpretHostServer().hasRequestForArg(host, 0, false)
+                && server2.getInterpretHostServer().hasRequestForArg(host, 0, false));
+    }
 
 }

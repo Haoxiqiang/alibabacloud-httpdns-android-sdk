@@ -140,7 +140,7 @@ public class BaseCategoryTest {
 
     @Test
     public void changeServerIpWhenServerIsNotAvailable() {
-        server.getInterpretHostServer().preSetRequestResponse(host, HttpException.DEGRADE_CODE, HttpException.DEGRADE_MESSAGE, -1);
+        server.getInterpretHostServer().preSetRequestResponse(host, HttpException.ERROR_CODE_403, HttpException.ERROR_MSG_SERVICE_LEVEL_DENY, -1);
         getCategory().interpret(httpDnsConfig, InterpretHostHelper.getIpv4Config(httpDnsConfig, host), callback);
         try {
             testExecutorService.await();
@@ -165,7 +165,7 @@ public class BaseCategoryTest {
 
     @Test
     public void interpreHostFailWhenServerIsNotReachableWillTurnDownStatus() {
-        server.getInterpretHostServer().preSetRequestResponse(host, HttpException.DEGRADE_CODE, HttpException.DEGRADE_MESSAGE, 1);
+        server.getInterpretHostServer().preSetRequestResponse(host, HttpException.ERROR_CODE_403, HttpException.ERROR_MSG_SERVICE_LEVEL_DENY, 1);
         getCategory().interpret(httpDnsConfig, InterpretHostHelper.getIpv4Config(httpDnsConfig, host), callback);
         try {
             testExecutorService.await();
@@ -177,7 +177,7 @@ public class BaseCategoryTest {
 
     @Test
     public void whenAllServerIpUsedWillUpdateServerIp() {
-        server.getInterpretHostServer().preSetRequestResponse(host, HttpException.DEGRADE_CODE, HttpException.DEGRADE_MESSAGE, 1);
+        server.getInterpretHostServer().preSetRequestResponse(host, HttpException.ERROR_CODE_403, HttpException.ERROR_MSG_SERVICE_LEVEL_DENY, 1);
         getCategory().interpret(httpDnsConfig, InterpretHostHelper.getIpv4Config(httpDnsConfig, host), callback);
         try {
             testExecutorService.await();

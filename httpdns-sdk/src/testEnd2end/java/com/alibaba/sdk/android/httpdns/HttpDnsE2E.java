@@ -264,13 +264,13 @@ public class HttpDnsE2E {
         // 预置第一次失败，第二次成功
         server.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), 400, "whatever", 1);
         InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(app.getRequestHost());
-        server.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), response, 1);
+        server1.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), response, 1);
 
         // 请求
         app.requestInterpretHost();
         // 判断服务器是否收到两次请求
         ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult(app, server, 400, "whatever");
-        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("正常模式域名解析失败会重试一次", app, server, response);
+        ServerStatusHelper.hasReceiveAppInterpretHostRequestWithResult("正常模式域名解析失败会重试一次", app, server1, response);
 
         String[] ips = app.requestInterpretHost();
         UnitTestUtil.assertIpsEqual("重试如果请求成功，可以正常获取到解析结果", ips, response.getIps());
@@ -415,11 +415,17 @@ public class HttpDnsE2E {
         // 嗅探模式下请求一次，恢复正常模式
         ServerStatusHelper.requestInterpretAnotherHost("嗅探模式下，正常请求", app, server2);
 
+        // 清除服务的记录
+        server.getInterpretHostServer().cleanRecord();
+        server1.getInterpretHostServer().cleanRecord();
+        server2.getInterpretHostServer().cleanRecord();
+
         // 设置一次失败
         server2.getInterpretHostServer().preSetRequestResponse(app.getRequestHost(), 400, "whatever", 1);
         app.requestInterpretHost(app.getRequestHost());
         // 一次失败，一次正常 两次
-        ServerStatusHelper.hasReceiveAppInterpretHostRequest("恢复到正常模式后，请求失败会重试一次。", app, server2, 2);
+        ServerStatusHelper.hasReceiveAppInterpretHostRequest("恢复到正常模式后，请求一次。", app, server2, 1);
+        ServerStatusHelper.hasReceiveAppInterpretHostRequest("失败会切换服务，重试一次。", app, server, 1);
     }
 
     /**

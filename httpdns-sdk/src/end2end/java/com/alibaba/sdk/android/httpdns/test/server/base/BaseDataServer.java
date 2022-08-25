@@ -170,6 +170,13 @@ public abstract class BaseDataServer<ARG, DATA> implements ServerApi<ARG, DATA>,
     }
 
     @Override
+    public void cleanRecord() {
+        synchronized (this.records) {
+            this.records.clear();
+        }
+    }
+
+    @Override
     public MockResponse handle(RecordedRequest request) {
         ARG arg = getRequestArg(request);
         HttpResponse httpResponse = getPreSetResponse(arg);

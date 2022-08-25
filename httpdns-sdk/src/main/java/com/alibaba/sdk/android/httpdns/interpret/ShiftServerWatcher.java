@@ -65,7 +65,7 @@ public class ShiftServerWatcher implements HttpRequestWatcher.Watcher {
             return true;
         }
         if (throwable instanceof HttpException) {
-            return ((HttpException) throwable).isServerDegrade();
+            return ((HttpException) throwable).shouldShiftServer();
         }
         return false;
     }

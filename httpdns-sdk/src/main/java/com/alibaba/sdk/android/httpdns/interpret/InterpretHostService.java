@@ -8,6 +8,7 @@ import com.alibaba.sdk.android.httpdns.impl.HttpDnsConfig;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import com.alibaba.sdk.android.httpdns.probe.ProbeCallback;
 import com.alibaba.sdk.android.httpdns.probe.ProbeService;
+import com.alibaba.sdk.android.httpdns.request.HttpException;
 import com.alibaba.sdk.android.httpdns.request.RequestCallback;
 import com.alibaba.sdk.android.httpdns.utils.CommonUtil;
 import com.alibaba.sdk.android.httpdns.utils.Constants;
@@ -123,6 +124,10 @@ public class InterpretHostService {
                 @Override
                 public void onFail(Throwable throwable) {
                     HttpDnsLog.w("ip request for " + host + " fail", throwable);
+                    if(throwable instanceof HttpException && ((HttpException) throwable).shouldCreateEmptyCache()) {
+                        InterpretHostResponse emptyResponse = InterpretHostResponse.createEmpty(host, 60 * 60);
+                        repo.save(region, host, type, emptyResponse.getExtras(), cacheKey, emptyResponse);
+                    }
                     recorder.endInterpret(host, type, cacheKey);
                 }
             });
@@ -218,6 +223,10 @@ public class InterpretHostService {
                 @Override
                 public void onFail(Throwable throwable) {
                     HttpDnsLog.w("ip request for " + host + " fail", throwable);
+                    if(throwable instanceof HttpException && ((HttpException) throwable).shouldCreateEmptyCache()) {
+                        InterpretHostResponse emptyResponse = InterpretHostResponse.createEmpty(host, 60 * 60);
+                        repo.save(region, host, type, emptyResponse.getExtras(), cacheKey, emptyResponse);
+                    }
                     locker.endInterpret(host, type, cacheKey);
                 }
             });
