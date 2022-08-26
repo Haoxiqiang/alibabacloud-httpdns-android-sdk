@@ -23,7 +23,7 @@ public class ServerConfig extends RegionServer implements SpCacheItem {
     private long serverIpsLastUpdatedTime = 0;
 
     public ServerConfig(HttpDnsConfig config) {
-        super(config.getInitServer().getServerIps(), config.getInitServer().getPorts(), config.getInitServer().getRegion());
+        super(config.getInitServer().getServerIps(), config.getInitServer().getPorts(), config.getInitServer().getIpv6ServerIps(), config.getInitServer().getIpv6Ports(), config.getInitServer().getRegion());
         this.config = config;
     }
 

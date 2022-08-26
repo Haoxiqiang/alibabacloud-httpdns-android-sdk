@@ -58,4 +58,18 @@ public interface ApiForTest {
      * @param ports
      */
     void setDefaultUpdateServer(String[] defaultServerIps, int[] ports);
+
+    /**
+     * 设置ipv6的初始IP
+     * @param ips
+     * @param ports
+     */
+    void setInitServerIpv6(String[] ips, int[] ports);
+
+    /**
+     * 设置ipv6的兜底调度IP
+     * @param defaultServerIps
+     * @param ports
+     */
+    void setDefaultUpdateServerIpv6(String[] defaultServerIps, int[] ports);
 }

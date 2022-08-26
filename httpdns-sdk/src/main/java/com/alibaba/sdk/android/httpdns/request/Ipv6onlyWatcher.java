@@ -24,7 +24,7 @@ public class Ipv6onlyWatcher implements HttpRequestWatcher.Watcher {
             if (HttpDnsLog.isPrint()) {
                 HttpDnsLog.d("origin ip is " + originIp + " change to " + ipv6);
             }
-            config.setIp("[" + ipv6 + "]");
+            config.setIp(ipv6);
             changedIp = ipv6;
         }
     }

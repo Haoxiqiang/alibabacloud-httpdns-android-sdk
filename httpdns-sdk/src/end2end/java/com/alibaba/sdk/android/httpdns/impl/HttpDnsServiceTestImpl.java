@@ -72,4 +72,14 @@ public class HttpDnsServiceTestImpl extends HttpDnsServiceImpl implements ApiFor
     public void setDefaultUpdateServer(String[] defaultServerIps, int[] ports) {
         this.config.setDefaultUpdateServer(defaultServerIps, ports);
     }
+
+    @Override
+    public void setInitServerIpv6(String[] ips, int[] ports) {
+        this.config.setInitServersIpv6(ips, ports);
+    }
+
+    @Override
+    public void setDefaultUpdateServerIpv6(String[] defaultServerIps, int[] ports) {
+        this.config.setDefaultUpdateServerIpv6(defaultServerIps, ports);
+    }
 }

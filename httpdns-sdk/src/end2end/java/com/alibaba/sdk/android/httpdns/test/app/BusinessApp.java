@@ -63,6 +63,8 @@ public class BusinessApp {
     private String initRegion;
     private HttpDnsServer[] initServers;
     private HttpDnsServer[] defaultUpdateServers;
+    private HttpDnsServer[] initServersIpv6;
+    private HttpDnsServer[] defaultUpdateServersIpv6;
     private MockSpeedTestServer speedTestServer;
 
     private TestExecutorService testExecutorService;
@@ -80,6 +82,15 @@ public class BusinessApp {
         this.initRegion = region == null ? Constants.REGION_MAINLAND : region;
         this.initServers = initServers;
         this.defaultUpdateServers = defaultUpdateServers;
+    }
+
+    public void configInitRegion(final String region) {
+        this.initRegion = region == null ? Constants.REGION_MAINLAND : region;
+    }
+
+    public void configIpv6InitServer(final HttpDnsServer[] initServers, final HttpDnsServer[] defaultUpdateServers) {
+        this.initServersIpv6 = initServers;
+        this.defaultUpdateServersIpv6 = defaultUpdateServers;
     }
 
     public void configSpeedTestSever(MockSpeedTestServer speedTestServer) {
@@ -114,6 +125,25 @@ public class BusinessApp {
                             ports[i] = BusinessApp.this.defaultUpdateServers[i].getPort();
                         }
                         ((ApiForTest) httpDnsService).setDefaultUpdateServer(defaultServerIps, ports);
+                    }
+                    if (BusinessApp.this.initServersIpv6 != null) {
+                        String[] ips = new String[BusinessApp.this.initServersIpv6.length];
+                        int[] ports = new int[BusinessApp.this.initServersIpv6.length];
+                        for (int i = 0; i < BusinessApp.this.initServersIpv6.length; i++) {
+                            ips[i] = BusinessApp.this.initServersIpv6[i].getServerIp();
+                            ports[i] = BusinessApp.this.initServersIpv6[i].getPort();
+                        }
+                        // 设置初始IP
+                        ((ApiForTest) httpDnsService).setInitServerIpv6(ips, ports);
+                    }
+                    if (BusinessApp.this.defaultUpdateServersIpv6 != null) {
+                        String[] defaultServerIps = new String[BusinessApp.this.defaultUpdateServersIpv6.length];
+                        int[] ports = new int[BusinessApp.this.defaultUpdateServersIpv6.length];
+                        for (int i = 0; i < BusinessApp.this.defaultUpdateServersIpv6.length; i++) {
+                            defaultServerIps[i] = BusinessApp.this.defaultUpdateServersIpv6[i].getServerIp();
+                            ports[i] = BusinessApp.this.defaultUpdateServersIpv6[i].getPort();
+                        }
+                        ((ApiForTest) httpDnsService).setDefaultUpdateServerIpv6(defaultServerIps, ports);
                     }
                     testExecutorService = new TestExecutorService(((ApiForTest) httpDnsService).getWorker());
                     ((ApiForTest) httpDnsService).setThread(testExecutorService);

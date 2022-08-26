@@ -22,10 +22,16 @@ public class RegionServer {
     private int[] ports;
     private String region;
 
-    public RegionServer(String[] serverIps, int[] ports, String region) {
-        this.serverIps = serverIps;
+    private String[] ipv6ServerIps;
+    private String[] ipv6FormatIps;
+    private int[] ipv6Ports;
+
+    public RegionServer(String[] serverIps, int[] ports, String[] ipv6ServerIps, int[] ipv6Ports, String region) {
+        this.serverIps = serverIps == null ? new String[0] : serverIps;
         this.ports = ports;
         this.region = region;
+        this.ipv6ServerIps = ipv6ServerIps == null ? new String[0] : ipv6ServerIps;
+        this.ipv6Ports = ipv6Ports;
     }
 
     public String[] getServerIps() {
@@ -40,6 +46,25 @@ public class RegionServer {
         return region;
     }
 
+    public String[] getIpv6ServerIps() {
+        return ipv6ServerIps;
+    }
+
+    public String[] getIpv6ServerIpsForUse() {
+        if(ipv6FormatIps != null) {
+            return ipv6FormatIps;
+        }
+        ipv6FormatIps = new String[ipv6ServerIps.length];
+        for (int i = 0; i < ipv6ServerIps.length; i++) {
+            ipv6FormatIps[i] = "[" + ipv6ServerIps[i] + "]";
+        }
+        return ipv6FormatIps;
+    }
+
+    public int[] getIpv6Ports() {
+        return ipv6Ports;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -47,12 +72,16 @@ public class RegionServer {
         RegionServer that = (RegionServer) o;
         return Arrays.equals(serverIps, that.serverIps) &&
                 Arrays.equals(ports, that.ports) &&
+                Arrays.equals(ipv6ServerIps, that.ipv6ServerIps) &&
+                Arrays.equals(ipv6Ports, that.ipv6Ports) &&
                 CommonUtil.equals(region, that.region);
     }
 
     public boolean serverEquals(RegionServer that) {
         return Arrays.equals(serverIps, that.serverIps) &&
                 Arrays.equals(ports, that.ports) &&
+                Arrays.equals(ipv6ServerIps, that.ipv6ServerIps) &&
+                Arrays.equals(ipv6Ports, that.ipv6Ports) &&
                 CommonUtil.equals(region, that.region);
     }
 
@@ -61,6 +90,8 @@ public class RegionServer {
         int result = Arrays.hashCode(new Object[]{region});
         result = 31 * result + Arrays.hashCode(serverIps);
         result = 31 * result + Arrays.hashCode(ports);
+        result = 31 * result + Arrays.hashCode(ipv6ServerIps);
+        result = 31 * result + Arrays.hashCode(ipv6Ports);
         return result;
     }
 
@@ -71,6 +102,17 @@ public class RegionServer {
         }
         this.serverIps = ips;
         this.ports = ports;
+        return true;
+    }
+
+    public boolean updateIpv6(String[] ips, int[] ports) {
+        boolean same = CommonUtil.isSameServer(this.ipv6ServerIps, this.ipv6Ports, ips, ports);
+        if (same) {
+            return false;
+        }
+        this.ipv6ServerIps = ips;
+        this.ipv6Ports = ports;
+        this.ipv6FormatIps = null;
         return true;
     }
 

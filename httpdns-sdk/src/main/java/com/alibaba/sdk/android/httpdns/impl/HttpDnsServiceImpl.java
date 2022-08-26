@@ -421,7 +421,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
         region = CommonUtil.fixRegion(region);
         if (CommonUtil.regionEquals(this.config.getRegion(), region)
                 && this.config.isCurrentRegionMatch()
-                && !this.config.isInitServerInUse()) {
+                && !this.config.isAllInitServer()) {
             if (HttpDnsLog.isPrint()) {
                 HttpDnsLog.d("region " + region + " is same, do not update serverIps");
             }
