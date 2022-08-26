@@ -77,7 +77,7 @@ public class BusinessApp {
     }
 
     public void configInitServer(final String region, final HttpDnsServer[] initServers, final HttpDnsServer[] defaultUpdateServers) {
-        this.initRegion = region;
+        this.initRegion = region == null ? Constants.REGION_MAINLAND : region;
         this.initServers = initServers;
         this.defaultUpdateServers = defaultUpdateServers;
     }
@@ -96,17 +96,30 @@ public class BusinessApp {
             public void beforeInit(HttpDnsService httpDnsService) {
                 // 设置针对测试的辅助接口
                 if (httpDnsService instanceof ApiForTest) {
-                    String[] ips = new String[BusinessApp.this.initServers.length];
-                    int[] ports = new int[BusinessApp.this.initServers.length];
-                    for (int i = 0; i < BusinessApp.this.initServers.length; i++) {
-                        ips[i] = BusinessApp.this.initServers[i].getServerIp();
-                        ports[i] = BusinessApp.this.initServers[i].getPort();
+                    if (BusinessApp.this.initServers != null) {
+                        String[] ips = new String[BusinessApp.this.initServers.length];
+                        int[] ports = new int[BusinessApp.this.initServers.length];
+                        for (int i = 0; i < BusinessApp.this.initServers.length; i++) {
+                            ips[i] = BusinessApp.this.initServers[i].getServerIp();
+                            ports[i] = BusinessApp.this.initServers[i].getPort();
+                        }
+                        // 设置初始IP
+                        ((ApiForTest) httpDnsService).setInitServer(initRegion, ips, ports);
                     }
-                    // 设置初始IP
-                    ((ApiForTest) httpDnsService).setInitServer(initRegion, ips, ports);
+                    if (BusinessApp.this.defaultUpdateServers != null) {
+                        String[] defaultServerIps = new String[BusinessApp.this.defaultUpdateServers.length];
+                        int[] ports = new int[BusinessApp.this.defaultUpdateServers.length];
+                        for (int i = 0; i < BusinessApp.this.defaultUpdateServers.length; i++) {
+                            defaultServerIps[i] = BusinessApp.this.defaultUpdateServers[i].getServerIp();
+                            ports[i] = BusinessApp.this.defaultUpdateServers[i].getPort();
+                        }
+                        ((ApiForTest) httpDnsService).setDefaultUpdateServer(defaultServerIps, ports);
+                    }
                     testExecutorService = new TestExecutorService(((ApiForTest) httpDnsService).getWorker());
                     ((ApiForTest) httpDnsService).setThread(testExecutorService);
-                    ((ApiForTest) httpDnsService).setSocketFactory(BusinessApp.this.speedTestServer);
+                    if (BusinessApp.this.speedTestServer != null) {
+                        ((ApiForTest) httpDnsService).setSocketFactory(BusinessApp.this.speedTestServer);
+                    }
                 }
             }
         });
@@ -137,6 +150,7 @@ public class BusinessApp {
 
     /**
      * 获取app使用httpdns accountId
+     *
      * @return
      */
     public String getAccountId() {
@@ -203,6 +217,7 @@ public class BusinessApp {
 
     /**
      * 指定类型解析
+     *
      * @param host
      * @param type
      * @return
@@ -257,7 +272,7 @@ public class BusinessApp {
         ArgumentCaptor<String> logArgument = ArgumentCaptor.forClass(String.class);
         verify(mockLogger, atLeastOnce()).log(logArgument.capture());
         assertThat(logArgument.getAllValues().size(), greaterThan(1));
-        assertThat("有特定的日志"+logKey, stringListContain(logArgument.getAllValues(), logKey));
+        assertThat("有特定的日志" + logKey, stringListContain(logArgument.getAllValues(), logKey));
     }
 
     private boolean stringListContain(List<String> list, String msg) {

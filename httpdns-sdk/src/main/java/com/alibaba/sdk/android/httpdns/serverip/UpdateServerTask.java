@@ -16,6 +16,8 @@ import com.alibaba.sdk.android.httpdns.request.ResponseTranslator;
 import com.alibaba.sdk.android.httpdns.request.RetryHttpRequest;
 import com.alibaba.sdk.android.httpdns.utils.Constants;
 
+import java.util.ArrayList;
+
 import static com.alibaba.sdk.android.httpdns.interpret.InterpretHostHelper.getSid;
 
 /**
@@ -30,7 +32,10 @@ public class UpdateServerTask {
                 + ((TextUtils.isEmpty(region) ? "" : ("&region=" + region))
                 + getSid());
 
-        Server[] servers = getAllServers(config.getCurrentServer().getServerIps(), config.getCurrentServer().getPorts(), config.getInitServer().getServerIps(), config.getInitServer().getPorts());
+        Server[] servers = getAllServers(
+                config.getCurrentServer().getServerIps(), config.getCurrentServer().getPorts(),
+                config.getInitServer().getServerIps(), config.getInitServer().getPorts(),
+                config.getDefaultUpdateServer().getServerIps(), config.getDefaultUpdateServer().getPorts());
 
         HttpRequestConfig requestConfig = new HttpRequestConfig(config.getSchema(), servers[0].getServerIp(), servers[0].getPort(config.getSchema()), path, config.getTimeout());
         HttpRequest<UpdateServerResponse> httpRequest = new HttpRequest<>(requestConfig, new ResponseTranslator<UpdateServerResponse>() {
@@ -41,7 +46,7 @@ public class UpdateServerTask {
         });
         httpRequest = new HttpRequestWatcher<>(httpRequest, new HttpRequestFailWatcher(ReportManager.getReportManagerByAccount(config.getAccountId())));
         // 兼容ipv6only 环境
-        httpRequest = new HttpRequestWatcher<>(httpRequest, new Ipv6onlyWatcher(config.getIpv6ServerIps()));
+        httpRequest = new HttpRequestWatcher<>(httpRequest, new Ipv6onlyWatcher(getAllIpv6Servers(config.getIpv6ServerIps(), config.getDefaultIpv6UpdateServer())));
         // 增加切换ip，回到初始Ip的逻辑
         httpRequest = new HttpRequestWatcher<>(httpRequest, new ShiftServerWatcher(servers));
         // 重试，当前服务Ip和初始服务ip个数
@@ -54,15 +59,47 @@ public class UpdateServerTask {
         }
     }
 
-    private static Server[] getAllServers(String[] currentServerIps, int[] ports, String[] initServerIps, int[] initServerPorts) {
-        Server[] servers = new Server[currentServerIps.length + initServerIps.length];
-        for (int i = 0; i < currentServerIps.length; i++) {
-            servers[i] = new Server(currentServerIps[i], ports != null && ports.length > i ? ports[i] : Constants.NO_PORT);
+    private static Server[] getAllServers(String[] currentServerIps, int[] ports, String[] initServerIps, int[] initServerPorts, String[] defaultServerIps, int[] defaultServerPorts) {
+        ArrayList<String> serverIps = new ArrayList<>();
+        ArrayList<Integer> serverPorts = new ArrayList<>();
+        if (currentServerIps != null) {
+            for (int i = 0; i < currentServerIps.length; i++) {
+                serverIps.add(currentServerIps[i]);
+                serverPorts.add(ports != null && ports.length > i ? ports[i] : Constants.NO_PORT);
+            }
         }
-        final int tmpSize = currentServerIps.length;
-        for (int i = 0; i < initServerIps.length; i++) {
-            servers[tmpSize + i] = new Server(initServerIps[i], initServerPorts != null && initServerPorts.length > i ? initServerPorts[i] : Constants.NO_PORT);
+        if (initServerIps != null) {
+            for (int i = 0; i < initServerIps.length; i++) {
+                serverIps.add(initServerIps[i]);
+                serverPorts.add(initServerPorts != null && initServerPorts.length > i ? initServerPorts[i] : Constants.NO_PORT);
+            }
+        }
+        if (defaultServerIps != null) {
+            for (int i = 0; i < defaultServerIps.length; i++) {
+                serverIps.add(defaultServerIps[i]);
+                serverPorts.add(defaultServerPorts != null && defaultServerPorts.length > i ? defaultServerPorts[i] : Constants.NO_PORT);
+            }
+        }
+
+        Server[] servers = new Server[serverIps.size()];
+        for (int i = 0; i < serverIps.size(); i++) {
+            servers[i] = new Server(serverIps.get(i), serverPorts.get(i));
         }
         return servers;
+    }
+
+    private static String[] getAllIpv6Servers(String[] ips1, String[] ips2) {
+        ArrayList<String> ips = new ArrayList<>();
+        if (ips1 != null) {
+            for (int i = 0; i < ips1.length; i++) {
+                ips.add(ips1[i]);
+            }
+        }
+        if (ips2 != null) {
+            for (int i = 0; i < ips2.length; i++) {
+                ips.add(ips2[i]);
+            }
+        }
+        return ips.toArray(new String[0]);
     }
 }

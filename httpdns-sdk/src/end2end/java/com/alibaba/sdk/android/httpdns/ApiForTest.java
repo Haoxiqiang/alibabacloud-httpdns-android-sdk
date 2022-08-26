@@ -46,7 +46,16 @@ public interface ApiForTest {
 
     /**
      * 获取httpdns的线程池用于控制异常操作
+     *
      * @return
      */
     ExecutorService getWorker();
+
+    /**
+     * 设置兜底的调度ip
+     *
+     * @param defaultServerIps
+     * @param ports
+     */
+    void setDefaultUpdateServer(String[] defaultServerIps, int[] ports);
 }

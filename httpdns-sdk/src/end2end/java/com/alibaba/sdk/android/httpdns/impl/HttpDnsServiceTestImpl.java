@@ -67,4 +67,9 @@ public class HttpDnsServiceTestImpl extends HttpDnsServiceImpl implements ApiFor
     public ExecutorService getWorker() {
         return this.config.worker;
     }
+
+    @Override
+    public void setDefaultUpdateServer(String[] defaultServerIps, int[] ports) {
+        this.config.setDefaultUpdateServer(defaultServerIps, ports);
+    }
 }

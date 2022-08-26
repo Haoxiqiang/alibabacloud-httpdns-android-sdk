@@ -34,6 +34,16 @@ public class HttpDnsConfig implements SpCacheItem {
      * 目前仅用于一些ipv6only的环境，避免httpdns完全失效
      */
     private String[] ipv6InitServerIps = BuildConfig.IPV6_INIT_SERVER;
+
+    /**
+     * 兜底的调度服务IP，用于应对国际版服务IP有可能不稳定的情况
+     */
+    private RegionServer defaultUpdateServer = new RegionServer(BuildConfig.UPDATE_SERVER, Constants.NO_PORTS, Constants.REGION_DEFAULT);
+    /**
+     * 兜底的调度服务IP（Ipv6），用于应对国际版服务IP有可能不稳定的情况
+     */
+    private String[] defaultIpv6UpdateServer = BuildConfig.IPV6_UPDATE_SERVER;
+
     /**
      * 当前服务节点
      */
@@ -200,6 +210,14 @@ public class HttpDnsConfig implements SpCacheItem {
         return this.initServer;
     }
 
+    public RegionServer getDefaultUpdateServer() {
+        return defaultUpdateServer;
+    }
+
+    public String[] getDefaultIpv6UpdateServer() {
+        return defaultIpv6UpdateServer;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -243,6 +261,17 @@ public class HttpDnsConfig implements SpCacheItem {
             // 初始IP默认region为国内
             currentServer.setServerIps(this.initServer.getRegion(), initIps, initPorts);
         }
+    }
+
+    /**
+     * 设置兜底的调度IP，
+     * 测试代码使用
+     *
+     * @param ips
+     * @param ports
+     */
+    public void setDefaultUpdateServer(String[] ips, int[] ports) {
+        this.defaultUpdateServer.updateAll(this.initServer.getRegion(), ips, ports);
     }
 
     public void crashDefend(boolean crashDefend) {
