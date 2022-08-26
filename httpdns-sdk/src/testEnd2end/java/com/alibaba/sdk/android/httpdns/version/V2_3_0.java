@@ -55,6 +55,7 @@ import java.util.Date;
 @RunWith(RobolectricTestRunner.class)
 public class V2_3_0 {
 
+    private final String REGION_DEFAULT = "sg";
     private BusinessApp app = new BusinessApp(RandomValue.randomStringWithFixedLength(20));
 
     private HttpDnsServer server = new HttpDnsServer();
@@ -87,7 +88,9 @@ public class V2_3_0 {
         server2.start();
         ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
         application.grantPermissions(Manifest.permission.ACCESS_NETWORK_STATE);
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+        app.configInitServer(REGION_DEFAULT, new HttpDnsServer[]{server, server1, server2}, null);
+        app.configSpeedTestSever(speedTestServer);
+        app.start(true);
     }
 
     @After
@@ -120,7 +123,7 @@ public class V2_3_0 {
         // 重置，然后重新初始化httpdns
         HttpDns.resetInstance();
         new InitConfig.Builder().configCacheTtlChanger(changer).setEnableExpiredIp(false).buildFor(app.getAccountId());
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+        app.start(true);
 
         InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(hostWithShorterTtl, 2);
         server.getInterpretHostServer().preSetRequestResponse(hostWithShorterTtl, response, -1);
@@ -180,7 +183,7 @@ public class V2_3_0 {
         ArrayList<String> hosts = new ArrayList<>();
         hosts.add(app.getRequestHost());
         new InitConfig.Builder().configHostWithFixedIp(hosts).buildFor(app.getAccountId());
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+        app.start(true);
 
         // 用于和主站域名的效果进行对比
         final String hostWithoutFixedIP = RandomValue.randomHost();
@@ -215,7 +218,7 @@ public class V2_3_0 {
         ArrayList<String> hosts = new ArrayList<>();
         hosts.add(app.getRequestHost());
         new InitConfig.Builder().configHostWithFixedIp(hosts).buildFor(app.getAccountId());
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+        app.start(true);
         // 这里设置为网络变化预解析，强化这个配置不影响主站域名
         app.enableResolveAfterNetworkChange(true);
 
@@ -248,7 +251,7 @@ public class V2_3_0 {
         hosts.add(app.getRequestHost());
         // 这里配置关闭本地缓存，强化这个配置不影响主站域名
         new InitConfig.Builder().configHostWithFixedIp(hosts).setEnableCacheIp(false).buildFor(app.getAccountId());
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+        app.start(true);
 
         // 非主站域名用于对比
         final String hostWithoutFixedIP = RandomValue.randomHost();
@@ -262,7 +265,7 @@ public class V2_3_0 {
         // 重置，重新初始化，触发读取缓存逻辑
         HttpDns.resetInstance();
         new InitConfig.Builder().configHostWithFixedIp(hosts).setEnableCacheIp(false).buildFor(app.getAccountId());
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+        app.start(true);
 
         // 请求一次，读取缓存
         String[] ips = app.requestInterpretHost();
@@ -313,7 +316,7 @@ public class V2_3_0 {
         // 显式设置 不开启本地缓存，避免测试干扰
         HttpDns.resetInstance();
         new InitConfig.Builder().setEnableCacheIp(false).buildFor(app.getAccountId());
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+        app.start(true);
 
         // 先请求一次，产生缓存
         app.requestInterpretHost(hostWithEmptyIP);
@@ -322,7 +325,7 @@ public class V2_3_0 {
         // 重置，重新初始化，触发读取缓存逻辑
         HttpDns.resetInstance();
         new InitConfig.Builder().setEnableCacheIp(false).buildFor(app.getAccountId());
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+        app.start(true);
 
         // 请求一次，读取缓存
         app.requestInterpretHost(hostWithEmptyIP);
@@ -430,7 +433,7 @@ public class V2_3_0 {
         // 重置，重新初始化，清空内存缓存，重新从本地缓存读取
         HttpDns.resetInstance();
         new InitConfig.Builder().setEnableCacheIp(false).buildFor(app.getAccountId());
-        app.start(new HttpDnsServer[]{server, server1, server2}, speedTestServer, true);
+        app.start(true);
 
         // 预解析所有的域名
         app.preInterpreHost(allHost, RequestIpType.both);

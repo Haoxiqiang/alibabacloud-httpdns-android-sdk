@@ -48,6 +48,8 @@ public class InterpretHostResultRepoTest {
     private TestExecutorService worker;
     private RecordDBHelper dbHelper;
 
+    private final String REGION_DEFAULT = Constants.REGION_MAINLAND;
+
     @Before
     public void setUp() {
         worker = new TestExecutorService(new ThreadPoolExecutor(0, 10, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>()));
@@ -70,12 +72,12 @@ public class InterpretHostResultRepoTest {
 
         InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(host);
 
-        repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
+        repo.save(REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
         UnitTestUtil.assertIpsEqual("解析过的域名返回上次的解析结果", repo.getIps(host, RequestIpType.v4, null).getIps(), response.getIps());
         MatcherAssert.assertThat("没有解析过的域名返回空", repo.getIps(host, RequestIpType.v6, null) == null);
         MatcherAssert.assertThat("get方法传入both时，返回空", repo.getIps(host, RequestIpType.both, null) == null);
 
-        repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v6, null, null, response);
+        repo.save(REGION_DEFAULT, host, RequestIpType.v6, null, null, response);
         UnitTestUtil.assertIpsEqual("解析过的域名返回上次的解析结果", repo.getIps(host, RequestIpType.v4, null).getIps(), response.getIps());
         UnitTestUtil.assertIpsEqual("解析过的域名返回上次的解析结果", repo.getIps(host, RequestIpType.v6, null).getIpv6s(), response.getIpsv6());
         UnitTestUtil.assertIpsEqual("get方法传入both时，返回ipv4 ipv6的结果", repo.getIps(host, RequestIpType.both, null).getIps(), response.getIps());
@@ -87,7 +89,7 @@ public class InterpretHostResultRepoTest {
         UnitTestUtil.assertIpsEqual("更新结果之后再请求，返回更新后的结果", repo.getIps(host, RequestIpType.v6, null).getIpv6s(), ipv6s);
 
         InterpretHostResponse response1 = InterpretHostServer.randomInterpretHostResponse(host);
-        repo.save(Constants.REGION_DEFAULT, host, RequestIpType.both, null, null, response1);
+        repo.save(REGION_DEFAULT, host, RequestIpType.both, null, null, response1);
         UnitTestUtil.assertIpsEqual("新的解析结果会覆盖原来的解析结果", repo.getIps(host, RequestIpType.v4, null).getIps(), response1.getIps());
         UnitTestUtil.assertIpsEqual("新的解析结果会覆盖原来的解析结果", repo.getIps(host, RequestIpType.v6, null).getIpv6s(), response1.getIpsv6());
         UnitTestUtil.assertIpsEqual("新的解析结果会覆盖原来的解析结果", repo.getIps(host, RequestIpType.both, null).getIps(), response1.getIps());
@@ -125,7 +127,7 @@ public class InterpretHostResultRepoTest {
                 preHosts.add(RandomValue.randomHost());
             }
             ResolveHostResponse resolveHostResponse = ResolveHostServer.randomResolveHostResponse(preHosts, type);
-            repo.save(Constants.REGION_DEFAULT, type, resolveHostResponse);
+            repo.save(REGION_DEFAULT, type, resolveHostResponse);
 
             for (ResolveHostResponse.HostItem item: resolveHostResponse.getItems()) {
                 if(item.getType() == RequestIpType.v4) {
@@ -150,7 +152,7 @@ public class InterpretHostResultRepoTest {
             String cacheKey = sdns ? RandomValue.randomStringWithMaxLength(10) : null;
             String extra = sdns ? RandomValue.randomJsonMap() : null;
             RequestIpType type = RequestIpType.values()[RandomValue.randomInt(3)];
-            repo.save(Constants.REGION_DEFAULT, host, type, extra, cacheKey, response);
+            repo.save(REGION_DEFAULT, host, type, extra, cacheKey, response);
             responses.put(host, response);
             types.put(host, type);
             cacheKeys.put(host, cacheKey);
@@ -162,7 +164,7 @@ public class InterpretHostResultRepoTest {
         for (int i = 0; i < 30; i++) {
             String host = hosts.get(RandomValue.randomInt(hosts.size()));
             InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(host);
-            repo.save(Constants.REGION_DEFAULT, host, types.get(host), extras.get(host), cacheKeys.get(host), response);
+            repo.save(REGION_DEFAULT, host, types.get(host), extras.get(host), cacheKeys.get(host), response);
             responses.put(host, response);
         }
 
@@ -213,13 +215,13 @@ public class InterpretHostResultRepoTest {
         Mockito.when(changer.changeCacheTtl(host, RequestIpType.v4, originTtl)).thenReturn(changedTtl);
 
         InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(host, originTtl);
-        repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
+        repo.save(REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
         Thread.sleep(1000);
         MatcherAssert.assertThat("没有设置ttlChanger时，ttl是" + originTtl + ", 1s内不会过期", !repo.getIps(host, RequestIpType.v4, null).isExpired());
 
         repo.setCacheTtlChanger(changer);
 
-        repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
+        repo.save(REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
 //        TestLogger.log("start " + System.currentTimeMillis() + " "+repo.getIps(host, RequestIpType.v4, null).isExpired());
         Thread.sleep(1001);
 //        TestLogger.log("end " + System.currentTimeMillis());
@@ -227,7 +229,7 @@ public class InterpretHostResultRepoTest {
         Mockito.verify(changer).changeCacheTtl(host, RequestIpType.v4, originTtl);
 
         repo.setCacheTtlChanger(null);
-        repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
+        repo.save(REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
         Thread.sleep(1000);
         MatcherAssert.assertThat("移除ttlchanger后，ttl是" + originTtl + ", 1s不会过期", !repo.getIps(host, RequestIpType.v4, null).isExpired());
 
@@ -240,7 +242,7 @@ public class InterpretHostResultRepoTest {
         Mockito.when(changer.changeCacheTtl(resolveHost, RequestIpType.v4, originTtl)).thenReturn(changedTtl);
         repo.setCacheTtlChanger(changer);
 
-        repo.save(Constants.REGION_DEFAULT, RequestIpType.v4, resolveHostResponse);
+        repo.save(REGION_DEFAULT, RequestIpType.v4, resolveHostResponse);
         Mockito.verify(changer).changeCacheTtl(resolveHost, RequestIpType.v4, originTtl);
         Thread.sleep(1001);
         MatcherAssert.assertThat("设置ttlChanger时，ttl是" + changedTtl + ", 1s会过期", repo.getIps(resolveHost, RequestIpType.v4, null).isExpired());
@@ -260,7 +262,7 @@ public class InterpretHostResultRepoTest {
         for (int i = 0; i < 10; i++) {
             String host = RandomValue.randomHost();
             InterpretHostResponse response = InterpretHostServer.randomInterpretHostResponse(host);
-            repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
+            repo.save(REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
             if (RandomValue.randomInt(2) % 2 == 0) {
                 hostToBeClear.add(host);
             } else {
@@ -277,7 +279,7 @@ public class InterpretHostResultRepoTest {
             } else {
                 hostNotClear.addAll(tmp);
             }
-            repo.save(Constants.REGION_DEFAULT, RequestIpType.both, ResolveHostServer.randomResolveHostResponse(tmp, RequestIpType.both));
+            repo.save(REGION_DEFAULT, RequestIpType.both, ResolveHostServer.randomResolveHostResponse(tmp, RequestIpType.both));
         }
 
 
@@ -306,8 +308,8 @@ public class InterpretHostResultRepoTest {
         // 开启本地缓存
         repo.setCachedIPEnabled(true, false);
         // 触发缓存
-        repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
-        repo.save(Constants.REGION_DEFAULT, RequestIpType.v4, ResolveHostServer.randomResolveHostResponse(hosts, RequestIpType.v4));
+        repo.save(REGION_DEFAULT, host, RequestIpType.v4, null, null, response);
+        repo.save(REGION_DEFAULT, RequestIpType.v4, ResolveHostServer.randomResolveHostResponse(hosts, RequestIpType.v4));
         // 清除内存缓存
         repo.clearMemoryCache();
         MatcherAssert.assertThat("清除缓存后没有数据", repo.getIps(host, RequestIpType.v4, null) == null);
@@ -353,9 +355,9 @@ public class InterpretHostResultRepoTest {
         // 关闭本地缓存，避免干扰
         repo.setCachedIPEnabled(false, false);
         // 触发缓存
-        repo.save(Constants.REGION_DEFAULT, hostWithFixedIP, RequestIpType.v4, null, null, responseForHostWithFixedIP);
-        repo.save(Constants.REGION_DEFAULT, hostWithoutFixedIP, RequestIpType.v4, null, null, InterpretHostServer.randomInterpretHostResponse(hostWithoutFixedIP));
-        repo.save(Constants.REGION_DEFAULT, RequestIpType.v4, ResolveHostServer.randomResolveHostResponse(hosts, RequestIpType.v4));
+        repo.save(REGION_DEFAULT, hostWithFixedIP, RequestIpType.v4, null, null, responseForHostWithFixedIP);
+        repo.save(REGION_DEFAULT, hostWithoutFixedIP, RequestIpType.v4, null, null, InterpretHostServer.randomInterpretHostResponse(hostWithoutFixedIP));
+        repo.save(REGION_DEFAULT, RequestIpType.v4, ResolveHostServer.randomResolveHostResponse(hosts, RequestIpType.v4));
         String[] updatedIps = RandomValue.randomIpv4s();
         repo.update(hostWithFixedIP, RequestIpType.v4, null, updatedIps);
         // 等待本地缓存完成
@@ -395,8 +397,8 @@ public class InterpretHostResultRepoTest {
         repo.setHostListWhichIpFixed(hostListWithFixedIP);
 
         // 触发缓存
-        repo.save(Constants.REGION_DEFAULT, hostWithFixedIP, RequestIpType.v4, null, null, InterpretHostServer.randomInterpretHostResponse(hostWithFixedIP));
-        repo.save(Constants.REGION_DEFAULT, hostWithoutFixedIP, RequestIpType.v4, null, null, InterpretHostServer.randomInterpretHostResponse(hostWithoutFixedIP));
+        repo.save(REGION_DEFAULT, hostWithFixedIP, RequestIpType.v4, null, null, InterpretHostServer.randomInterpretHostResponse(hostWithFixedIP));
+        repo.save(REGION_DEFAULT, hostWithoutFixedIP, RequestIpType.v4, null, null, InterpretHostServer.randomInterpretHostResponse(hostWithoutFixedIP));
         // 清除内存缓存
         repo.clearMemoryCacheForHostWithoutFixedIP();
         MatcherAssert.assertThat("主站域名没有被清除", repo.getIps(hostWithFixedIP, RequestIpType.v4, null) != null);
@@ -416,8 +418,8 @@ public class InterpretHostResultRepoTest {
         repo.setHostListWhichIpFixed(hostListWithFixedIP);
 
         // 触发缓存
-        repo.save(Constants.REGION_DEFAULT, hostWithFixedIP, RequestIpType.v4, null, null, InterpretHostServer.randomInterpretHostResponse(hostWithFixedIP));
-        repo.save(Constants.REGION_DEFAULT, hostWithoutFixedIP, RequestIpType.v4, null, null, InterpretHostServer.randomInterpretHostResponse(hostWithoutFixedIP));
+        repo.save(REGION_DEFAULT, hostWithFixedIP, RequestIpType.v4, null, null, InterpretHostServer.randomInterpretHostResponse(hostWithFixedIP));
+        repo.save(REGION_DEFAULT, hostWithoutFixedIP, RequestIpType.v4, null, null, InterpretHostServer.randomInterpretHostResponse(hostWithoutFixedIP));
 
         HashMap<String, RequestIpType> result = repo.getAllHostWithoutFixedIP();
         MatcherAssert.assertThat("仅能获取一个非主站域名", result.size() == 1);

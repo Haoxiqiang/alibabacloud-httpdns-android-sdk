@@ -39,8 +39,8 @@ public class HttpDnsServiceTestImpl extends HttpDnsServiceImpl implements ApiFor
     }
 
     @Override
-    public void setInitServer(String[] ips, int[] ports) {
-        this.config.setInitServers(ips, ports);
+    public void setInitServer(String region, String[] ips, int[] ports) {
+        this.config.setInitServers(region, ips, ports);
     }
 
     @Override

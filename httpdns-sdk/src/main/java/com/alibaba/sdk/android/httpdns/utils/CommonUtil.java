@@ -30,10 +30,10 @@ public class CommonUtil {
 
     public static boolean regionEquals(String region, String regionThat) {
         if (region == null) {
-            region = Constants.REGION_DEFAULT;
+            region = Constants.REGION_MAINLAND;
         }
         if (regionThat == null) {
-            regionThat = Constants.REGION_DEFAULT;
+            regionThat = Constants.REGION_MAINLAND;
         }
         return equals(region, regionThat);
     }
@@ -44,7 +44,7 @@ public class CommonUtil {
 
     public static String fixRegion(String region) {
         if (region == null) {
-            return Constants.REGION_DEFAULT;
+            return Constants.REGION_MAINLAND;
         }
         return region;
     }

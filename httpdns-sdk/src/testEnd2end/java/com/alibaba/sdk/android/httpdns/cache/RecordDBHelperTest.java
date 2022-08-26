@@ -37,11 +37,11 @@ public class RecordDBHelperTest {
     @Test
     public void testSaveAndGet() {
         // 初始数据
-        List<HostRecord> records = randomRecord(Constants.REGION_DEFAULT, 30);
+        List<HostRecord> records = randomRecord(Constants.REGION_MAINLAND, 30);
         helper.insertOrUpdate(records);
 
         // 读取
-        List<HostRecord> records3 = helper.readFromDb(Constants.REGION_DEFAULT);
+        List<HostRecord> records3 = helper.readFromDb(Constants.REGION_MAINLAND);
 
         ArrayList<HostRecord> saved = new ArrayList<>();
         saved.addAll(records);
@@ -54,7 +54,7 @@ public class RecordDBHelperTest {
     @Test
     public void testDeleted() {
         // 初始数据
-        List<HostRecord> records = randomRecord(Constants.REGION_DEFAULT, 30);
+        List<HostRecord> records = randomRecord(Constants.REGION_MAINLAND, 30);
         helper.insertOrUpdate(records);
 
         // 删除一些
@@ -66,7 +66,7 @@ public class RecordDBHelperTest {
         helper.delete(deleted);
 
         // 读取
-        List<HostRecord> records3 = helper.readFromDb(Constants.REGION_DEFAULT);
+        List<HostRecord> records3 = helper.readFromDb(Constants.REGION_MAINLAND);
 
         ArrayList<HostRecord> saved = new ArrayList<>();
         saved.addAll(left);
@@ -79,15 +79,15 @@ public class RecordDBHelperTest {
     @Test
     public void testAdd() {
         // 初始数据
-        List<HostRecord> records = randomRecord(Constants.REGION_DEFAULT, 30);
+        List<HostRecord> records = randomRecord(Constants.REGION_MAINLAND, 30);
         helper.insertOrUpdate(records);
 
         // 新增一些
-        List<HostRecord> records1 = randomRecord(Constants.REGION_DEFAULT, 10);
+        List<HostRecord> records1 = randomRecord(Constants.REGION_MAINLAND, 10);
         helper.insertOrUpdate(records1);
 
         // 读取
-        List<HostRecord> records3 = helper.readFromDb(Constants.REGION_DEFAULT);
+        List<HostRecord> records3 = helper.readFromDb(Constants.REGION_MAINLAND);
 
         ArrayList<HostRecord> saved = new ArrayList<>();
         saved.addAll(records);
@@ -101,11 +101,11 @@ public class RecordDBHelperTest {
     @Test
     public void testUpdate() {
         // 初始数据
-        List<HostRecord> records = randomRecord(Constants.REGION_DEFAULT, 30);
+        List<HostRecord> records = randomRecord(Constants.REGION_MAINLAND, 30);
         helper.insertOrUpdate(records);
 
         // 新增一些
-        List<HostRecord> records1 = randomRecord(Constants.REGION_DEFAULT, 10);
+        List<HostRecord> records1 = randomRecord(Constants.REGION_MAINLAND, 10);
         helper.insertOrUpdate(records1);
 
         // 更新一些
@@ -122,7 +122,7 @@ public class RecordDBHelperTest {
         helper.insertOrUpdate(records2);
 
         // 读取
-        List<HostRecord> records3 = helper.readFromDb(Constants.REGION_DEFAULT);
+        List<HostRecord> records3 = helper.readFromDb(Constants.REGION_MAINLAND);
 
         ArrayList<HostRecord> saved = new ArrayList<>();
         saved.addAll(records);
@@ -136,7 +136,7 @@ public class RecordDBHelperTest {
     @Test
     public void testCache() {
         // 初始数据
-        List<HostRecord> records = randomRecord(Constants.REGION_DEFAULT, 30);
+        List<HostRecord> records = randomRecord(Constants.REGION_MAINLAND, 30);
         helper.insertOrUpdate(records);
 
         // 删除一些
@@ -148,7 +148,7 @@ public class RecordDBHelperTest {
         helper.delete(deleted);
 
         // 新增一些
-        List<HostRecord> records1 = randomRecord(Constants.REGION_DEFAULT, 10);
+        List<HostRecord> records1 = randomRecord(Constants.REGION_MAINLAND, 10);
         helper.insertOrUpdate(records1);
 
         // 更新一些
@@ -165,7 +165,7 @@ public class RecordDBHelperTest {
         helper.insertOrUpdate(records2);
 
         // 读取
-        List<HostRecord> records3 = helper.readFromDb(Constants.REGION_DEFAULT);
+        List<HostRecord> records3 = helper.readFromDb(Constants.REGION_MAINLAND);
 
         ArrayList<HostRecord> saved = new ArrayList<>();
         saved.addAll(left);

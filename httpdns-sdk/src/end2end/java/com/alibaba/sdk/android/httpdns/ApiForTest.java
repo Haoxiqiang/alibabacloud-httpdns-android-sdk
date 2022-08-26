@@ -13,10 +13,12 @@ public interface ApiForTest {
 
     /**
      * 指定初始服务ip
+     *
+     * @param region
      * @param ips
      * @param ports
      */
-    void setInitServer(String[] ips, int[] ports);
+    void setInitServer(String region, String[] ips, int[] ports);
 
     /**
      * 指定httpdns使用的线程池

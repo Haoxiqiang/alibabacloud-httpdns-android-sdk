@@ -39,6 +39,7 @@ public class InterpretHostResultRepoTest2 {
     private RecordDBHelper dbHelper;
     private TestExecutorService worker;
 
+    private final String REGION_DEFAULT = Constants.REGION_MAINLAND;
 
     @Before
     public void setup() {
@@ -57,7 +58,7 @@ public class InterpretHostResultRepoTest2 {
 
         final String host = RandomValue.randomHost();
 
-        repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, new InterpretHostResponse(host, new String[]{"a.b.c"}, null, 60, null));
+        repo.save(REGION_DEFAULT, host, RequestIpType.v4, null, null, new InterpretHostResponse(host, new String[]{"a.b.c"}, null, 60, null));
 
         HTTPDNSResult result = repo.getIps(host, RequestIpType.v4, null);
         HTTPDNSResult result1 = repo.getIps(host, RequestIpType.v4, null);
@@ -74,14 +75,14 @@ public class InterpretHostResultRepoTest2 {
         final String host = RandomValue.randomHost();
 
         String ip1 = RandomValue.randomIpv4();
-        repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, new InterpretHostResponse(host, new String[]{ip1}, null, 60, null));
+        repo.save(REGION_DEFAULT, host, RequestIpType.v4, null, null, new InterpretHostResponse(host, new String[]{ip1}, null, 60, null));
 
         HTTPDNSResult result = repo.getIps(host, RequestIpType.v4, null);
 
         MatcherAssert.assertThat("开始时，缓存是 " + ip1, result.getIps()[0], Matchers.is(Matchers.equalTo(ip1)));
 
         String ip2 = RandomValue.randomIpv4();
-        repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, new InterpretHostResponse(host, new String[]{ip2}, null, 60, null));
+        repo.save(REGION_DEFAULT, host, RequestIpType.v4, null, null, new InterpretHostResponse(host, new String[]{ip2}, null, 60, null));
 
         HTTPDNSResult result1 = repo.getIps(host, RequestIpType.v4, null);
 
@@ -97,7 +98,7 @@ public class InterpretHostResultRepoTest2 {
     public void httpDnsResultExpiredAfterTtl() throws InterruptedException {
         final String host = RandomValue.randomHost();
         String ip1 = RandomValue.randomIpv4();
-        repo.save(Constants.REGION_DEFAULT, host, RequestIpType.v4, null, null, new InterpretHostResponse(host, new String[]{ip1}, null, 1, null));
+        repo.save(REGION_DEFAULT, host, RequestIpType.v4, null, null, new InterpretHostResponse(host, new String[]{ip1}, null, 1, null));
 
         HTTPDNSResult result = repo.getIps(host, RequestIpType.v4, null);
 

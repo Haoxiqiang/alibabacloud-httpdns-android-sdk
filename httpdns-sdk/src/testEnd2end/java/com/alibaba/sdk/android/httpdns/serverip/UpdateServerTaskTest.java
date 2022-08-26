@@ -7,6 +7,7 @@ import com.alibaba.sdk.android.httpdns.request.RequestCallback;
 import com.alibaba.sdk.android.httpdns.test.server.HttpDnsServer;
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
 import com.alibaba.sdk.android.httpdns.test.utils.TestExecutorService;
+import com.alibaba.sdk.android.httpdns.utils.Constants;
 
 import org.junit.After;
 import org.junit.Before;
@@ -59,7 +60,7 @@ public class UpdateServerTaskTest {
         };
         HttpDnsLog.setLogger(logger);
         httpDnsConfig = new HttpDnsConfig(RuntimeEnvironment.application, "100000");
-        httpDnsConfig.setInitServers(new String[]{server.getServerIp()}, new int[]{server.getPort()});
+        httpDnsConfig.setInitServers(Constants.REGION_MAINLAND, new String[]{server.getServerIp()}, new int[]{server.getPort()});
         httpDnsConfig.setTimeout(1000);
         httpDnsConfig.setWorker(testExecutorService);
     }

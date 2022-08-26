@@ -2,7 +2,6 @@ package com.alibaba.sdk.android.httpdns.config;
 
 import android.content.SharedPreferences;
 
-import com.alibaba.sdk.android.httpdns.BuildConfig;
 import com.alibaba.sdk.android.httpdns.impl.HttpDnsConfig;
 import com.alibaba.sdk.android.httpdns.utils.CommonUtil;
 import com.alibaba.sdk.android.httpdns.utils.Constants;
@@ -156,9 +155,9 @@ public class ServerConfig extends RegionServer implements SpCacheItem {
 
     @Override
     public void restoreFromCache(SharedPreferences sp) {
-        String[] serverIps = CommonUtil.parseStringArray(sp.getString(Constants.CONFIG_KEY_SERVERS, CommonUtil.translateStringArray(BuildConfig.INIT_SERVER)));
-        int[] ports = CommonUtil.parsePorts(sp.getString(Constants.CONFIG_KEY_PORTS, null));
-        String currentServerRegion = sp.getString(Constants.CONFIG_CURRENT_SERVER_REGION, Constants.REGION_DEFAULT);
+        String[] serverIps = CommonUtil.parseStringArray(sp.getString(Constants.CONFIG_KEY_SERVERS, CommonUtil.translateStringArray(getServerIps())));
+        int[] ports = CommonUtil.parsePorts(sp.getString(Constants.CONFIG_KEY_PORTS, CommonUtil.translateIntArray(getPorts())));
+        String currentServerRegion = sp.getString(Constants.CONFIG_CURRENT_SERVER_REGION, getRegion());
         updateAll(currentServerRegion, serverIps, ports);
         currentServerIndex = sp.getInt(Constants.CONFIG_CURRENT_INDEX, 0);
         lastOkServerIndex = sp.getInt(Constants.CONFIG_LAST_INDEX, 0);

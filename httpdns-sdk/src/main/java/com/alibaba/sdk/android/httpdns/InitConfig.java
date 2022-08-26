@@ -22,6 +22,8 @@ public class InitConfig {
         configs.put(accountId, config);
     }
 
+    public static final String NOT_SET = null;
+
     public static InitConfig getInitConfig(String accountId) {
         return configs.get(accountId);
     }
@@ -93,7 +95,7 @@ public class InitConfig {
         private int timeout = Constants.DEFAULT_TIMEOUT;
         private boolean enableHttps = Constants.DEFAULT_ENABLE_HTTPS;
         private List<IPProbeItem> ipProbeItems = null;
-        private String region = Constants.REGION_DEFAULT;
+        private String region = NOT_SET;
         private CacheTtlChanger cacheTtlChanger = null;
         private List<String> hostListWithFixedIp = null;
 

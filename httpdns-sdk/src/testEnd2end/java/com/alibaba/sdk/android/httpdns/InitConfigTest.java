@@ -45,7 +45,7 @@ public class InitConfigTest {
         MatcherAssert.assertThat("默认允许过期IP", config.isEnableExpiredIp(), Matchers.is(true));
         MatcherAssert.assertThat("默认不本地缓存IP", config.isEnableCacheIp(), Matchers.is(false));
         MatcherAssert.assertThat("默认不开启https", config.isEnableHttps(), Matchers.is(false));
-        MatcherAssert.assertThat("默认region正确", config.getRegion(), Matchers.is(Constants.REGION_DEFAULT));
+        MatcherAssert.assertThat("默认region正确", config.getRegion(), Matchers.is(InitConfig.NOT_SET));
         MatcherAssert.assertThat("默认超时时间是15s", config.getTimeout(), Matchers.is(15 * 1000));
         MatcherAssert.assertThat("默认不测速", config.getIpProbeItems(), Matchers.nullValue());
         MatcherAssert.assertThat("默认不修改缓存ttl配置", config.getCacheTtlChanger(), Matchers.nullValue());

@@ -17,7 +17,6 @@ import com.alibaba.sdk.android.httpdns.ILogger;
 import com.alibaba.sdk.android.httpdns.InitManager;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.SyncService;
-import com.alibaba.sdk.android.httpdns.CacheTtlChanger;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import com.alibaba.sdk.android.httpdns.probe.IPProbeItem;
 import com.alibaba.sdk.android.httpdns.test.helper.ServerStatusHelper;
@@ -61,6 +60,11 @@ public class BusinessApp {
     private HttpDnsService httpDnsService;
     private ILogger mockLogger;
 
+    private String initRegion;
+    private HttpDnsServer[] initServers;
+    private HttpDnsServer[] defaultUpdateServers;
+    private MockSpeedTestServer speedTestServer;
+
     private TestExecutorService testExecutorService;
 
     public BusinessApp(String accountId) {
@@ -72,27 +76,37 @@ public class BusinessApp {
         this.secret = secret;
     }
 
+    public void configInitServer(final String region, final HttpDnsServer[] initServers, final HttpDnsServer[] defaultUpdateServers) {
+        this.initRegion = region;
+        this.initServers = initServers;
+        this.defaultUpdateServers = defaultUpdateServers;
+    }
+
+    public void configSpeedTestSever(MockSpeedTestServer speedTestServer) {
+        this.speedTestServer = speedTestServer;
+    }
+
     /**
      * 应用启动
      */
-    public void start(final HttpDnsServer[] servers, final MockSpeedTestServer speedTestServer, boolean removeInitUpdateServerRecord) {
+    public void start(boolean removeInitUpdateServerRecord) {
 
         InitManager.getInstance().add(accountId, new BeforeHttpDnsServiceInit() {
             @Override
             public void beforeInit(HttpDnsService httpDnsService) {
                 // 设置针对测试的辅助接口
                 if (httpDnsService instanceof ApiForTest) {
-                    String[] ips = new String[servers.length];
-                    int[] ports = new int[servers.length];
-                    for (int i = 0; i < servers.length; i++) {
-                        ips[i] = servers[i].getServerIp();
-                        ports[i] = servers[i].getPort();
+                    String[] ips = new String[BusinessApp.this.initServers.length];
+                    int[] ports = new int[BusinessApp.this.initServers.length];
+                    for (int i = 0; i < BusinessApp.this.initServers.length; i++) {
+                        ips[i] = BusinessApp.this.initServers[i].getServerIp();
+                        ports[i] = BusinessApp.this.initServers[i].getPort();
                     }
                     // 设置初始IP
-                    ((ApiForTest) httpDnsService).setInitServer(ips, ports);
+                    ((ApiForTest) httpDnsService).setInitServer(initRegion, ips, ports);
                     testExecutorService = new TestExecutorService(((ApiForTest) httpDnsService).getWorker());
                     ((ApiForTest) httpDnsService).setThread(testExecutorService);
-                    ((ApiForTest) httpDnsService).setSocketFactory(speedTestServer);
+                    ((ApiForTest) httpDnsService).setSocketFactory(BusinessApp.this.speedTestServer);
                 }
             }
         });
@@ -104,11 +118,11 @@ public class BusinessApp {
         }
         assertThat("HttpDns.getService should not return null", httpDnsService, notNullValue());
 
-        for (int i = 0; i < servers.length; i++) {
-            TestLogger.log(this.toString() + " start with " + servers[i].toString());
+        for (int i = 0; i < BusinessApp.this.initServers.length; i++) {
+            TestLogger.log(this.toString() + " start with " + BusinessApp.this.initServers[i].toString());
         }
         if (removeInitUpdateServerRecord) {
-            ServerStatusHelper.hasReceiveRegionChange("初始化时会更新一次服务节点", this, servers[0], Constants.REGION_DEFAULT, true);
+            ServerStatusHelper.hasReceiveRegionChange("初始化时会更新一次服务节点", this, BusinessApp.this.initServers[0], initRegion, true);
         }
     }
 

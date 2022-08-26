@@ -103,7 +103,9 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
                 setIPProbeList(config.getIpProbeItems());
             }
             // 设置region 必须在 读取缓存之前
-            this.config.setRegion(config.getRegion());
+            if (config.getRegion() != InitConfig.NOT_SET) {
+                this.config.setRegion(config.getRegion());
+            }
             // 设置 主站域名 需要在 读取缓存之前
             this.repo.setHostListWhichIpFixed(config.getHostListWithFixedIp());
             // 设置缓存控制，并读取缓存

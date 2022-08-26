@@ -227,16 +227,18 @@ public class HttpDnsConfig implements SpCacheItem {
      * 线上SDK 初始化服务IP是内置写死的。
      * 本API主要用于一些测试代码使用
      *
+     * @param initRegion
      * @param initIps
      * @param initPorts
      */
-    public void setInitServers(String[] initIps, int[] initPorts) {
+    public void setInitServers(String initRegion, String[] initIps, int[] initPorts) {
+        this.region = initRegion;
         if (initIps == null) {
             return;
         }
         String[] oldInitServerIps = this.initServer.getServerIps();
         int[] oldInitPorts = this.initServer.getPorts();
-        this.initServer.update(initIps, initPorts);
+        this.initServer.updateAll(initRegion, initIps, initPorts);
         if (currentServer.getServerIps() == null || CommonUtil.isSameServer(oldInitServerIps, oldInitPorts, currentServer.getServerIps(), currentServer.getPorts())) {
             // 初始IP默认region为国内
             currentServer.setServerIps(this.initServer.getRegion(), initIps, initPorts);

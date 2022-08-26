@@ -24,11 +24,13 @@ public class HttpDnsConfigTest {
     private String[] serverIps = RandomValue.randomIpv4s();
     private int[] ports = RandomValue.randomPorts();
 
+    private final String REGION_DEFAULT = Constants.REGION_MAINLAND;
+
     @Before
     public void setUp() {
         config = new HttpDnsConfig(RuntimeEnvironment.application, account);
         config.setWorker(new SyncExecutorService());
-        config.setInitServers(serverIps, null);
+        config.setInitServers(REGION_DEFAULT, serverIps, null);
     }
 
     @Test
@@ -145,12 +147,14 @@ public class HttpDnsConfigTest {
     @Test
     public void testRegionUpdate() {
 
-        String otherRegion = Constants.REGION_HK == Constants.REGION_DEFAULT ? Constants.REGION_MAINLAND : Constants.REGION_HK;
+        String otherRegion = Constants.REGION_HK;
 
+        // 这一条验证和HttpDnsConfig无关
         MatcherAssert.assertThat("默认region是通过gradle配置的", Constants.REGION_DEFAULT, Matchers.is(Matchers.equalTo(BuildConfig.DEFAULT_REGION)));
 
-        MatcherAssert.assertThat("默认region正确", config.getRegion(), Matchers.is(Matchers.equalTo(Constants.REGION_DEFAULT)));
-        MatcherAssert.assertThat("默认服务节点的region是默认region", config.getCurrentServer().getRegion(), Matchers.is(Matchers.equalTo(Constants.REGION_DEFAULT)));
+        // HttpDnsConfig默认的region应该和测试方法setInitServer的值一致
+        MatcherAssert.assertThat("默认region正确", config.getRegion(), Matchers.is(Matchers.equalTo(REGION_DEFAULT)));
+        MatcherAssert.assertThat("默认服务节点的region是默认region", config.getCurrentServer().getRegion(), Matchers.is(Matchers.equalTo(REGION_DEFAULT)));
         MatcherAssert.assertThat("默认配置是region匹配", config.isCurrentRegionMatch(), Matchers.is(true));
 
         String regionBak = config.getRegion();
@@ -166,15 +170,15 @@ public class HttpDnsConfigTest {
         MatcherAssert.assertThat("服务节点更新后，region匹配", config.isCurrentRegionMatch(), Matchers.is(true));
 
         regionBak = config.getRegion();
-        config.setRegion(Constants.REGION_DEFAULT);
+        config.setRegion(REGION_DEFAULT);
 
-        MatcherAssert.assertThat("setRegion 更新成功", config.getRegion(), Matchers.is(Matchers.equalTo(Constants.REGION_DEFAULT)));
+        MatcherAssert.assertThat("setRegion 更新成功", config.getRegion(), Matchers.is(Matchers.equalTo(REGION_DEFAULT)));
         MatcherAssert.assertThat("setRegion不影响服务节点的region", config.getCurrentServer().getRegion(), Matchers.is(Matchers.equalTo(regionBak)));
         MatcherAssert.assertThat("setRegion 导致region不匹配", config.isCurrentRegionMatch(), Matchers.is(false));
 
-        config.getCurrentServer().setServerIps(Constants.REGION_DEFAULT, RandomValue.randomIpv4s(), RandomValue.randomPorts());
+        config.getCurrentServer().setServerIps(REGION_DEFAULT, RandomValue.randomIpv4s(), RandomValue.randomPorts());
 
-        MatcherAssert.assertThat("setServerIps更像服务节点", config.getCurrentServer().getRegion(), Matchers.is(Matchers.equalTo(Constants.REGION_DEFAULT)));
+        MatcherAssert.assertThat("setServerIps更新服务节点", config.getCurrentServer().getRegion(), Matchers.is(Matchers.equalTo(REGION_DEFAULT)));
         MatcherAssert.assertThat("服务节点更新后，region匹配", config.isCurrentRegionMatch(), Matchers.is(true));
     }
 

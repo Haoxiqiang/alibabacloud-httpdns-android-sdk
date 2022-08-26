@@ -44,18 +44,27 @@ android {
             buildConfigField "String", "DEFAULT_REGION", REGION
             buildConfigField "String[]", "INIT_SERVER", INIT_SERVERS
             buildConfigField "String[]", "IPV6_INIT_SERVER", IPV6_INIT_SERVERS
+
+            buildConfigField "String[]", "UPDATE_SERVER", "{}"
+            buildConfigField "String[]", "IPV6_UPDATE_SERVER", "{}"
         }
 
         intl {
             buildConfigField "String", "DEFAULT_REGION", INTL_REGION
             buildConfigField "String[]", "INIT_SERVER", INTL_INIT_SERVERS
             buildConfigField "String[]", "IPV6_INIT_SERVER", INTL_IPV6_INIT_SERVERS
+
+            buildConfigField "String[]", "UPDATE_SERVER", INTL_UPDATE_SERVERS
+            buildConfigField "String[]", "IPV6_UPDATE_SERVER", INTL_IPV6_UPDATE_SERVERS
         }
 
         end2end {
             buildConfigField "String", "DEFAULT_REGION", "\"\""
             buildConfigField "String[]", "INIT_SERVER", "{}"
             buildConfigField "String[]", "IPV6_INIT_SERVER", "{}"
+
+            buildConfigField "String[]", "UPDATE_SERVER", "{}"
+            buildConfigField "String[]", "IPV6_UPDATE_SERVER", "{}"
         }
     }
 

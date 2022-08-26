@@ -23,7 +23,7 @@ public class UpdateServerLockerTest {
     public void onlyOneRequest() {
         UpdateServerLocker locker = new UpdateServerLocker();
 
-        String region = Constants.REGION_DEFAULT;
+        String region = Constants.REGION_MAINLAND;
         MatcherAssert.assertThat("允许第一个请求", locker.begin(region));
         MatcherAssert.assertThat("第一个请求,未完成，其它请求不处理", !locker.begin(region));
 
@@ -51,7 +51,7 @@ public class UpdateServerLockerTest {
     @Test
     public void timeout() throws InterruptedException {
         UpdateServerLocker locker = new UpdateServerLocker(10);
-        String region = Constants.REGION_DEFAULT;
+        String region = Constants.REGION_MAINLAND;
         MatcherAssert.assertThat("允许第一个请求", locker.begin(region));
         MatcherAssert.assertThat("第一个请求,未完成，其它请求不处理", !locker.begin(region));
         Thread.sleep(11);
@@ -63,8 +63,8 @@ public class UpdateServerLockerTest {
 
     @Test
     public void multiThread() {
-        final String region = Constants.REGION_DEFAULT;
-        final String region1 = Constants.REGION_HK == Constants.REGION_DEFAULT ? Constants.REGION_MAINLAND : Constants.REGION_HK;
+        final String region = Constants.REGION_MAINLAND;
+        final String region1 = Constants.REGION_HK;
         final AtomicInteger regionRequesting = new AtomicInteger(0);
         final AtomicInteger region1Requesting = new AtomicInteger(0);
         final UpdateServerLocker locker = new UpdateServerLocker();
