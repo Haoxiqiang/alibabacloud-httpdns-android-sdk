@@ -25,10 +25,12 @@ public class HttpDnsSettings {
         }
     };
 
+    @Deprecated
     public static void setNetworkChecker(NetworkChecker checker) {
         HttpDnsSettings.checker = checker;
     }
 
+    @Deprecated
     public static NetworkChecker getChecker() {
         return checker;
     }

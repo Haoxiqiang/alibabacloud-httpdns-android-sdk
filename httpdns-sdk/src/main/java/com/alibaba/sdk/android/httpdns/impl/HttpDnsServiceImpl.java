@@ -202,6 +202,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             HttpDnsLog.i("setPreResolveHosts empty list");
             return;
         }
+        requestIpType = changeTypeWithNetType(config.getNetworkDetector(), requestIpType);
         resolveHostService.resolveHostAsync(hostList, requestIpType);
     }
 
@@ -275,6 +276,24 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             return Constants.EMPTY;
         }
         return interpretHostService.interpretHostAsync(host, RequestIpType.both, null, null);
+    }
+
+    @Override
+    public HTTPDNSResult getIpsByHostAsync(String host, RequestIpType type) {
+        if (!config.isEnabled()) {
+            HttpDnsLog.i("service is disabled");
+            return Constants.EMPTY;
+        }
+        if (!CommonUtil.isAHost(host)) {
+            HttpDnsLog.i("host is invalid. " + host);
+            return Constants.EMPTY;
+        }
+        if (CommonUtil.isAnIP(host)) {
+            HttpDnsLog.i("host is ip. " + host);
+            return Constants.EMPTY;
+        }
+        type = changeTypeWithNetType(config.getNetworkDetector(), type);
+        return interpretHostService.interpretHostAsync(host, type, null, null);
     }
 
     @Override
@@ -396,6 +415,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             HttpDnsLog.i("host is ip. " + host);
             return Constants.EMPTY;
         }
+        type = changeTypeWithNetType(config.getNetworkDetector(), type);
         return interpretHostService.interpretHostAsync(host, type, params, cacheKey);
     }
 
@@ -521,6 +541,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             HttpDnsLog.i("host is ip. " + host);
             return Constants.EMPTY;
         }
+        type = changeTypeWithNetType(config.getNetworkDetector(), type);
         if (Looper.getMainLooper() == Looper.myLooper()) {
             if (HttpDnsLog.isPrint()) {
                 HttpDnsLog.d("request in main thread, use async request");
@@ -528,6 +549,23 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             return interpretHostService.interpretHostAsync(host, type, null, null);
         }
         return interpretHostService.interpretHost(host, type, null, null);
+    }
+
+    private RequestIpType changeTypeWithNetType(HttpDnsSettings.NetworkDetector networkDetector, RequestIpType type) {
+        if (type == RequestIpType.auto) {
+            if (networkDetector != null) {
+                switch (networkDetector.getNetType()) {
+                    case v6:
+                        return RequestIpType.v6;
+                    case v4:
+                        return RequestIpType.v4;
+                    default:
+                        return RequestIpType.both;
+                }
+            }
+            return RequestIpType.both;
+        }
+        return type;
     }
 
     public void cleanHostCache(ArrayList<String> hosts) {

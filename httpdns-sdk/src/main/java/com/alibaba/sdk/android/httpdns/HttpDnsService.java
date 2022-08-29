@@ -68,6 +68,14 @@ public interface HttpDnsService extends Net64Service {
     HTTPDNSResult getAllByHostAsync(String host);
 
     /**
+     * 异步解析接口，获取ipv4ipv6列表
+     * 支持 指定解析IP类型
+     *
+     * @return
+     */
+    HTTPDNSResult getIpsByHostAsync(String host, RequestIpType type);
+
+    /**
      * 设置是否允许返回超过ttl 的ip
      *
      * @param enable
@@ -155,12 +163,24 @@ public interface HttpDnsService extends Net64Service {
 
     /**
      * 异步解析接口, 获取ip列表
+     * 支持配置sdns参数
      *
      * @return 返回HTTPDNSResult对象
      * @host host
      */
     HTTPDNSResult getIpsByHostAsync(String host, Map<String, String> params, String cacheKey);
 
+    /**
+     * 异步解析接口, 获取ip列表
+     * 支持配置sdns参数
+     * 支持指定解析类型
+     *
+     * @param host
+     * @param type
+     * @param params
+     * @param cacheKey
+     * @return
+     */
     HTTPDNSResult getIpsByHostAsync(String host, RequestIpType type, Map<String, String> params, String cacheKey);
 
     /**

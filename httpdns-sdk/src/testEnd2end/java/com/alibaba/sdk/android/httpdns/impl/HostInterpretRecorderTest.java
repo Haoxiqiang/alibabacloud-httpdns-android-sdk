@@ -80,7 +80,7 @@ public class HostInterpretRecorderTest {
             public void run() {
                 for (int i = 0; i < 100; i++) {
                     final String host = hosts.get(RandomValue.randomInt(5));
-                    final RequestIpType type = RequestIpType.values()[RandomValue.randomInt(RequestIpType.values().length)];
+                    final RequestIpType type = RequestIpType.values()[RandomValue.randomInt(3)];
                     worker.execute(new Runnable() {
                         @Override
                         public void run() {

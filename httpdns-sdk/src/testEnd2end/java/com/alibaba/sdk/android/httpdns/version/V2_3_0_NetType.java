@@ -7,10 +7,12 @@ import com.alibaba.sdk.android.httpdns.HttpDns;
 import com.alibaba.sdk.android.httpdns.ILogger;
 import com.alibaba.sdk.android.httpdns.InitConfig;
 import com.alibaba.sdk.android.httpdns.NetType;
+import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import com.alibaba.sdk.android.httpdns.test.app.BusinessApp;
 import com.alibaba.sdk.android.httpdns.test.helper.ServerStatusHelper;
 import com.alibaba.sdk.android.httpdns.test.server.HttpDnsServer;
+import com.alibaba.sdk.android.httpdns.test.server.InterpretHostServer;
 import com.alibaba.sdk.android.httpdns.test.server.MockSpeedTestServer;
 import com.alibaba.sdk.android.httpdns.test.server.ServerIpsServer;
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
@@ -259,5 +261,46 @@ public class V2_3_0_NetType {
         app.waitForAppThread();
 
         assertThat("网络环境变为both后使用v4的服务节点", serverV4Two.getInterpretHostServer().hasRequestForArg(host3, 1, true));
+    }
+
+
+    @Test
+    public void testAutoRequestIpTypeForIpv4() {
+
+        // 复用case 获取v4网络状态
+        testUpdateServerWhenStart();
+        serverV4Two.getInterpretHostServer().cleanRecord();
+
+        String host = RandomValue.randomHost();
+        app.requestInterpretHost(host, RequestIpType.auto);
+        app.waitForAppThread();
+
+        assertThat("当前网络仅支持v4时，自动解析只会解析v4类型", serverV4Two.getInterpretHostServer().hasRequestForArg(host, 1, true));
+    }
+
+    @Test
+    public void testAutoRequestIpTypeForIpv6() {
+        // 复用case 获取v6网络状态
+        testUpdateServerWhenStartUnderV6();
+        serverV6Two.getInterpretHostServer().cleanRecord();
+
+        String host = RandomValue.randomHost();
+        app.requestInterpretHost(host, RequestIpType.auto);
+        app.waitForAppThread();
+
+        assertThat("当前网络仅支持v6时，自动解析只会解析v6类型", serverV6Two.getInterpretHostServer().hasRequestForArg(InterpretHostServer.InterpretHostArg.create(host, RequestIpType.v6), 1, true));
+    }
+
+    @Test
+    public void testAutoRequestIpTypeForBoth() {
+        // 复用case 获取v4v6网络状态
+        testUpdateServerWhenStartUnderV4V6();
+        serverV4Two.getInterpretHostServer().cleanRecord();
+
+        String host = RandomValue.randomHost();
+        app.requestInterpretHost(host, RequestIpType.auto);
+        app.waitForAppThread();
+
+        assertThat("当前网络支持v4v6时，自动解析会解析v4v6类型", serverV4Two.getInterpretHostServer().hasRequestForArg(InterpretHostServer.InterpretHostArg.create(host, RequestIpType.both), 1, true));
     }
 }
