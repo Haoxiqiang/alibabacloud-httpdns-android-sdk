@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.alibaba.sdk.android.httpdns.ApiForTest;
 import com.alibaba.sdk.android.httpdns.BeforeHttpDnsServiceInit;
+import com.alibaba.sdk.android.httpdns.HttpDnsSettings;
 import com.alibaba.sdk.android.httpdns.InitManager;
 import com.alibaba.sdk.android.httpdns.probe.ProbeTask;
 
@@ -81,5 +82,10 @@ public class HttpDnsServiceTestImpl extends HttpDnsServiceImpl implements ApiFor
     @Override
     public void setDefaultUpdateServerIpv6(String[] defaultServerIps, int[] ports) {
         this.config.setDefaultUpdateServerIpv6(defaultServerIps, ports);
+    }
+
+    @Override
+    public void setNetworkDetector(HttpDnsSettings.NetworkDetector networkDetector) {
+        this.networkDetector = networkDetector;
     }
 }

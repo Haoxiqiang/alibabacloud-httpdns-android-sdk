@@ -9,6 +9,7 @@ import com.alibaba.sdk.android.httpdns.BuildConfig;
 import com.alibaba.sdk.android.httpdns.DegradationFilter;
 import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
 import com.alibaba.sdk.android.httpdns.HttpDnsService;
+import com.alibaba.sdk.android.httpdns.HttpDnsSettings;
 import com.alibaba.sdk.android.httpdns.ILogger;
 import com.alibaba.sdk.android.httpdns.InitConfig;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
@@ -21,6 +22,7 @@ import com.alibaba.sdk.android.httpdns.interpret.InterpretHostResultRepo;
 import com.alibaba.sdk.android.httpdns.interpret.InterpretHostService;
 import com.alibaba.sdk.android.httpdns.interpret.ResolveHostService;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
+import com.alibaba.sdk.android.httpdns.net.HttpDnsNetworkDetector;
 import com.alibaba.sdk.android.httpdns.net.NetworkStateManager;
 import com.alibaba.sdk.android.httpdns.probe.IPProbeItem;
 import com.alibaba.sdk.android.httpdns.probe.ProbeService;
@@ -53,6 +55,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
     private SignService signService;
     private boolean resolveAfterNetworkChange = true;
     private HostInterpretRecorder recorder = new HostInterpretRecorder();
+    protected HttpDnsSettings.NetworkDetector networkDetector;
 
     public HttpDnsServiceImpl(Context context, final String accountId, String secret) {
         try {
@@ -65,6 +68,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             requestHandler = new InterpretHostRequestHandler(config, scheduleService, signService);
             interpretHostService = new InterpretHostService(this.config, ipProbeService, requestHandler, repo, filter, recorder);
             resolveHostService = new ResolveHostService(this.config, repo, requestHandler, ipProbeService, filter, recorder);
+            networkDetector = HttpDnsNetworkDetector.getInstance();
 
             beforeInit();
 

@@ -13,8 +13,10 @@ import com.alibaba.sdk.android.httpdns.DegradationFilter;
 import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
 import com.alibaba.sdk.android.httpdns.HttpDns;
 import com.alibaba.sdk.android.httpdns.HttpDnsService;
+import com.alibaba.sdk.android.httpdns.HttpDnsSettings;
 import com.alibaba.sdk.android.httpdns.ILogger;
 import com.alibaba.sdk.android.httpdns.InitManager;
+import com.alibaba.sdk.android.httpdns.NetType;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.SyncService;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
@@ -68,6 +70,8 @@ public class BusinessApp {
     private MockSpeedTestServer speedTestServer;
 
     private TestExecutorService testExecutorService;
+
+    private NetType currentNetType = NetType.v4;
 
     public BusinessApp(String accountId) {
         this.accountId = accountId;
@@ -150,6 +154,12 @@ public class BusinessApp {
                     if (BusinessApp.this.speedTestServer != null) {
                         ((ApiForTest) httpDnsService).setSocketFactory(BusinessApp.this.speedTestServer);
                     }
+                    ((ApiForTest) httpDnsService).setNetworkDetector(new HttpDnsSettings.NetworkDetector() {
+                        @Override
+                        public NetType getNetType() {
+                            return currentNetType;
+                        }
+                    });
                 }
             }
         });
@@ -471,5 +481,9 @@ public class BusinessApp {
                 ((TestExecutorService) ((ApiForTest) httpDnsService).getWorker()).enableThreadCountCheck(check);
             }
         }
+    }
+
+    public void changeNetType(NetType netType) {
+        currentNetType = netType;
     }
 }

@@ -68,8 +68,16 @@ public interface ApiForTest {
 
     /**
      * 设置ipv6的兜底调度IP
+     *
      * @param defaultServerIps
      * @param ports
      */
     void setDefaultUpdateServerIpv6(String[] defaultServerIps, int[] ports);
+
+    /**
+     * 设置测试用的网络detector
+     *
+     * @param networkDetector
+     */
+    void setNetworkDetector(HttpDnsSettings.NetworkDetector networkDetector);
 }
