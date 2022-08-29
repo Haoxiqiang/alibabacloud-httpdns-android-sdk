@@ -40,8 +40,8 @@ public class HttpDnsServiceTestImpl extends HttpDnsServiceImpl implements ApiFor
     }
 
     @Override
-    public void setInitServer(String region, String[] ips, int[] ports) {
-        this.config.setInitServers(region, ips, ports);
+    public void setInitServer(String region, String[] ips, int[] ports, String[] ipv6s, int[] v6Ports) {
+        this.config.setInitServers(region, ips, ports, ipv6s, v6Ports);
     }
 
     @Override
@@ -75,17 +75,12 @@ public class HttpDnsServiceTestImpl extends HttpDnsServiceImpl implements ApiFor
     }
 
     @Override
-    public void setInitServerIpv6(String[] ips, int[] ports) {
-        this.config.setInitServersIpv6(ips, ports);
-    }
-
-    @Override
     public void setDefaultUpdateServerIpv6(String[] defaultServerIps, int[] ports) {
         this.config.setDefaultUpdateServerIpv6(defaultServerIps, ports);
     }
 
     @Override
     public void setNetworkDetector(HttpDnsSettings.NetworkDetector networkDetector) {
-        this.networkDetector = networkDetector;
+        this.config.setNetworkDetector(networkDetector);
     }
 }

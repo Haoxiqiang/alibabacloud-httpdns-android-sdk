@@ -1,7 +1,6 @@
 package com.alibaba.sdk.android.httpdns.test.server;
 
 import com.alibaba.sdk.android.httpdns.probe.ProbeTask;
-import com.alibaba.sdk.android.httpdns.test.helper.ServerHelper;
 import com.alibaba.sdk.android.httpdns.test.server.base.BaseDataServer;
 import com.alibaba.sdk.android.httpdns.test.server.base.RequestListener;
 import com.alibaba.sdk.android.httpdns.test.utils.UnitTestUtil;
@@ -37,8 +36,8 @@ public class MockSpeedTestServer implements ProbeTask.SpeedTestSocketFactory, Re
     public void onRequest(int type, Object arg, BaseDataServer server) {
         // InterpretHostRequest
         if (type == REQUEST_TYPE_INTERPRET_HOST) {
-            String host = ((InterpretHostServer.InterpretHostArg)arg).host;
-            String[] ips = ((InterpretHostServer) server).getResponse((InterpretHostServer.InterpretHostArg)arg, 1, false).get(0).getIps();
+            String host = ((InterpretHostServer.InterpretHostArg) arg).host;
+            String[] ips = ((InterpretHostServer) server).getResponse((InterpretHostServer.InterpretHostArg) arg, 1, false).get(0).getIps();
             String[] sorted = UnitTestUtil.changeArraySort(ips);
             sortedIps.add(sorted);
             sortedHostIpsMap.put(host, sorted);

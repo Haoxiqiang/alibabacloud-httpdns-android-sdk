@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.alibaba.sdk.android.httpdns.BuildConfig;
+import com.alibaba.sdk.android.httpdns.HttpDnsSettings;
 import com.alibaba.sdk.android.httpdns.config.ConfigCacheHelper;
 import com.alibaba.sdk.android.httpdns.config.RegionServer;
 import com.alibaba.sdk.android.httpdns.config.ServerConfig;
@@ -14,7 +15,6 @@ import com.alibaba.sdk.android.httpdns.utils.Constants;
 import com.alibaba.sdk.android.httpdns.utils.ThreadUtil;
 
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -69,6 +69,11 @@ public class HttpDnsConfig implements SpCacheItem {
      * 是否禁用probe能力
      */
     private boolean probeDisabled = false;
+
+    /**
+     * 网络探测接口
+     */
+    private HttpDnsSettings.NetworkDetector networkDetector = null;
 
     private ConfigCacheHelper cacheHelper;
 
@@ -196,7 +201,7 @@ public class HttpDnsConfig implements SpCacheItem {
      * @return
      */
     public String[] getIpv6ServerIps() {
-        return this.currentServer.getIpv6ServerIpsForUse();
+        return this.currentServer.getIpv6ServerIps();
     }
 
     public RegionServer getInitServer() {
@@ -208,7 +213,7 @@ public class HttpDnsConfig implements SpCacheItem {
     }
 
     public String[] getDefaultIpv6UpdateServer() {
-        return defaultUpdateServer.getIpv6ServerIpsForUse();
+        return defaultUpdateServer.getIpv6ServerIps();
     }
 
     @Override
@@ -238,28 +243,6 @@ public class HttpDnsConfig implements SpCacheItem {
         return Arrays.hashCode(new Object[]{context, enabled, initServer, defaultUpdateServer, currentServer, accountId, schema, region, timeout, crashDefend, remoteDisabled, probeDisabled, cacheHelper, worker, dbWorker});
     }
 
-    //
-//    @Override
-//    public boolean equals(Object o) {
-//        if (this == o) return true;
-//        if (o == null || getClass() != o.getClass()) return false;
-//        HttpDnsConfig that = (HttpDnsConfig) o;
-//        return enabled == that.enabled &&
-//                timeout == that.timeout &&
-//                CommonUtil.equals(context, that.context) &&
-//                CommonUtil.equals(initServer, initServer) &&
-//                CommonUtil.equals(accountId, that.accountId) &&
-//                CommonUtil.equals(schema, that.schema) &&
-//                CommonUtil.equals(region, that.region) &&
-//                CommonUtil.equals(worker, that.worker);
-//    }
-//
-//    @Override
-//    public int hashCode() {
-//        int result = Arrays.hashCode(new Object[]{context, enabled, accountId, schema, currentServer, region, timeout, worker, initServer});
-//        return result;
-//    }
-
     /**
      * 设置初始服务IP
      * <p>
@@ -269,18 +252,24 @@ public class HttpDnsConfig implements SpCacheItem {
      * @param initRegion
      * @param initIps
      * @param initPorts
+     * @param initIpv6s
+     * @param initV6Ports
      */
-    public void setInitServers(String initRegion, String[] initIps, int[] initPorts) {
+    public void setInitServers(String initRegion, String[] initIps, int[] initPorts, String[] initIpv6s, int[] initV6Ports) {
         this.region = initRegion;
         if (initIps == null) {
             return;
         }
         String[] oldInitServerIps = this.initServer.getServerIps();
         int[] oldInitPorts = this.initServer.getPorts();
-        this.initServer.updateAll(initRegion, initIps, initPorts);
-        if (currentServer.getServerIps() == null || CommonUtil.isSameServer(oldInitServerIps, oldInitPorts, currentServer.getServerIps(), currentServer.getPorts())) {
-            // 初始IP默认region为国内
-            currentServer.setServerIps(initRegion, initIps, initPorts);
+        String[] oldInitIpv6ServerIps = this.initServer.getIpv6ServerIps();
+        int[] oldInitIpv6Ports = this.initServer.getIpv6Ports();
+        this.initServer.updateAll(initRegion, initIps, initPorts, initIpv6s, initV6Ports);
+        if (currentServer.getServerIps() == null
+                || currentServer.getIpv6ServerIps() == null
+                || (CommonUtil.isSameServer(oldInitServerIps, oldInitPorts, currentServer.getServerIps(), currentServer.getPorts())
+                && CommonUtil.isSameServer(oldInitIpv6ServerIps, oldInitIpv6Ports, currentServer.getIpv6ServerIps(), currentServer.getIpv6Ports()))) {
+            currentServer.setServerIps(initRegion, initIps, initPorts, initIpv6s, initV6Ports);
         }
     }
 
@@ -292,22 +281,7 @@ public class HttpDnsConfig implements SpCacheItem {
      * @param ports
      */
     public void setDefaultUpdateServer(String[] ips, int[] ports) {
-        this.defaultUpdateServer.updateAll(this.initServer.getRegion(), ips, ports);
-    }
-
-
-    public void setInitServersIpv6(String[] ips, int[] ports) {
-        if (ips == null) {
-            return;
-        }
-        String[] oldInitServerIps = this.initServer.getIpv6ServerIps();
-        int[] oldInitPorts = this.initServer.getIpv6Ports();
-        this.initServer.updateIpv6(ips, ports);
-        if (currentServer.getIpv6ServerIps() == null || CommonUtil.isSameServer(oldInitServerIps, oldInitPorts, currentServer.getIpv6ServerIps(), currentServer.getIpv6Ports())) {
-            // 初始IP默认region为国内
-            // TODO 修改ipv6
-//            currentServer.setServerIps(region, ips, ports);
-        }
+        this.defaultUpdateServer.updateRegionAndIpv4(this.initServer.getRegion(), ips, ports);
     }
 
     public void setDefaultUpdateServerIpv6(String[] defaultServerIps, int[] ports) {
@@ -330,6 +304,13 @@ public class HttpDnsConfig implements SpCacheItem {
         return probeDisabled;
     }
 
+    public HttpDnsSettings.NetworkDetector getNetworkDetector() {
+        return networkDetector;
+    }
+
+    public void setNetworkDetector(HttpDnsSettings.NetworkDetector networkDetector) {
+        this.networkDetector = networkDetector;
+    }
 
     // 缓存相关的 处理，暂时放这里
 

@@ -13,12 +13,13 @@ public interface ApiForTest {
 
     /**
      * 指定初始服务ip
-     *
-     * @param region
+     *  @param region
      * @param ips
      * @param ports
+     * @param ipv6s
+     * @param v6Ports
      */
-    void setInitServer(String region, String[] ips, int[] ports);
+    void setInitServer(String region, String[] ips, int[] ports, String[] ipv6s, int[] v6Ports);
 
     /**
      * 指定httpdns使用的线程池
@@ -58,13 +59,6 @@ public interface ApiForTest {
      * @param ports
      */
     void setDefaultUpdateServer(String[] defaultServerIps, int[] ports);
-
-    /**
-     * 设置ipv6的初始IP
-     * @param ips
-     * @param ports
-     */
-    void setInitServerIpv6(String[] ips, int[] ports);
 
     /**
      * 设置ipv6的兜底调度IP

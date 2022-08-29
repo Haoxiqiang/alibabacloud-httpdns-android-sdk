@@ -52,6 +52,10 @@ public class Constants {
     public static final String CONFIG_KEY_PORTS = "ports";
     public static final String CONFIG_CURRENT_INDEX = "current";
     public static final String CONFIG_LAST_INDEX = "last";
+    public static final String CONFIG_KEY_SERVERS_IPV6 = "serverIpsIpv6";
+    public static final String CONFIG_KEY_PORTS_IPV6 = "portsIpv6";
+    public static final String CONFIG_CURRENT_INDEX_IPV6 = "currentIpv6";
+    public static final String CONFIG_LAST_INDEX_IPV6 = "lastIpv6";
     public static final String CONFIG_SERVERS_LAST_UPDATED_TIME = "servers_last_updated_time";
     public static final String CONFIG_CURRENT_SERVER_REGION = "server_region";
 }

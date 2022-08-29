@@ -23,7 +23,6 @@ public class RegionServer {
     private String region;
 
     private String[] ipv6ServerIps;
-    private String[] ipv6FormatIps;
     private int[] ipv6Ports;
 
     public RegionServer(String[] serverIps, int[] ports, String[] ipv6ServerIps, int[] ipv6Ports, String region) {
@@ -48,17 +47,6 @@ public class RegionServer {
 
     public String[] getIpv6ServerIps() {
         return ipv6ServerIps;
-    }
-
-    public String[] getIpv6ServerIpsForUse() {
-        if(ipv6FormatIps != null) {
-            return ipv6FormatIps;
-        }
-        ipv6FormatIps = new String[ipv6ServerIps.length];
-        for (int i = 0; i < ipv6ServerIps.length; i++) {
-            ipv6FormatIps[i] = "[" + ipv6ServerIps[i] + "]";
-        }
-        return ipv6FormatIps;
     }
 
     public int[] getIpv6Ports() {
@@ -95,16 +83,6 @@ public class RegionServer {
         return result;
     }
 
-    public boolean update(String[] ips, int[] ports) {
-        boolean same = CommonUtil.isSameServer(this.serverIps, this.ports, ips, ports);
-        if (same) {
-            return false;
-        }
-        this.serverIps = ips;
-        this.ports = ports;
-        return true;
-    }
-
     public boolean updateIpv6(String[] ips, int[] ports) {
         boolean same = CommonUtil.isSameServer(this.ipv6ServerIps, this.ipv6Ports, ips, ports);
         if (same) {
@@ -112,11 +90,10 @@ public class RegionServer {
         }
         this.ipv6ServerIps = ips;
         this.ipv6Ports = ports;
-        this.ipv6FormatIps = null;
         return true;
     }
 
-    public boolean updateAll(String region, String[] ips, int[] ports) {
+    public boolean updateRegionAndIpv4(String region, String[] ips, int[] ports) {
         boolean same = CommonUtil.isSameServer(this.serverIps, this.ports, ips, ports);
         if (same && region.equals(this.region)) {
             return false;
@@ -124,6 +101,21 @@ public class RegionServer {
         this.region = region;
         this.serverIps = ips;
         this.ports = ports;
+        return true;
+    }
+
+
+    public boolean updateAll(String region, String[] ips, int[] ports, String[] ipv6s, int[] v6ports) {
+        boolean same = CommonUtil.isSameServer(this.serverIps, this.ports, ips, ports);
+        boolean v6same = CommonUtil.isSameServer(this.ipv6ServerIps, this.ipv6Ports, ipv6s, v6ports);
+        if (same && v6same && region.equals(this.region)) {
+            return false;
+        }
+        this.region = region;
+        this.serverIps = ips;
+        this.ports = ports;
+        this.ipv6ServerIps = ipv6s;
+        this.ipv6Ports = v6ports;
         return true;
     }
 }

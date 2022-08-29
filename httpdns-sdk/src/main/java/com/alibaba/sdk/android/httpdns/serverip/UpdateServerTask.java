@@ -3,6 +3,9 @@ package com.alibaba.sdk.android.httpdns.serverip;
 import android.text.TextUtils;
 
 import com.alibaba.sdk.android.httpdns.BuildConfig;
+import com.alibaba.sdk.android.httpdns.HttpDnsSettings;
+import com.alibaba.sdk.android.httpdns.NetType;
+import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.impl.HttpDnsConfig;
 import com.alibaba.sdk.android.httpdns.report.ReportManager;
 import com.alibaba.sdk.android.httpdns.request.HttpRequest;
@@ -10,7 +13,6 @@ import com.alibaba.sdk.android.httpdns.request.HttpRequestConfig;
 import com.alibaba.sdk.android.httpdns.request.HttpRequestFailWatcher;
 import com.alibaba.sdk.android.httpdns.request.HttpRequestTask;
 import com.alibaba.sdk.android.httpdns.request.HttpRequestWatcher;
-import com.alibaba.sdk.android.httpdns.request.Ipv6onlyWatcher;
 import com.alibaba.sdk.android.httpdns.request.RequestCallback;
 import com.alibaba.sdk.android.httpdns.request.ResponseTranslator;
 import com.alibaba.sdk.android.httpdns.request.RetryHttpRequest;
@@ -32,12 +34,25 @@ public class UpdateServerTask {
                 + ((TextUtils.isEmpty(region) ? "" : ("&region=" + region))
                 + getSid());
 
-        Server[] servers = getAllServers(
-                config.getCurrentServer().getServerIps(), config.getCurrentServer().getPorts(),
-                config.getInitServer().getServerIps(), config.getInitServer().getPorts(),
-                config.getDefaultUpdateServer().getServerIps(), config.getDefaultUpdateServer().getPorts());
+        Server[] servers = null;
 
-        HttpRequestConfig requestConfig = new HttpRequestConfig(config.getSchema(), servers[0].getServerIp(), servers[0].getPort(config.getSchema()), path, config.getTimeout());
+        RequestIpType ipType;
+        HttpDnsSettings.NetworkDetector networkDetector = config.getNetworkDetector();
+        if (networkDetector != null && networkDetector.getNetType() == NetType.v6) {
+            servers = getAllServers(
+                    config.getCurrentServer().getIpv6ServerIps(), config.getCurrentServer().getIpv6Ports(),
+                    config.getInitServer().getIpv6ServerIps(), config.getInitServer().getIpv6Ports(),
+                    config.getDefaultUpdateServer().getIpv6ServerIps(), config.getDefaultUpdateServer().getIpv6Ports());
+            ipType = RequestIpType.v6;
+        } else {
+            servers = getAllServers(
+                    config.getCurrentServer().getServerIps(), config.getCurrentServer().getPorts(),
+                    config.getInitServer().getServerIps(), config.getInitServer().getPorts(),
+                    config.getDefaultUpdateServer().getServerIps(), config.getDefaultUpdateServer().getPorts());
+            ipType = RequestIpType.v4;
+        }
+
+        HttpRequestConfig requestConfig = new HttpRequestConfig(config.getSchema(), servers[0].getServerIp(), servers[0].getPort(config.getSchema()), path, config.getTimeout(), ipType);
         HttpRequest<UpdateServerResponse> httpRequest = new HttpRequest<>(requestConfig, new ResponseTranslator<UpdateServerResponse>() {
             @Override
             public UpdateServerResponse translate(String response) throws Throwable {
@@ -45,8 +60,6 @@ public class UpdateServerTask {
             }
         });
         httpRequest = new HttpRequestWatcher<>(httpRequest, new HttpRequestFailWatcher(ReportManager.getReportManagerByAccount(config.getAccountId())));
-        // 兼容ipv6only 环境
-        httpRequest = new HttpRequestWatcher<>(httpRequest, new Ipv6onlyWatcher(getAllIpv6Servers(config.getIpv6ServerIps(), config.getDefaultIpv6UpdateServer())));
         // 增加切换ip，回到初始Ip的逻辑
         httpRequest = new HttpRequestWatcher<>(httpRequest, new ShiftServerWatcher(servers));
         // 重试，当前服务Ip和初始服务ip个数

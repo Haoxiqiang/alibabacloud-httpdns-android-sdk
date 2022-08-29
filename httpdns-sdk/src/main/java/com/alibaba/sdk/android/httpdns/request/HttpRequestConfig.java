@@ -1,5 +1,6 @@
 package com.alibaba.sdk.android.httpdns.request;
 
+import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.utils.Constants;
 
 /**
@@ -33,18 +34,24 @@ public class HttpRequestConfig {
      */
     private int timeout = Constants.DEFAULT_TIMEOUT;
 
+    /**
+     * 服务器IP类型 只会是 v4 或者 v6
+     */
+    private RequestIpType ipType = RequestIpType.v4;
+
     public HttpRequestConfig(String ip, int port, String path) {
         this.ip = ip;
         this.port = port;
         this.path = path;
     }
 
-    public HttpRequestConfig(String schema, String ip, int port, String path, int timeout) {
+    public HttpRequestConfig(String schema, String ip, int port, String path, int timeout, RequestIpType ipType) {
         this.schema = schema;
         this.ip = ip;
         this.port = port;
         this.path = path;
         this.timeout = timeout;
+        this.ipType = ipType;
     }
 
     public void setSchema(String schema) {
@@ -79,7 +86,15 @@ public class HttpRequestConfig {
         return timeout;
     }
 
+    public RequestIpType getIpType() {
+        return ipType;
+    }
+
     public String url() {
-        return schema + ip + ":" + port + path;
+        if (ipType == RequestIpType.v6) {
+            return schema + "[" + ip + "]" + ":" + port + path;
+        } else {
+            return schema + ip + ":" + port + path;
+        }
     }
 }

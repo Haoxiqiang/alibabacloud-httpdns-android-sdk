@@ -55,7 +55,6 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
     private SignService signService;
     private boolean resolveAfterNetworkChange = true;
     private HostInterpretRecorder recorder = new HostInterpretRecorder();
-    protected HttpDnsSettings.NetworkDetector networkDetector;
 
     public HttpDnsServiceImpl(Context context, final String accountId, String secret) {
         try {
@@ -68,7 +67,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
             requestHandler = new InterpretHostRequestHandler(config, scheduleService, signService);
             interpretHostService = new InterpretHostService(this.config, ipProbeService, requestHandler, repo, filter, recorder);
             resolveHostService = new ResolveHostService(this.config, repo, requestHandler, ipProbeService, filter, recorder);
-            networkDetector = HttpDnsNetworkDetector.getInstance();
+            config.setNetworkDetector(HttpDnsNetworkDetector.getInstance());
 
             beforeInit();
 

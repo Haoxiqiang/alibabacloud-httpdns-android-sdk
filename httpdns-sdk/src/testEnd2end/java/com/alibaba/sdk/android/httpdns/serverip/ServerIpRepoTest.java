@@ -28,7 +28,7 @@ public class ServerIpRepoTest {
 
         String hk = Constants.REGION_HK;
         String[] hkIps = RandomValue.randomIpv4s();
-        repo.save(hk, hkIps, null);
+        repo.save(hk, hkIps, null, null, null);
 
         MatcherAssert.assertThat("应该可以正确获取存入的值", repo.getServerIps(hk), Matchers.arrayContaining(hkIps));
         MatcherAssert.assertThat("port没有设置就是null", repo.getPorts(hk) == null);
@@ -36,7 +36,7 @@ public class ServerIpRepoTest {
         String sg = "sg";
         String[] sgIps = RandomValue.randomIpv4s();
         int[] sgPorts = RandomValue.randomPorts();
-        repo.save(sg, sgIps, sgPorts);
+        repo.save(sg, sgIps, sgPorts, null, null);
 
         MatcherAssert.assertThat("应该可以正确获取存入的值", repo.getServerIps(sg), Matchers.arrayContaining(sgIps));
         UnitTestUtil.assertIntArrayEquals(sgPorts, repo.getPorts(sg));
@@ -47,7 +47,7 @@ public class ServerIpRepoTest {
         String sg = "sg";
         String[] sgIps = RandomValue.randomIpv4s();
         int[] sgPorts = RandomValue.randomPorts();
-        repo.save(sg, sgIps, sgPorts);
+        repo.save(sg, sgIps, sgPorts, null, null);
 
         MatcherAssert.assertThat("应该可以正确获取存入的值", repo.getServerIps(sg), Matchers.arrayContaining(sgIps));
         UnitTestUtil.assertIntArrayEquals(sgPorts, repo.getPorts(sg));

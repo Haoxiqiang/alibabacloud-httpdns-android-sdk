@@ -1,7 +1,8 @@
 package com.alibaba.sdk.android.httpdns.test.server;
 
-import com.alibaba.sdk.android.httpdns.test.helper.ServerHelper;
 import com.alibaba.sdk.android.httpdns.test.server.base.BaseDataServer;
+
+import java.util.List;
 
 import okhttp3.mockwebserver.RecordedRequest;
 
@@ -12,6 +13,8 @@ import okhttp3.mockwebserver.RecordedRequest;
  * @date 2020/11/9
  */
 public class DebugApiServer extends BaseDataServer<Void, String> {
+
+
     @Override
     public String convert(String body) {
         return body;
@@ -29,6 +32,17 @@ public class DebugApiServer extends BaseDataServer<Void, String> {
 
     @Override
     public boolean isMyBusinessRequest(RecordedRequest request) {
-        return ServerHelper.isDebugRequest(request);
+        return isDebugRequest(request);
+    }
+
+
+    /**
+     * 服务侧 判断是否是 测试请求
+     * @param request
+     * @return
+     */
+    private static boolean isDebugRequest(RecordedRequest request) {
+        List<String> pathSegments = request.getRequestUrl().pathSegments();
+        return pathSegments.size() == 1 && pathSegments.contains("debug");
     }
 }

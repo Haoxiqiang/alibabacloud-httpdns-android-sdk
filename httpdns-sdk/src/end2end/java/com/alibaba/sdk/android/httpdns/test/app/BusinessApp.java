@@ -118,8 +118,20 @@ public class BusinessApp {
                             ips[i] = BusinessApp.this.initServers[i].getServerIp();
                             ports[i] = BusinessApp.this.initServers[i].getPort();
                         }
+
+                        String[] ipv6s = null;
+                        int[] v6ports = null;
+                        if (BusinessApp.this.initServersIpv6 != null) {
+                            ipv6s = new String[BusinessApp.this.initServersIpv6.length];
+                            v6ports = new int[BusinessApp.this.initServersIpv6.length];
+                            for (int i = 0; i < BusinessApp.this.initServersIpv6.length; i++) {
+                                ipv6s[i] = BusinessApp.this.initServersIpv6[i].getServerIp();
+                                v6ports[i] = BusinessApp.this.initServersIpv6[i].getPort();
+                            }
+                        }
+
                         // 设置初始IP
-                        ((ApiForTest) httpDnsService).setInitServer(initRegion, ips, ports);
+                        ((ApiForTest) httpDnsService).setInitServer(initRegion, ips, ports, ipv6s, v6ports);
                     }
                     if (BusinessApp.this.defaultUpdateServers != null) {
                         String[] defaultServerIps = new String[BusinessApp.this.defaultUpdateServers.length];
@@ -130,16 +142,7 @@ public class BusinessApp {
                         }
                         ((ApiForTest) httpDnsService).setDefaultUpdateServer(defaultServerIps, ports);
                     }
-                    if (BusinessApp.this.initServersIpv6 != null) {
-                        String[] ips = new String[BusinessApp.this.initServersIpv6.length];
-                        int[] ports = new int[BusinessApp.this.initServersIpv6.length];
-                        for (int i = 0; i < BusinessApp.this.initServersIpv6.length; i++) {
-                            ips[i] = BusinessApp.this.initServersIpv6[i].getServerIp();
-                            ports[i] = BusinessApp.this.initServersIpv6[i].getPort();
-                        }
-                        // 设置初始IP
-                        ((ApiForTest) httpDnsService).setInitServerIpv6(ips, ports);
-                    }
+
                     if (BusinessApp.this.defaultUpdateServersIpv6 != null) {
                         String[] defaultServerIps = new String[BusinessApp.this.defaultUpdateServersIpv6.length];
                         int[] ports = new int[BusinessApp.this.defaultUpdateServersIpv6.length];

@@ -8,12 +8,12 @@ import com.alibaba.sdk.android.httpdns.interpret.ResolveHostResponse;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import com.alibaba.sdk.android.httpdns.probe.IPProbeItem;
 import com.alibaba.sdk.android.httpdns.test.app.BusinessApp;
-import com.alibaba.sdk.android.httpdns.test.helper.ServerHelper;
 import com.alibaba.sdk.android.httpdns.test.helper.ServerStatusHelper;
 import com.alibaba.sdk.android.httpdns.test.server.HttpDnsServer;
 import com.alibaba.sdk.android.httpdns.test.server.InterpretHostServer;
 import com.alibaba.sdk.android.httpdns.test.server.MockSpeedTestServer;
 import com.alibaba.sdk.android.httpdns.test.server.ResolveHostServer;
+import com.alibaba.sdk.android.httpdns.test.server.ServerIpsServer;
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
 import com.alibaba.sdk.android.httpdns.test.utils.ShadowNetworkInfo;
 import com.alibaba.sdk.android.httpdns.test.utils.UnitTestUtil;
@@ -223,7 +223,7 @@ public class HttpDnsE2E {
 
     private void prepareUpdateServerResponseForGroup2(String defaultRegion) {
         // 给 group2（服务3、4、5） 设置 defaultRegion的服务IP是 服务 0 1 2
-        String anotherUpdateServerResponse = ServerHelper.createUpdateServerResponse(new String[]{server.getServerIp(), server1.getServerIp(), server2.getServerIp()}, RandomValue.randomIpv6s(), new int[]{server.getPort(), server1.getPort(), server2.getPort()}, RandomValue.randomPorts());
+        String anotherUpdateServerResponse = ServerIpsServer.createUpdateServerResponse(new String[]{server.getServerIp(), server1.getServerIp(), server2.getServerIp()}, RandomValue.randomIpv6s(), new int[]{server.getPort(), server1.getPort(), server2.getPort()}, RandomValue.randomPorts());
         server3.getServerIpsServer().preSetRequestResponse(defaultRegion, 200, anotherUpdateServerResponse, -1);
         server4.getServerIpsServer().preSetRequestResponse(defaultRegion, 200, anotherUpdateServerResponse, -1);
         server5.getServerIpsServer().preSetRequestResponse(defaultRegion, 200, anotherUpdateServerResponse, -1);
@@ -231,7 +231,7 @@ public class HttpDnsE2E {
 
     private void prepareUpdateServerResponseForGroup1(String anotherRegion) {
         // 给 group1（服务0、1、2） 设置 anotherRegion的服务IP是 服务 3 4 5
-        String updateServerResponse = ServerHelper.createUpdateServerResponse(new String[]{server3.getServerIp(), server4.getServerIp(), server5.getServerIp()}, RandomValue.randomIpv6s(), new int[]{server3.getPort(), server4.getPort(), server5.getPort()}, RandomValue.randomPorts());
+        String updateServerResponse = ServerIpsServer.createUpdateServerResponse(new String[]{server3.getServerIp(), server4.getServerIp(), server5.getServerIp()}, RandomValue.randomIpv6s(), new int[]{server3.getPort(), server4.getPort(), server5.getPort()}, RandomValue.randomPorts());
         server.getServerIpsServer().preSetRequestResponse(anotherRegion, 200, updateServerResponse, -1);
         server1.getServerIpsServer().preSetRequestResponse(anotherRegion, 200, updateServerResponse, -1);
         server2.getServerIpsServer().preSetRequestResponse(anotherRegion, 200, updateServerResponse, -1);
@@ -530,7 +530,7 @@ public class HttpDnsE2E {
     public void updateServerFailWhenRetryAnotherServer() {
 
         String hkRegion = Constants.REGION_HK;
-        String updateServerResponse = ServerHelper.createUpdateServerResponse(new String[]{server3.getServerIp(), server4.getServerIp(), server5.getServerIp()}, RandomValue.randomIpv6s(), new int[]{server3.getPort(), server4.getPort(), server5.getPort()}, RandomValue.randomPorts());
+        String updateServerResponse = ServerIpsServer.createUpdateServerResponse(new String[]{server3.getServerIp(), server4.getServerIp(), server5.getServerIp()}, RandomValue.randomIpv6s(), new int[]{server3.getPort(), server4.getPort(), server5.getPort()}, RandomValue.randomPorts());
         // 第一个服务失败
         server.getServerIpsServer().preSetRequestResponse(hkRegion, 400, "whatever", 1);
         server1.getServerIpsServer().preSetRequestResponse(hkRegion, 200, updateServerResponse, -1);
@@ -1348,12 +1348,12 @@ public class HttpDnsE2E {
     @Test
     public void serverIpWillUpdateEveryday() {
         String region = REGION_DEFAULT;
-        String updateServerResponseFor345 = ServerHelper.createUpdateServerResponse(new String[]{server.getServerIp(), server1.getServerIp(), server2.getServerIp()}, RandomValue.randomIpv6s(), new int[]{server.getPort(), server1.getPort(), server2.getPort()}, RandomValue.randomPorts());
+        String updateServerResponseFor345 = ServerIpsServer.createUpdateServerResponse(new String[]{server.getServerIp(), server1.getServerIp(), server2.getServerIp()}, RandomValue.randomIpv6s(), new int[]{server.getPort(), server1.getPort(), server2.getPort()}, RandomValue.randomPorts());
         server3.getServerIpsServer().preSetRequestResponse(region, 200, updateServerResponseFor345, -1);
         server4.getServerIpsServer().preSetRequestResponse(region, 200, updateServerResponseFor345, -1);
         server5.getServerIpsServer().preSetRequestResponse(region, 200, updateServerResponseFor345, -1);
 
-        String updateServerResponseFor012 = ServerHelper.createUpdateServerResponse(new String[]{server3.getServerIp(), server4.getServerIp(), server5.getServerIp()}, RandomValue.randomIpv6s(), new int[]{server3.getPort(), server4.getPort(), server5.getPort()}, RandomValue.randomPorts());
+        String updateServerResponseFor012 = ServerIpsServer.createUpdateServerResponse(new String[]{server3.getServerIp(), server4.getServerIp(), server5.getServerIp()}, RandomValue.randomIpv6s(), new int[]{server3.getPort(), server4.getPort(), server5.getPort()}, RandomValue.randomPorts());
         server.getServerIpsServer().preSetRequestResponse(region, 200, updateServerResponseFor012, -1);
         server1.getServerIpsServer().preSetRequestResponse(region, 200, updateServerResponseFor012, -1);
         server2.getServerIpsServer().preSetRequestResponse(region, 200, updateServerResponseFor012, -1);
@@ -1383,7 +1383,7 @@ public class HttpDnsE2E {
     @Test
     public void testDisableService() {
         String region = Constants.REGION_HK;
-        String disableResponse = ServerHelper.createUpdateServerDisableResponse();
+        String disableResponse = ServerIpsServer.createUpdateServerDisableResponse();
         server.getServerIpsServer().preSetRequestResponse(region, 200, disableResponse, -1);
 
         // 修改region，触发禁止服务

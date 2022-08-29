@@ -30,7 +30,7 @@ public class HttpDnsConfigTest {
     public void setUp() {
         config = new HttpDnsConfig(RuntimeEnvironment.application, account);
         config.setWorker(new SyncExecutorService());
-        config.setInitServers(REGION_DEFAULT, serverIps, null);
+        config.setInitServers(REGION_DEFAULT, serverIps, null, null, null);
     }
 
     @Test
@@ -39,13 +39,13 @@ public class HttpDnsConfigTest {
         config.getCurrentServer().markOkServer(config.getCurrentServer().getServerIp(), config.getCurrentServer().getPort());
         MatcherAssert.assertThat("current ok server is " + serverIps[1], config.getCurrentServer().getServerIp().equals(serverIps[1]));
         String[] newServerIps = RandomValue.randomIpv4s();
-        config.getCurrentServer().setServerIps(null, newServerIps, null);
+        config.getCurrentServer().setServerIps(null, newServerIps, null, null, null);
         MatcherAssert.assertThat("current ok server is " + newServerIps[0], config.getCurrentServer().getServerIp().equals(newServerIps[0]));
     }
 
     @Test
     public void shiftServerTest() {
-        config.getCurrentServer().setServerIps(null, serverIps, ports);
+        config.getCurrentServer().setServerIps(null, serverIps, ports, null, null);
         MatcherAssert.assertThat("default index is first", serverIps[0].equals(config.getCurrentServer().getServerIp()));
         MatcherAssert.assertThat("default index is first", ports[0] == config.getCurrentServer().getPort());
 
@@ -124,8 +124,8 @@ public class HttpDnsConfigTest {
 
     @Test
     public void setSameServerWillReturnFalse() {
-        config.getCurrentServer().setServerIps(null, serverIps, ports);
-        MatcherAssert.assertThat("same server will return false", !config.getCurrentServer().setServerIps(null, serverIps, ports));
+        config.getCurrentServer().setServerIps(null, serverIps, ports, null, null);
+        MatcherAssert.assertThat("same server will return false", !config.getCurrentServer().setServerIps(null, serverIps, ports, null, null));
     }
 
     @Test
@@ -137,7 +137,7 @@ public class HttpDnsConfigTest {
         MatcherAssert.assertThat("当前服务更新后会缓存到本地，再次创建时读取缓存", another.getCurrentServer().getServerIp(), Matchers.equalTo(config.getCurrentServer().getServerIp()));
         MatcherAssert.assertThat("当前服务更新后会缓存到本地，再次创建时读取缓存", another.getCurrentServer().getPort(), Matchers.equalTo(config.getCurrentServer().getPort()));
 
-        config.getCurrentServer().setServerIps(null, RandomValue.randomIpv4s(), RandomValue.randomPorts());
+        config.getCurrentServer().setServerIps(null, RandomValue.randomIpv4s(), RandomValue.randomPorts(), null, null);
 
         another = new HttpDnsConfig(RuntimeEnvironment.application, account);
         MatcherAssert.assertThat("服务更新后会缓存到本地，再次创建时读取缓存", another.getCurrentServer().getServerIp(), Matchers.equalTo(config.getCurrentServer().getServerIp()));
@@ -164,7 +164,7 @@ public class HttpDnsConfigTest {
         MatcherAssert.assertThat("setRegion不影响服务节点的region", config.getCurrentServer().getRegion(), Matchers.is(Matchers.equalTo(regionBak)));
         MatcherAssert.assertThat("setRegion 导致region不匹配", config.isCurrentRegionMatch(), Matchers.is(false));
 
-        config.getCurrentServer().setServerIps(otherRegion, RandomValue.randomIpv4s(), RandomValue.randomPorts());
+        config.getCurrentServer().setServerIps(otherRegion, RandomValue.randomIpv4s(), RandomValue.randomPorts(), null, null);
 
         MatcherAssert.assertThat("setServerIps更像服务节点", config.getCurrentServer().getRegion(), Matchers.is(Matchers.equalTo(otherRegion)));
         MatcherAssert.assertThat("服务节点更新后，region匹配", config.isCurrentRegionMatch(), Matchers.is(true));
@@ -176,7 +176,7 @@ public class HttpDnsConfigTest {
         MatcherAssert.assertThat("setRegion不影响服务节点的region", config.getCurrentServer().getRegion(), Matchers.is(Matchers.equalTo(regionBak)));
         MatcherAssert.assertThat("setRegion 导致region不匹配", config.isCurrentRegionMatch(), Matchers.is(false));
 
-        config.getCurrentServer().setServerIps(REGION_DEFAULT, RandomValue.randomIpv4s(), RandomValue.randomPorts());
+        config.getCurrentServer().setServerIps(REGION_DEFAULT, RandomValue.randomIpv4s(), RandomValue.randomPorts(), null, null);
 
         MatcherAssert.assertThat("setServerIps更新服务节点", config.getCurrentServer().getRegion(), Matchers.is(Matchers.equalTo(REGION_DEFAULT)));
         MatcherAssert.assertThat("服务节点更新后，region匹配", config.isCurrentRegionMatch(), Matchers.is(true));

@@ -33,9 +33,27 @@ public class ServerIpRepo {
         return data.getServerPorts();
     }
 
-    public void save(String region, String[] serverIps, int[] ports) {
+    public String[] getServerV6Ips(String region) {
         region = CommonUtil.fixRegion(region);
-        ServerIpData data = new ServerIpData(region, serverIps, ports);
+        ServerIpData data = cache.get(region);
+        if (data == null || data.getRequestTime() + interval < System.currentTimeMillis()) {
+            return null;
+        }
+        return data.getServerV6Ips();
+    }
+
+    public int[] getV6Ports(String region) {
+        region = CommonUtil.fixRegion(region);
+        ServerIpData data = cache.get(region);
+        if (data == null || data.getRequestTime() + interval < System.currentTimeMillis()) {
+            return null;
+        }
+        return data.getServerV6Ports();
+    }
+
+    public void save(String region, String[] serverIps, int[] ports, String[] serverV6Ips, int[] v6Ports) {
+        region = CommonUtil.fixRegion(region);
+        ServerIpData data = new ServerIpData(region, serverIps, ports, serverV6Ips, v6Ports);
         cache.put(region, data);
     }
 

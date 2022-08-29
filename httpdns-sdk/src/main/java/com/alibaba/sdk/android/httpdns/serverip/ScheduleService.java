@@ -1,5 +1,6 @@
 package com.alibaba.sdk.android.httpdns.serverip;
 
+import com.alibaba.sdk.android.httpdns.HttpDnsSettings;
 import com.alibaba.sdk.android.httpdns.impl.HttpDnsConfig;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import com.alibaba.sdk.android.httpdns.request.RequestCallback;
@@ -17,6 +18,7 @@ public class ScheduleService {
     private OnServerIpUpdate onServerIpUpdate;
     private ServerIpRepo repo;
     private UpdateServerLocker locker;
+    private HttpDnsSettings.NetworkDetector networkDetector;
 
     public ScheduleService(HttpDnsConfig config, OnServerIpUpdate onServerIpUpdate) {
         this.config = config;
@@ -33,8 +35,10 @@ public class ScheduleService {
     public void updateServerIps(final String newRegion) {
         String[] serverIps = repo.getServerIps(newRegion);
         int[] ports = repo.getPorts(newRegion);
-        if (serverIps != null) {
-            updateServerConfig(newRegion, serverIps, ports);
+        String[] serverV6Ips = repo.getServerV6Ips(newRegion);
+        int[] v6Ports = repo.getV6Ports(newRegion);
+        if (serverIps != null || serverV6Ips != null) {
+            updateServerConfig(newRegion, serverIps, ports, serverV6Ips, v6Ports);
             return;
         }
 
@@ -52,8 +56,8 @@ public class ScheduleService {
                         }
                     }
                     if (updateServerResponse.getServerIps() != null) {
-                        updateServerConfig(newRegion, updateServerResponse.getServerIps(), updateServerResponse.getServerPorts());
-                        repo.save(newRegion, updateServerResponse.getServerIps(), updateServerResponse.getServerPorts());
+                        updateServerConfig(newRegion, updateServerResponse.getServerIps(), updateServerResponse.getServerPorts(), updateServerResponse.getServerIpv6s(), updateServerResponse.getServerIpv6Ports());
+                        repo.save(newRegion, updateServerResponse.getServerIps(), updateServerResponse.getServerPorts(), updateServerResponse.getServerIpv6s(), updateServerResponse.getServerIpv6Ports());
                     }
                     locker.end(newRegion);
                 }
@@ -67,9 +71,9 @@ public class ScheduleService {
         }
     }
 
-    private void updateServerConfig(String newRegion, String[] serverIps, int[] serverPorts) {
+    private void updateServerConfig(String newRegion, String[] serverIps, int[] serverPorts, String[] serverV6Ips, int[] serverV6Ports) {
         boolean regionUpdated = !CommonUtil.regionEquals(this.config.getCurrentServer().getRegion(), newRegion);
-        boolean updated = config.getCurrentServer().setServerIps(newRegion, serverIps, serverPorts);
+        boolean updated = config.getCurrentServer().setServerIps(newRegion, serverIps, serverPorts, serverV6Ips, serverV6Ports);
         if (updated && onServerIpUpdate != null) {
             onServerIpUpdate.serverIpUpdated(regionUpdated);
         }
@@ -88,6 +92,10 @@ public class ScheduleService {
      */
     public void setTimeInterval(int timeInterval) {
         this.repo.setTimeInterval(timeInterval);
+    }
+
+    public void setNetworkDetector(HttpDnsSettings.NetworkDetector networkDetector) {
+        this.networkDetector = networkDetector;
     }
 
     /**

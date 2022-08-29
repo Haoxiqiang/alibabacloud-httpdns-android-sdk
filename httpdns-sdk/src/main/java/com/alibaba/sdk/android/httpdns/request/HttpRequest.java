@@ -68,7 +68,7 @@ public class HttpRequest<T> {
                     }
                 });
             }
-            if (conn.getResponseCode() != 200) {
+            if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 in = conn.getErrorStream();
                 streamReader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
                 String errStr = readStringFrom(streamReader).toString();

@@ -60,7 +60,7 @@ public class UpdateServerTaskTest {
         };
         HttpDnsLog.setLogger(logger);
         httpDnsConfig = new HttpDnsConfig(RuntimeEnvironment.application, "100000");
-        httpDnsConfig.setInitServers(Constants.REGION_MAINLAND, new String[]{server.getServerIp()}, new int[]{server.getPort()});
+        httpDnsConfig.setInitServers(Constants.REGION_MAINLAND, new String[]{server.getServerIp()}, new int[]{server.getPort()}, null, null);
         httpDnsConfig.setTimeout(1000);
         httpDnsConfig.setWorker(testExecutorService);
     }

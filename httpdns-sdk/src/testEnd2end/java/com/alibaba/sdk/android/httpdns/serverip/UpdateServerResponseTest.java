@@ -1,7 +1,6 @@
 package com.alibaba.sdk.android.httpdns.serverip;
 
-import com.alibaba.sdk.android.httpdns.serverip.UpdateServerResponse;
-import com.alibaba.sdk.android.httpdns.test.helper.ServerHelper;
+import com.alibaba.sdk.android.httpdns.test.server.ServerIpsServer;
 import com.alibaba.sdk.android.httpdns.test.utils.RandomValue;
 import com.alibaba.sdk.android.httpdns.test.utils.UnitTestUtil;
 
@@ -26,7 +25,7 @@ public class UpdateServerResponseTest {
         String[] ipv6s = RandomValue.randomIpv6s();
         int[] ports = RandomValue.randomPorts();
 
-        UpdateServerResponse response = UpdateServerResponse.fromResponse(ServerHelper.createUpdateServerResponse(ips, ipv6s, ports, ports));
+        UpdateServerResponse response = UpdateServerResponse.fromResponse(ServerIpsServer.createUpdateServerResponse(ips, ipv6s, ports, ports));
 
         assertThat(response.getServerIps(), arrayContaining(ips));
         assertThat(response.getServerIpv6s(), arrayContaining(ipv6s));
@@ -34,7 +33,7 @@ public class UpdateServerResponseTest {
         UnitTestUtil.assertIntArrayEquals(response.getServerIpv6Ports(), ports);
 
 
-        response = UpdateServerResponse.fromResponse(ServerHelper.createUpdateServerResponse(ips, ipv6s, null, null));
+        response = UpdateServerResponse.fromResponse(ServerIpsServer.createUpdateServerResponse(ips, ipv6s, null, null));
 
         assertThat(response.getServerIps(), arrayContaining(ips));
         assertThat(response.getServerIpv6s(), arrayContaining(ipv6s));

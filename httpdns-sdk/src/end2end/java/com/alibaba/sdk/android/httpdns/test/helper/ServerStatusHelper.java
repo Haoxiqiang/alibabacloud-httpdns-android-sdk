@@ -144,6 +144,15 @@ public class ServerStatusHelper {
         assertThat(reason, server.getInterpretHostServer().hasRequestForArgWithResult(host, response, 1, false));
     }
 
+    /**
+     * 对于 {@link HttpException#ERROR_MSG_SERVICE_LEVEL_DENY} 这个错误之前理解有误
+     * 之前以为含义是服务节点下线了，不可用，才会返回此错误码，所以此方法命名为降级服务。
+     * 真实含义是当前用户不能使用此服务节点。
+     * 但是从效果上来说是一样的，都是返回了一个错误，此错误应该触发的逻辑是 切换服务节点。 所以还是保留此命名
+     * @param server
+     * @param requestHost
+     * @param count
+     */
     public static void degradeServer(HttpDnsServer server, String requestHost, int count) {
         server.getInterpretHostServer().preSetRequestResponse(requestHost, HttpException.ERROR_CODE_403, HttpException.ERROR_MSG_SERVICE_LEVEL_DENY, count);
     }
