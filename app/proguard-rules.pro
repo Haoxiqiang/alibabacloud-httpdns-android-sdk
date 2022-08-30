@@ -26,3 +26,4 @@
 -dontwarn okhttp3.**
 -dontwarn okio.**
 -dontwarn com.alibaba.sdk.android.httpdns.test.**
+-dontwarn com.alibaba.sdk.android.httpdns.net.HttpDnsNetworkDetector

@@ -44,6 +44,8 @@
 -keepclasseswithmembers class com.alibaba.sdk.android.httpdns.HttpDnsSettings {
     public static *** setDailyReport(***);
     public static *** setNetworkChecker(***);
+    public static *** getNetworkDetector(***);
 }
 
 -keep interface com.alibaba.sdk.android.httpdns.HttpDnsSettings$NetworkChecker{*;}
+-keep interface com.alibaba.sdk.android.httpdns.HttpDnsSettings$NetworkDetector{*;}

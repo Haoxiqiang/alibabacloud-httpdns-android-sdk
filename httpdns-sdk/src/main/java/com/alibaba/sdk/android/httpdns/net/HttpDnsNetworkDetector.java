@@ -2,8 +2,9 @@ package com.alibaba.sdk.android.httpdns.net;
 
 import com.alibaba.sdk.android.httpdns.HttpDnsSettings;
 import com.alibaba.sdk.android.httpdns.NetType;
-import com.aliyun.ams.ipdetector.Inet64Util;
+import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 
+import java.lang.reflect.Method;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -30,13 +31,16 @@ public class HttpDnsNetworkDetector implements HttpDnsSettings.NetworkDetector {
     @Override
     public NetType getNetType() {
         try {
-            Class.forName("com.aliyun.ams.ipdetector.Inet64Util");
-            int type = Inet64Util.getStackType();
-            if (type == Inet64Util.IP_DUAL_STACK) {
+            Class clz = Class.forName("com.aliyun.ams.ipdetector.Inet64Util");
+            Method getStackType = clz.getMethod("getStackType");
+
+            int type = (int) getStackType.invoke(null);
+            HttpDnsLog.d("ipdetector type is " + type);
+            if (type == IP_DUAL_STACK) {
                 return NetType.both;
-            } else if (type == Inet64Util.IPV4_ONLY) {
+            } else if (type == IPV4_ONLY) {
                 return NetType.v4;
-            } else if (type == Inet64Util.IPV6_ONLY) {
+            } else if (type == IPV6_ONLY) {
                 return NetType.v6;
             } else {
                 // 没有网络？
@@ -45,6 +49,7 @@ public class HttpDnsNetworkDetector implements HttpDnsSettings.NetworkDetector {
         } catch (Throwable e) {
             // 没有引入网络判断库时，使用local dns解析简单判断下
             int type = getIpStackByHost("www.taobao.com");
+            HttpDnsLog.i("ipdetector not exist. by host type is " + type);
             if (type == IP_DUAL_STACK) {
                 return NetType.both;
             } else if (type == IPV4_ONLY) {

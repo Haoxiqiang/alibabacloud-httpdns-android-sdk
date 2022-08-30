@@ -96,10 +96,6 @@ android {
     }
 }
 
-repositories {
-    flatDir { dirs 'libs' }
-}
-
 dependencies {
 
     //noinspection GradleDependency 高版本 jdk和androidx有一些依赖，暂时不升级
@@ -112,7 +108,7 @@ dependencies {
 
     implementation "com.aliyun.ams:alicloud-android-logger:${loggerVersion}"
     implementation "com.aliyun.ams:alicloud-android-crashdefend:${crashDefendVersion}"
-    implementation (name: "ipdetector-debug", ext: 'aar')
+    implementation "com.aliyun.ams:alicloud-android-ipdetector:${ipdetectorVersion}"
 
     normalImplementation "com.aliyun.ams:alicloud-android-utdid:${utdidVersion}"
     normalImplementation "com.aliyun.ams:alicloud-android-sender:${senderVersion}"

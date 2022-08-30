@@ -14,14 +14,11 @@ import com.alibaba.sdk.android.httpdns.DegradationFilter;
 import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
 import com.alibaba.sdk.android.httpdns.HttpDns;
 import com.alibaba.sdk.android.httpdns.HttpDnsService;
-import com.alibaba.sdk.android.httpdns.HttpDnsSettings;
 import com.alibaba.sdk.android.httpdns.ILogger;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.SyncService;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
 import com.alibaba.sdk.android.httpdns.probe.IPProbeItem;
-import com.aliyun.ams.httpdns.demo.utils.Inet64Util;
-import com.aliyun.ams.httpdns.demo.utils.NetworkStateManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -208,19 +205,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
 //        HttpDns.enableIPv6Service(this,(true);
         httpdns = HttpDns.getService(getApplicationContext(), accountID);
-
-        NetworkStateManager.getInstance().init(getApplicationContext());
-        HttpDnsSettings.setNetworkChecker(new HttpDnsSettings.NetworkChecker() {
-            @Override
-            public boolean isIpv6Only() {
-                // 通过网络IP判断还是域名解析结果判断
-                if (true) {
-                    return Inet64Util.isIPv6OnlyNetwork();
-                } else {
-                    return Inet64Util.isIPv6OnlyNetworkByHost();
-                }
-            }
-        });
 
 //        // 允许过期IP以实现懒加载策略
 //        httpdns.setExpiredIPEnabled(true);
