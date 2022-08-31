@@ -70,9 +70,13 @@ public class HttpRequest<T> {
             }
             if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 in = conn.getErrorStream();
-                streamReader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
-                String errStr = readStringFrom(streamReader).toString();
-                throw HttpException.create(conn.getResponseCode(), errStr);
+                if (in != null) {
+                    streamReader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
+                    String errStr = readStringFrom(streamReader).toString();
+                    throw HttpException.create(conn.getResponseCode(), errStr);
+                } else {
+                    throw HttpException.create(conn.getResponseCode(), "");
+                }
             } else {
                 in = conn.getInputStream();
                 streamReader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
