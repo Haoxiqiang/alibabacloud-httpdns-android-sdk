@@ -64,8 +64,11 @@ public class HttpUrlConnectionRequest implements NetworkRequest {
         BufferedReader streamReader = null;
         if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
             in = conn.getErrorStream();
-            streamReader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
-            String errStr = readStringFrom(streamReader).toString();
+            String errStr = null;
+            if (in != null) {
+                streamReader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
+                errStr = readStringFrom(streamReader).toString();
+            }
             Log.d(TAG, "请求失败 " + conn.getResponseCode() + " err " + errStr);
             throw new Exception("Status Code : " + conn.getResponseCode() + " Msg : " + errStr);
         } else {
