@@ -54,6 +54,8 @@
     public *** setCheckInterface(***);
     public *** setHostToCheckNetType(***);
     public *** getNetType(***);
+    public *** disableCache(***);
+    public *** cleanCache(***);
 }
 
 -keep interface com.alibaba.sdk.android.httpdns.HttpDnsSettings$NetworkChecker{*;}

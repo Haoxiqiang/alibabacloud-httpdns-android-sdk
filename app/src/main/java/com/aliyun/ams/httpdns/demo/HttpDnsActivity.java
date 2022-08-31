@@ -284,17 +284,61 @@ public class HttpDnsActivity extends BaseActivity {
             }
         });
 
-        addTwoButton("清除所有缓存", new View.OnClickListener() {
+        addOneButton("清除所有缓存", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 MyApp.getInstance().getService().cleanHostCache(null);
                 sendLog("清除所有缓存");
             }
-        }, "获取当前网络状态", new View.OnClickListener() {
+        });
+
+        addFourButton("获取当前网络状态", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 NetType type = HttpDnsNetworkDetector.getInstance().getNetType(getApplicationContext());
                 sendLog("获取网络状态 " + type.name());
+            }
+        }, "禁用网络状态缓存", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                HttpDnsNetworkDetector.getInstance().disableCache(true);
+                sendLog("网络状态 禁用缓存 ");
+            }
+        }, "开启网络状态缓存", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                HttpDnsNetworkDetector.getInstance().disableCache(false);
+                sendLog("网络状态 开启缓存 ");
+            }
+        }, "清除网络状态缓存", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                HttpDnsNetworkDetector.getInstance().cleanCache(false);
+                sendLog("网络状态清除缓存 ");
+            }
+        });
+
+        addTwoButton("禁止读取IP", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                HttpDnsNetworkDetector.getInstance().setCheckInterface(false);
+                sendLog("查询网络状态时 禁止读取IP");
+            }
+        }, "允许读取IP", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                HttpDnsNetworkDetector.getInstance().setCheckInterface(true);
+                sendLog("查询网络状态时 允许读取IP");
+            }
+        });
+
+        addAutoCompleteTextViewButton(hosts, "设置检测网络使用的域名", new OnButtonClick() {
+            @Override
+            public void onBtnClick(View view) {
+                AutoCompleteTextView actvOne = (AutoCompleteTextView) view;
+                String host = actvOne.getEditableText().toString();
+                HttpDnsNetworkDetector.getInstance().setHostToCheckNetType(host);
+                sendLog("设置检测网络状态使用的域名为" + host);
             }
         });
 
