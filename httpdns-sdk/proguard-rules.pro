@@ -56,3 +56,6 @@
 
 -keep interface com.alibaba.sdk.android.httpdns.HttpDnsSettings$NetworkChecker{*;}
 -keep interface com.alibaba.sdk.android.httpdns.HttpDnsSettings$NetworkDetector{*;}
+
+-dontwarn com.taobao.android.**
+-dontwarn anet.channel.**

@@ -57,9 +57,9 @@ public class HttpDnsActivity extends BaseActivity {
      */
     private RequestIpType requestIpType = RequestIpType.v4;
 
-    private HttpUrlConnectionRequest httpUrlConnectionRequest;
-    private OkHttpRequest okHttpRequest;
-    private NetworkRequest networkRequest;
+    private HttpUrlConnectionRequest httpUrlConnectionRequest = new HttpUrlConnectionRequest();
+    private OkHttpRequest okHttpRequest = new OkHttpRequest();
+    private NetworkRequest networkRequest = httpUrlConnectionRequest;
 
     // 控制主站域名临时用的list
     private ArrayList<String> hostNotChange = new ArrayList<>();

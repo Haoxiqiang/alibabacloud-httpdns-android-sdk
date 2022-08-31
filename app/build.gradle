@@ -75,9 +75,7 @@ repositories {
 
 dependencies {
 
-    normalImplementation project(':httpdns-sdk')
-    intlImplementation project(':httpdns-sdk')
-    end2endImplementation "com.aliyun.ams:alicloud-android-httpdns:2.2.2"
+    implementation project(':httpdns-sdk')
 
     implementation("com.squareup.okhttp3:okhttp:3.9.0")
 }
