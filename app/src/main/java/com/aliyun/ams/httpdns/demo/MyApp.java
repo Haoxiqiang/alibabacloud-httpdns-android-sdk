@@ -31,8 +31,8 @@ public class MyApp extends Application {
         instance = this;
 
         // 开启logcat 日志 默认关闭, 开发测试过程中可以开启
-        HttpDnsLog.enable(false);
-        // 注入日志接口，接受httpdns的日志，开发测试过程中可以开启
+        HttpDnsLog.enable(true);
+        // 注入日志接口，接受httpdns的日志，开发测试过程中可以开启, 基础日志需要先enable才生效，一些错误日志不需要
         HttpDnsLog.setLogger(new ILogger() {
             @Override
             public void log(String msg) {
