@@ -110,6 +110,7 @@ public class HttpUrlConnectionRequest implements NetworkRequest {
         }
         conn.setConnectTimeout(30000);
         conn.setReadTimeout(30000);
+        conn.setInstanceFollowRedirects(false);
         if (conn instanceof HttpsURLConnection) {
             final HttpsURLConnection httpsURLConnection = (HttpsURLConnection) conn;
             WebviewTlsSniSocketFactory sslSocketFactory = new WebviewTlsSniSocketFactory((HttpsURLConnection) conn);
@@ -128,9 +129,28 @@ public class HttpUrlConnectionRequest implements NetworkRequest {
                 }
             });
         }
+        int code = conn.getResponseCode();// Network block
+        if (needRedirect(code)) {
+            //临时重定向和永久重定向location的大小写有区分
+            String location = conn.getHeaderField("Location");
+            if (location == null) {
+                location = conn.getHeaderField("location");
+            }
+            if (!(location.startsWith("http://") || location
+                    .startsWith("https://"))) {
+                //某些时候会省略host，只返回后面的path，所以需要补全url
+                URL originalUrl = new URL(url);
+                location = originalUrl.getProtocol() + "://"
+                        + originalUrl.getHost() + location;
+            }
+            return getConnection(location);
+        }
         return conn;
     }
 
+    private boolean needRedirect(int code) {
+        return code >= 300 && code < 400;
+    }
 
     class WebviewTlsSniSocketFactory extends SSLSocketFactory {
         private final String TAG = WebviewTlsSniSocketFactory.class.getSimpleName();
