@@ -159,7 +159,7 @@ public class BusinessApp {
                     }
                     ((ApiForTest) httpDnsService).setNetworkDetector(new HttpDnsSettings.NetworkDetector() {
                         @Override
-                        public NetType getNetType() {
+                        public NetType getNetType(Context context) {
                             return currentNetType;
                         }
                     });
