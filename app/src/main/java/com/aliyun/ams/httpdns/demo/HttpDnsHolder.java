@@ -102,6 +102,8 @@ public class HttpDnsHolder {
                 .configCacheTtlChanger(cacheTtlChanger)
                 .configHostWithFixedIp(hostListWithFixedIp)
                 .buildFor(accountId);
+
+        getService();
     }
 
     public HttpDnsService getService() {

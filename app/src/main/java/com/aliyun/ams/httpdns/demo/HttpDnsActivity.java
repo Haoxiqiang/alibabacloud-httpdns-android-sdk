@@ -33,15 +33,18 @@ public class HttpDnsActivity extends BaseActivity {
 
     public static final String APPLE_URL = "www.apple.com";
     public static final String TAOBAO_URL = "www.taobao.com";
-    public static final String DOUBAN_URL = "dou.bz";
+    public static final String ALICDN_URL = "gw.alicdn.com";
     public static final String ALIYUN_URL = "www.aliyun.com";
     public static final String IPV6TEST = "ipv6.sjtu.edu.cn";
 
     public static final String[] hosts = new String[]{
-            APPLE_URL, TAOBAO_URL, DOUBAN_URL, ALIYUN_URL, IPV6TEST
+            APPLE_URL, TAOBAO_URL, ALICDN_URL, ALIYUN_URL, IPV6TEST
     };
 
     public static String getUrl(String schema, String host) {
+        if (host.equals(ALICDN_URL)) {
+            return schema + host + "/imgextra/i4/O1CN01QmAvnA1IgJvX1GfLm_!!6000000000922-2-tps-176-176.png";
+        }
         return schema + host;
     }
 
@@ -422,7 +425,10 @@ public class HttpDnsActivity extends BaseActivity {
                         try {
                             String response = networkRequest.httpGet(url);
                             if (response != null && response.length() > 30) {
-                                response = response.substring(0, 30) + "...";
+                                response = response.trim();
+                                if (response.length() > 30) {
+                                    response = response.substring(0, 30) + "...";
+                                }
                             }
                             sendLog("请求结束 response is " + response + " 完整记录请看logcat日志");
                         } catch (Exception e) {

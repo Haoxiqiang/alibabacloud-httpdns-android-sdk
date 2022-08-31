@@ -21,7 +21,8 @@ public class MyApp extends Application {
     }
 
     private HttpDnsHolder holderA = new HttpDnsHolder("请替换为测试用A实例的accountId", "请替换为测试用A实例的secret");
-    private HttpDnsHolder holderB = new HttpDnsHolder("请替换为测试用B实例的accountId", null);
+    private HttpDnsHolder holderB = new HttpDnsHolder("请替换为测试用B实例的accountId");
+
     private HttpDnsHolder current = holderA;
 
     @Override

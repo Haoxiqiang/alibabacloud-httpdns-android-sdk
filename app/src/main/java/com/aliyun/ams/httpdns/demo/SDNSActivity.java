@@ -2,6 +2,7 @@ package com.aliyun.ams.httpdns.demo;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 
 import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
@@ -83,6 +84,15 @@ public class SDNSActivity extends BaseActivity {
             public void onClick(View v) {
                 requestIpType = RequestIpType.auto;
                 sendLog("要解析的IP类型根据网络情况自动判断");
+            }
+        });
+
+        addAutoCompleteTextViewButton(HttpDnsActivity.hosts, "域名", "指定要解析的域名", new OnButtonClick() {
+            @Override
+            public void onBtnClick(View view) {
+                AutoCompleteTextView actvOne = (AutoCompleteTextView) view;
+                host = actvOne.getEditableText().toString();
+                sendLog("要解析的域名" + host);
             }
         });
 

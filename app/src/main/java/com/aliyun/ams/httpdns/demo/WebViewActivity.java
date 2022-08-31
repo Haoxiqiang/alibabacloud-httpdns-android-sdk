@@ -275,7 +275,7 @@ public class WebViewActivity extends Activity {
                         location = originalUrl.getProtocol() + "://"
                                 + originalUrl.getHost() + location;
                     }
-                    Log.e(TAG, "code:" + code + "; location:" + location + "; path" + path);
+                    Log.e(TAG, "code: " + code + "; location: " + location + "; path " + path);
                     return recursiveRequest(location, headers, path);
                 } else {
                     // 无法获取location信息，让浏览器获取

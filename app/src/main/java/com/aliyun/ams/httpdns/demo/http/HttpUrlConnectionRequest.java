@@ -96,12 +96,12 @@ public class HttpUrlConnectionRequest implements NetworkRequest {
             String newUrl = url.replace(host, "[" + result.getIpv6s()[0] + "]");
             conn = (HttpURLConnection) new URL(newUrl).openConnection();
             conn.setRequestProperty("Host", host);
-            Log.d(TAG, "使用ipv6地址" + newUrl);
+            Log.d(TAG, "使用ipv6地址 " + newUrl);
         } else if (result.getIps() != null && result.getIps().length > 0 && HttpDnsSettings.getNetworkDetector().getNetType(context) != NetType.v6) {
             String newUrl = url.replace(host, result.getIps()[0]);
             conn = (HttpURLConnection) new URL(newUrl).openConnection();
             conn.setRequestProperty("Host", host);
-            Log.d(TAG, "使用ipv4地址" + newUrl);
+            Log.d(TAG, "使用ipv4地址 " + newUrl);
         }
 
         if (conn == null) {
