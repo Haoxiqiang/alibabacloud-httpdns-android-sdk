@@ -263,7 +263,9 @@ public class CommonUtil {
                     extras.put(var3, jsonObjectExtra.get(var3) == null ? null : jsonObjectExtra.get(var3).toString());
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                if (HttpDnsLog.isPrint()) {
+                    HttpDnsLog.w("parse extras fail", e);
+                }
             }
             return extras;
         } else {
