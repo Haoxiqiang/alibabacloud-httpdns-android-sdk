@@ -12,6 +12,7 @@ import com.alibaba.sdk.android.httpdns.DegradationFilter;
 import com.alibaba.sdk.android.httpdns.NetType;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.net.HttpDnsNetworkDetector;
+import com.alibaba.sdk.android.httpdns.probe.IPProbeItem;
 import com.aliyun.ams.httpdns.demo.base.BaseActivity;
 import com.aliyun.ams.httpdns.demo.http.HttpUrlConnectionRequest;
 import com.aliyun.ams.httpdns.demo.okhttp.OkHttpRequest;
@@ -61,8 +62,10 @@ public class HttpDnsActivity extends BaseActivity {
     private OkHttpRequest okHttpRequest;
     private NetworkRequest networkRequest = httpUrlConnectionRequest;
 
-    // 控制主站域名临时用的list
+    // 配置主站域名临时用的list
     private ArrayList<String> hostNotChange = new ArrayList<>();
+    // 配置probe能力的临时list
+    private ArrayList<IPProbeItem> ipProbeItems = new ArrayList<>();
     private ExecutorService worker = Executors.newSingleThreadExecutor();
 
     @Override
@@ -203,32 +206,6 @@ public class HttpDnsActivity extends BaseActivity {
             }
         });
 
-        addFourButton("指定v4", new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                requestIpType = RequestIpType.v4;
-                sendLog("要解析的IP类型指定为ipv4");
-            }
-        }, "指定v6", new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                requestIpType = RequestIpType.v6;
-                sendLog("要解析的IP类型指定为ipv6");
-            }
-        }, "都解析", new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                requestIpType = RequestIpType.both;
-                sendLog("要解析的IP类型指定为ipv4和ipv6");
-            }
-        }, "自动判断", new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                requestIpType = RequestIpType.auto;
-                sendLog("要解析的IP类型根据网络情况自动判断");
-            }
-        });
-
         addView(R.layout.item_autocomplete_edittext_button, new OnViewCreated() {
             @Override
             public void onViewCreated(View view) {
@@ -251,6 +228,34 @@ public class HttpDnsActivity extends BaseActivity {
                         int ttl = Integer.parseInt(etOne.getEditableText().toString());
                         MyApp.getInstance().getCurrentHolder().setHostTtl(host, ttl);
                         sendLog("指定域名" + host + "的ttl为" + ttl + "秒");
+                    }
+                });
+            }
+        });
+
+        addView(R.layout.item_autocomplete_edittext_button, new OnViewCreated() {
+            @Override
+            public void onViewCreated(View view) {
+                final AutoCompleteTextView actvOne = view.findViewById(R.id.actvOne);
+                final EditText etOne = view.findViewById(R.id.etOne);
+                Button btnOne = view.findViewById(R.id.btnOne);
+
+                actvOne.setHint("域名");
+                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(),
+                        android.R.layout.simple_dropdown_item_1line, hosts);
+                actvOne.setAdapter(adapter);
+
+                etOne.setHint("请输入端口");
+
+                btnOne.setText("添加probe配置");
+                btnOne.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String host = actvOne.getEditableText().toString();
+                        int port = Integer.parseInt(etOne.getEditableText().toString());
+                        ipProbeItems.add(new IPProbeItem(host, port));
+                        MyApp.getInstance().getCurrentHolder().setIpProbeItems(ipProbeItems);
+                        sendLog("添加域名" + host + " 探测");
                     }
                 });
             }
@@ -318,6 +323,33 @@ public class HttpDnsActivity extends BaseActivity {
             public void onClick(View v) {
                 networkRequest = okHttpRequest;
                 sendLog("指定网络实现方式为okhttp");
+            }
+        });
+
+
+        addFourButton("指定v4", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                requestIpType = RequestIpType.v4;
+                sendLog("要解析的IP类型指定为ipv4");
+            }
+        }, "指定v6", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                requestIpType = RequestIpType.v6;
+                sendLog("要解析的IP类型指定为ipv6");
+            }
+        }, "都解析", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                requestIpType = RequestIpType.both;
+                sendLog("要解析的IP类型指定为ipv4和ipv6");
+            }
+        }, "自动判断", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                requestIpType = RequestIpType.auto;
+                sendLog("要解析的IP类型根据网络情况自动判断");
             }
         });
 
