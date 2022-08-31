@@ -2,8 +2,6 @@ package com.alibaba.sdk.android.httpdns;
 
 import android.content.Context;
 
-import com.alibaba.sdk.android.httpdns.net.HttpDnsNetworkDetector;
-
 /**
  * @author zonglin.nzl
  * @date 11/8/21
@@ -35,10 +33,6 @@ public class HttpDnsSettings {
     @Deprecated
     public static NetworkChecker getChecker() {
         return checker;
-    }
-
-    public static NetworkDetector getNetworkDetector() {
-        return HttpDnsNetworkDetector.getInstance();
     }
 
     /**

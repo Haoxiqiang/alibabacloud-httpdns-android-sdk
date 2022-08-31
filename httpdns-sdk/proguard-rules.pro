@@ -37,6 +37,8 @@
 -keep class com.alibaba.sdk.android.httpdns.DegradationFilter{*;}
 -keep class com.alibaba.sdk.android.httpdns.probe.IPProbeItem{*;}
 -keep class com.alibaba.sdk.android.httpdns.ILogger{*;}
+-keep class com.alibaba.sdk.android.httpdns.CacheTtlChanger{*;}
+-keep class com.alibaba.sdk.android.httpdns.NetType{*;}
 -keepclasseswithmembers class com.alibaba.sdk.android.httpdns.log.HttpDnsLog {
     public static *** setLogger(***);
     public static *** removeLogger(***);
@@ -46,17 +48,9 @@
 -keepclasseswithmembers class com.alibaba.sdk.android.httpdns.HttpDnsSettings {
     public static *** setDailyReport(***);
     public static *** setNetworkChecker(***);
-    public static *** getNetworkDetector(***);
 }
 
--keepclasseswithmembers class com.alibaba.sdk.android.httpdns.net.HttpDnsNetworkDetector {
-    public static *** getInstance(***);
-    public *** setCheckInterface(***);
-    public *** setHostToCheckNetType(***);
-    public *** getNetType(***);
-    public *** disableCache(***);
-    public *** cleanCache(***);
-}
+-keep class com.alibaba.sdk.android.httpdns.net.HttpDnsNetworkDetector { *;}
 
 -keep interface com.alibaba.sdk.android.httpdns.HttpDnsSettings$NetworkChecker{*;}
 -keep interface com.alibaba.sdk.android.httpdns.HttpDnsSettings$NetworkDetector{*;}

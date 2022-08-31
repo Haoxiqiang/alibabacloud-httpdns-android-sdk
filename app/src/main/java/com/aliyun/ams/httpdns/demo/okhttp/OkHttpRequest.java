@@ -4,10 +4,10 @@ import android.content.Context;
 import android.util.Log;
 
 import com.alibaba.sdk.android.httpdns.HTTPDNSResult;
-import com.alibaba.sdk.android.httpdns.HttpDnsSettings;
 import com.alibaba.sdk.android.httpdns.NetType;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.SyncService;
+import com.alibaba.sdk.android.httpdns.net.HttpDnsNetworkDetector;
 import com.aliyun.ams.httpdns.demo.MyApp;
 import com.aliyun.ams.httpdns.demo.NetworkRequest;
 
@@ -51,12 +51,12 @@ public class OkHttpRequest implements NetworkRequest {
                         Log.d(TAG, "httpdns 解析 " + hostname + " 结果为 " + result);
                         List<InetAddress> inetAddresses = new ArrayList<>();
                         // 这里需要根据实际情况选择使用ipv6地址 还是 ipv4地址， 下面示例的代码优先使用了ipv6地址
-                        if (result.getIpv6s() != null && result.getIpv6s().length > 0 && HttpDnsSettings.getNetworkDetector().getNetType(context) != NetType.v4) {
+                        if (result.getIpv6s() != null && result.getIpv6s().length > 0 && HttpDnsNetworkDetector.getInstance().getNetType(context) != NetType.v4) {
                             for (int i = 0; i < result.getIpv6s().length; i++) {
                                 inetAddresses.addAll(Arrays.asList(InetAddress.getAllByName(result.getIpv6s()[i])));
                             }
                             Log.d(TAG, "使用ipv6地址" + inetAddresses);
-                        } else if (result.getIps() != null && result.getIps().length > 0 && HttpDnsSettings.getNetworkDetector().getNetType(context) != NetType.v6) {
+                        } else if (result.getIps() != null && result.getIps().length > 0 && HttpDnsNetworkDetector.getInstance().getNetType(context) != NetType.v6) {
                             for (int i = 0; i < result.getIps().length; i++) {
                                 inetAddresses.addAll(Arrays.asList(InetAddress.getAllByName(result.getIps()[i])));
                             }
