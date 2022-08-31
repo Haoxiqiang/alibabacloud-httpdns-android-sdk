@@ -289,7 +289,7 @@ public class HttpDnsActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 NetType type = HttpDnsNetworkDetector.getInstance().getNetType(getApplicationContext());
-                sendLog("获取网络状态需要修改 " + type.name());
+                sendLog("获取网络状态 " + type.name());
             }
         });
 
