@@ -60,6 +60,7 @@ public class NetworkStateManager {
                                 String action = intent.getAction();
                                 if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action) && hasNetInfoPermission(context)) {
                                     String currentNetwork = detectCurrentNetwork();
+                                    HttpDnsNetworkDetector.getInstance().cleanCache(!currentNetwork.equals(NONE_NETWORK));
                                     if (!currentNetwork.equals(NONE_NETWORK) && !currentNetwork.equalsIgnoreCase(lastConnectedNetwork)) {
                                         for (OnNetworkChange onNetworkChange : listeners) {
                                             onNetworkChange.onNetworkChange(currentNetwork);

@@ -9,7 +9,9 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.alibaba.sdk.android.httpdns.DegradationFilter;
+import com.alibaba.sdk.android.httpdns.NetType;
 import com.alibaba.sdk.android.httpdns.RequestIpType;
+import com.alibaba.sdk.android.httpdns.net.HttpDnsNetworkDetector;
 import com.aliyun.ams.httpdns.demo.base.BaseActivity;
 import com.aliyun.ams.httpdns.demo.http.HttpUrlConnectionRequest;
 import com.aliyun.ams.httpdns.demo.okhttp.OkHttpRequest;
@@ -283,8 +285,8 @@ public class HttpDnsActivity extends BaseActivity {
         }, "获取当前网络状态", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO
-                sendLog("获取网络状态需要修改");
+                NetType type = HttpDnsNetworkDetector.getInstance().getNetType();
+                sendLog("获取网络状态需要修改 " + type.name());
             }
         });
 

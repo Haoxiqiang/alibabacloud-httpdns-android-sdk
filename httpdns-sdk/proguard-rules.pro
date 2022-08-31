@@ -47,5 +47,12 @@
     public static *** getNetworkDetector(***);
 }
 
+-keepclasseswithmembers class com.alibaba.sdk.android.httpdns.net.HttpDnsNetworkDetector {
+    public static *** getInstance(***);
+    public *** setCheckInterface(***);
+    public *** setHostToCheckNetType(***);
+    public *** getNetType(***);
+}
+
 -keep interface com.alibaba.sdk.android.httpdns.HttpDnsSettings$NetworkChecker{*;}
 -keep interface com.alibaba.sdk.android.httpdns.HttpDnsSettings$NetworkDetector{*;}

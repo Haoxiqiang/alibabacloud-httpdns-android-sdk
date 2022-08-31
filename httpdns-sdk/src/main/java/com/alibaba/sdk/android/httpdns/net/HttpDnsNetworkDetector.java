@@ -3,12 +3,14 @@ package com.alibaba.sdk.android.httpdns.net;
 import com.alibaba.sdk.android.httpdns.HttpDnsSettings;
 import com.alibaba.sdk.android.httpdns.NetType;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
+import com.alibaba.sdk.android.httpdns.utils.ThreadUtil;
 
 import java.lang.reflect.Method;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.ExecutorService;
 
 /**
  * @author zonglin.nzl
@@ -27,39 +29,110 @@ public class HttpDnsNetworkDetector implements HttpDnsSettings.NetworkDetector {
     private HttpDnsNetworkDetector() {
     }
 
+    private ExecutorService worker = ThreadUtil.createSingleThreadService("NetType");
+    private boolean checkInterface = true;
+    private String hostToCheckNetType = "www.taobao.com";
+    private NetType cache = NetType.none;
+
+    /**
+     * 网络变化时，清除缓存
+     */
+    public void cleanCache(boolean connected) {
+        cache = NetType.none;
+        if (connected) {
+            worker.execute(new Runnable() {
+                @Override
+                public void run() {
+                    // 异步探测一下
+                    cache = detectNetType();
+                }
+            });
+        }
+    }
+
+    /**
+     * 如果不能检查本地网关ip,可以调用此接口关闭
+     *
+     * @param checkInterface
+     */
+    public void setCheckInterface(boolean checkInterface) {
+        this.checkInterface = checkInterface;
+    }
+
+    /**
+     * 有些场景需要通过本地解析来确认网络类型，默认使用 www.taobao.com
+     *
+     * @param hostToCheckNetType
+     */
+    public void setHostToCheckNetType(String hostToCheckNetType) {
+        this.hostToCheckNetType = hostToCheckNetType;
+    }
 
     @Override
     public NetType getNetType() {
+        if (cache != NetType.none) {
+            return cache;
+        }
+        cache = detectNetType();
+        return cache;
+    }
+
+    private NetType detectNetType() {
         try {
             Class clz = Class.forName("com.aliyun.ams.ipdetector.Inet64Util");
-            Method getStackType = clz.getMethod("getStackType");
+            if (checkInterface) {
+                Method getStackType = clz.getMethod("getIpStack");
+                int type = (int) getStackType.invoke(null);
+                HttpDnsLog.d("ipdetector type is " + type);
+                if (type == IP_DUAL_STACK) {
+                    return NetType.both;
+                } else if (type == IPV4_ONLY) {
+                    return NetType.v4;
+                } else if (type == IPV6_ONLY) {
+                    return NetType.v6;
+                } else {
+                    // 没有网络？
+                    return NetType.none;
+                }
+            } else {
+                Method getStackType = clz.getMethod("getIpStackCheckLocal");
+                int type = (int) getStackType.invoke(null);
+                HttpDnsLog.d("ipdetector type is " + type);
+                if (type == IP_DUAL_STACK) {
+                    // 不检查本地IP的情况下，无法过滤ipv6只有本地ip的情况，需要通过其它方式检测下。
+                    NetType tmp = getNetTypeByHost();
+                    if (tmp == NetType.v4) {
+                        return tmp;
+                    }
+                    return NetType.both;
+                } else if (type == IPV4_ONLY) {
+                    return NetType.v4;
+                } else if (type == IPV6_ONLY) {
+                    return NetType.v6;
+                } else {
+                    // 没有网络？
+                    return NetType.none;
+                }
+            }
 
-            int type = (int) getStackType.invoke(null);
-            HttpDnsLog.d("ipdetector type is " + type);
-            if (type == IP_DUAL_STACK) {
-                return NetType.both;
-            } else if (type == IPV4_ONLY) {
-                return NetType.v4;
-            } else if (type == IPV6_ONLY) {
-                return NetType.v6;
-            } else {
-                // 没有网络？
-                return NetType.none;
-            }
         } catch (Throwable e) {
+            HttpDnsLog.i("ipdetector not exist.");
             // 没有引入网络判断库时，使用local dns解析简单判断下
-            int type = getIpStackByHost("www.taobao.com");
-            HttpDnsLog.i("ipdetector not exist. by host type is " + type);
-            if (type == IP_DUAL_STACK) {
-                return NetType.both;
-            } else if (type == IPV4_ONLY) {
-                return NetType.v4;
-            } else if (type == IPV6_ONLY) {
-                return NetType.v6;
-            } else {
-                // 没有网络？
-                return NetType.none;
-            }
+            return getNetTypeByHost();
+        }
+    }
+
+    private NetType getNetTypeByHost() {
+        int type = getIpStackByHost(hostToCheckNetType);
+        if (type == IP_DUAL_STACK) {
+            return NetType.both;
+        } else if (type == IPV4_ONLY) {
+            return NetType.v4;
+        } else if (type == IPV6_ONLY) {
+            return NetType.v6;
+        } else {
+            // 没有网络？
+            return NetType.none;
         }
     }
 
