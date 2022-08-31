@@ -162,7 +162,7 @@ public class HttpDnsActivity extends BaseActivity {
             }
         });
 
-        addEditTextButton("设置超时ms", new OnButtonClick() {
+        addEditTextButton("超时时长 ms", "设置超时ms", new OnButtonClick() {
             @Override
             public void onBtnClick(View view) {
                 EditText et = (EditText) view;
@@ -261,7 +261,7 @@ public class HttpDnsActivity extends BaseActivity {
             }
         });
 
-        addAutoCompleteTextViewButton(hosts, "添加主站域名", new OnButtonClick() {
+        addAutoCompleteTextViewButton(hosts, "主站域名", "添加主站域名", new OnButtonClick() {
             @Override
             public void onBtnClick(View view) {
                 AutoCompleteTextView actvOne = (AutoCompleteTextView) view;
@@ -272,7 +272,7 @@ public class HttpDnsActivity extends BaseActivity {
             }
         });
 
-        addAutoCompleteTextViewButton(hosts, "删除指定域名的缓存", new OnButtonClick() {
+        addAutoCompleteTextViewButton(hosts, "域名", "删除指定域名的缓存", new OnButtonClick() {
             @Override
             public void onBtnClick(View view) {
                 AutoCompleteTextView actvOne = (AutoCompleteTextView) view;
@@ -332,7 +332,7 @@ public class HttpDnsActivity extends BaseActivity {
             }
         });
 
-        addAutoCompleteTextViewButton(hosts, "设置检测网络使用的域名", new OnButtonClick() {
+        addAutoCompleteTextViewButton(hosts, "域名", "设置检测网络使用的域名", new OnButtonClick() {
             @Override
             public void onBtnClick(View view) {
                 AutoCompleteTextView actvOne = (AutoCompleteTextView) view;
@@ -397,7 +397,7 @@ public class HttpDnsActivity extends BaseActivity {
             }
         });
 
-        addAutoCompleteTextViewButton(hosts, "指定要解析的域名", new OnButtonClick() {
+        addAutoCompleteTextViewButton(hosts, "域名", "指定要解析的域名", new OnButtonClick() {
             @Override
             public void onBtnClick(View view) {
                 AutoCompleteTextView actvOne = (AutoCompleteTextView) view;

@@ -172,6 +172,7 @@ public class BaseActivity extends Activity {
     }
 
     protected void addEditTextButton(
+            final String hint,
             final String labelOne, final OnButtonClick clickListenerOne
     ) {
         addView(R.layout.item_edit_button, new OnViewCreated() {
@@ -181,6 +182,7 @@ public class BaseActivity extends Activity {
                 Button btnOne = view.findViewById(R.id.btnOne);
                 btnOne.setText(labelOne);
                 final EditText editText = view.findViewById(R.id.etOne);
+                editText.setHint(hint);
                 btnOne.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -193,6 +195,7 @@ public class BaseActivity extends Activity {
 
 
     protected void addEditTextEditTextButton(
+            final String hintOne, final String hintTwo,
             final String labelOne, final OnButtonClickMoreView clickListenerOne
     ) {
         addView(R.layout.item_edit_edit_button, new OnViewCreated() {
@@ -202,7 +205,9 @@ public class BaseActivity extends Activity {
                 Button btnOne = view.findViewById(R.id.btnOne);
                 btnOne.setText(labelOne);
                 final EditText editTextOne = view.findViewById(R.id.etOne);
+                editTextOne.setHint(hintOne);
                 final EditText editTextTwo = view.findViewById(R.id.etTwo);
+                editTextTwo.setHint(hintTwo);
                 btnOne.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -214,7 +219,7 @@ public class BaseActivity extends Activity {
     }
 
     protected void addAutoCompleteTextViewButton(
-            final String[] strings, final String labelOne, final OnButtonClick clickListenerOne
+            final String[] strings, final String hint, final String labelOne, final OnButtonClick clickListenerOne
     ) {
         addView(R.layout.item_autocomplete_button, new OnViewCreated() {
             @Override
@@ -227,6 +232,7 @@ public class BaseActivity extends Activity {
                 ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(),
                         android.R.layout.simple_dropdown_item_1line, strings);
                 actvOne.setAdapter(adapter);
+                actvOne.setHint(hint);
 
                 btnOne.setOnClickListener(new View.OnClickListener() {
                     @Override

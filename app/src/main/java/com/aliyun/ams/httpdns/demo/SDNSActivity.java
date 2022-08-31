@@ -33,7 +33,7 @@ public class SDNSActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
 
 
-        addEditTextEditTextButton("添加全局配置", new OnButtonClickMoreView() {
+        addEditTextEditTextButton("key", "value", "添加全局配置", new OnButtonClickMoreView() {
             @Override
             public void onBtnClick(View[] views) {
                 EditText etOne = (EditText) views[0];
@@ -86,7 +86,7 @@ public class SDNSActivity extends BaseActivity {
             }
         });
 
-        addEditTextEditTextButton("发起请求", new OnButtonClickMoreView() {
+        addEditTextEditTextButton("key", "value", "发起请求", new OnButtonClickMoreView() {
             @Override
             public void onBtnClick(View[] views) {
                 EditText etOne = (EditText) views[0];
