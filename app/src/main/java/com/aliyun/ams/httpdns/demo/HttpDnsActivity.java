@@ -395,28 +395,23 @@ public class HttpDnsActivity extends BaseActivity {
                 worker.execute(new Runnable() {
                     @Override
                     public void run() {
-                        worker.execute(new Runnable() {
-                            @Override
-                            public void run() {
-                                sendLog("开始发起网络请求");
-                                sendLog("网络实现方式为" + (networkRequest == httpUrlConnectionRequest ? "HttpUrlConnection" : "okhttp"));
-                                String url = getUrl(schema, host);
-                                sendLog("url is " + url);
-                                sendLog("httpdns 使用 同步解析api");
-                                sendLog("指定解析ip类型为" + requestIpType.name());
-                                networkRequest.updateHttpDnsConfig(false, requestIpType);
-                                try {
-                                    String response = networkRequest.httpGet(url);
-                                    if (response != null && response.length() > 30) {
-                                        response = response.substring(0, 30) + "...";
-                                    }
-                                    sendLog("请求结束 response is " + response + " 完整记录请看logcat日志");
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                    sendLog("请求结束 发生异常 " + e.getClass().getName() + e.getMessage() + " 完整记录请看logcat日志");
-                                }
+                        sendLog("开始发起网络请求");
+                        sendLog("网络实现方式为" + (networkRequest == httpUrlConnectionRequest ? "HttpUrlConnection" : "okhttp"));
+                        String url = getUrl(schema, host);
+                        sendLog("url is " + url);
+                        sendLog("httpdns 使用 同步解析api");
+                        sendLog("指定解析ip类型为" + requestIpType.name());
+                        networkRequest.updateHttpDnsConfig(false, requestIpType);
+                        try {
+                            String response = networkRequest.httpGet(url);
+                            if (response != null && response.length() > 30) {
+                                response = response.substring(0, 30) + "...";
                             }
-                        });
+                            sendLog("请求结束 response is " + response + " 完整记录请看logcat日志");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            sendLog("请求结束 发生异常 " + e.getClass().getName() + e.getMessage() + " 完整记录请看logcat日志");
+                        }
                     }
                 });
             }
