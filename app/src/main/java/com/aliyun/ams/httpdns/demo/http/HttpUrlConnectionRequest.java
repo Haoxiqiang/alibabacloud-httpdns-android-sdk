@@ -1,6 +1,7 @@
 package com.aliyun.ams.httpdns.demo.http;
 
 
+import android.content.Context;
 import android.net.SSLCertificateSocketFactory;
 import android.os.Build;
 import android.util.Log;
@@ -40,8 +41,13 @@ public class HttpUrlConnectionRequest implements NetworkRequest {
 
     public static final String TAG = MyApp.TAG + "HttpUrl";
 
+    private Context context;
     private boolean async;
     private RequestIpType type;
+
+    public HttpUrlConnectionRequest(Context context) {
+        this.context = context.getApplicationContext();
+    }
 
     @Override
     public void updateHttpDnsConfig(boolean async, RequestIpType requestIpType) {
@@ -83,12 +89,12 @@ public class HttpUrlConnectionRequest implements NetworkRequest {
         Log.d(TAG, "httpdns 解析 " + host + " 结果为 " + result);
 
         // 这里需要根据实际情况选择使用ipv6地址 还是 ipv4地址， 下面示例的代码优先使用了ipv6地址
-        if (result.getIpv6s() != null && result.getIpv6s().length > 0 && HttpDnsSettings.getNetworkDetector().getNetType() != NetType.v4) {
+        if (result.getIpv6s() != null && result.getIpv6s().length > 0 && HttpDnsSettings.getNetworkDetector().getNetType(context) != NetType.v4) {
             String newUrl = url.replace(host, "[" + result.getIpv6s()[0] + "]");
             conn = (HttpURLConnection) new URL(newUrl).openConnection();
             conn.setRequestProperty("Host", host);
             Log.d(TAG, "使用ipv6地址" + newUrl);
-        } else if (result.getIps() != null && result.getIps().length > 0 && HttpDnsSettings.getNetworkDetector().getNetType() != NetType.v6) {
+        } else if (result.getIps() != null && result.getIps().length > 0 && HttpDnsSettings.getNetworkDetector().getNetType(context) != NetType.v6) {
             String newUrl = url.replace(host, result.getIps()[0]);
             conn = (HttpURLConnection) new URL(newUrl).openConnection();
             conn.setRequestProperty("Host", host);

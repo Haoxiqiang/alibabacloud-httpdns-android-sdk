@@ -1,5 +1,7 @@
 package com.alibaba.sdk.android.httpdns;
 
+import android.content.Context;
+
 import com.alibaba.sdk.android.httpdns.net.HttpDnsNetworkDetector;
 
 /**
@@ -21,7 +23,7 @@ public class HttpDnsSettings {
     private static NetworkChecker checker = new NetworkChecker() {
         @Override
         public boolean isIpv6Only() {
-            return getNetworkDetector().getNetType() == NetType.v6;
+            return false;
         }
     };
 
@@ -50,6 +52,6 @@ public class HttpDnsSettings {
      * 获取网络类型的接口
      */
     public interface NetworkDetector {
-        NetType getNetType();
+        NetType getNetType(Context context);
     }
 }

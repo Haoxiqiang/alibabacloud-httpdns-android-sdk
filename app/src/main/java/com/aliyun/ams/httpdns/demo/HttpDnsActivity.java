@@ -57,8 +57,8 @@ public class HttpDnsActivity extends BaseActivity {
      */
     private RequestIpType requestIpType = RequestIpType.v4;
 
-    private HttpUrlConnectionRequest httpUrlConnectionRequest = new HttpUrlConnectionRequest();
-    private OkHttpRequest okHttpRequest = new OkHttpRequest();
+    private HttpUrlConnectionRequest httpUrlConnectionRequest;
+    private OkHttpRequest okHttpRequest;
     private NetworkRequest networkRequest = httpUrlConnectionRequest;
 
     // 控制主站域名临时用的list
@@ -68,6 +68,9 @@ public class HttpDnsActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        httpUrlConnectionRequest = new HttpUrlConnectionRequest(this);
+        okHttpRequest = new OkHttpRequest(this);
+        networkRequest = httpUrlConnectionRequest;
 
         addFourButton("切换实例", new View.OnClickListener() {
             @Override
@@ -285,7 +288,7 @@ public class HttpDnsActivity extends BaseActivity {
         }, "获取当前网络状态", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                NetType type = HttpDnsNetworkDetector.getInstance().getNetType();
+                NetType type = HttpDnsNetworkDetector.getInstance().getNetType(getApplicationContext());
                 sendLog("获取网络状态需要修改 " + type.name());
             }
         });

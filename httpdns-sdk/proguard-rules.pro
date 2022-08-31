@@ -24,6 +24,8 @@
 -allowaccessmodification
 -useuniqueclassmembernames
 
+-dontwarn com.alibaba.sdk.android.httpdns.net.HttpDnsNetworkDetector
+
 -keeppackagenames com.alibaba.sdk.android.httpdns
 -keep class com.alibaba.sdk.android.httpdns.HttpDns{*;}
 -keep class com.alibaba.sdk.android.httpdns.HttpDnsService{*;}
@@ -56,6 +58,3 @@
 
 -keep interface com.alibaba.sdk.android.httpdns.HttpDnsSettings$NetworkChecker{*;}
 -keep interface com.alibaba.sdk.android.httpdns.HttpDnsSettings$NetworkDetector{*;}
-
--dontwarn com.taobao.android.**
--dontwarn anet.channel.**

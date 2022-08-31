@@ -554,7 +554,7 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
     private RequestIpType changeTypeWithNetType(HttpDnsSettings.NetworkDetector networkDetector, RequestIpType type) {
         if (type == RequestIpType.auto) {
             if (networkDetector != null) {
-                switch (networkDetector.getNetType()) {
+                switch (networkDetector.getNetType(config.getContext())) {
                     case v6:
                         return RequestIpType.v6;
                     case v4:

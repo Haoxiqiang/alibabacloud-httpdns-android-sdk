@@ -42,7 +42,7 @@ public class InterpretHostHelper {
             }
         }
         String path = getPath(config, host, type, extraArgs, null);
-        if (config.getNetworkDetector() != null && config.getNetworkDetector().getNetType() == NetType.v6) {
+        if (config.getNetworkDetector() != null && config.getNetworkDetector().getNetType(config.getContext()) == NetType.v6) {
             return new HttpRequestConfig(config.getSchema(), config.getCurrentServer().getServerIpForV6(), config.getCurrentServer().getPortForV6(), path, config.getTimeout(), RequestIpType.v6);
         } else {
             return new HttpRequestConfig(config.getSchema(), config.getCurrentServer().getServerIp(), config.getCurrentServer().getPort(), path, config.getTimeout(), RequestIpType.v4);
@@ -62,7 +62,7 @@ public class InterpretHostHelper {
         }
         HashMap<String, String> signParams = signService.getSigns(host);
         String path = getPath(config, host, type, extraArgs, signParams);
-        if (config.getNetworkDetector() != null && config.getNetworkDetector().getNetType() == NetType.v6) {
+        if (config.getNetworkDetector() != null && config.getNetworkDetector().getNetType(config.getContext()) == NetType.v6) {
             return new HttpRequestConfig(config.getSchema(), config.getCurrentServer().getServerIpForV6(), config.getCurrentServer().getPortForV6(), path, config.getTimeout(), RequestIpType.v6);
         } else {
             return new HttpRequestConfig(config.getSchema(), config.getCurrentServer().getServerIp(), config.getCurrentServer().getPort(), path, config.getTimeout(), RequestIpType.v4);
@@ -177,7 +177,7 @@ public class InterpretHostHelper {
             service = "sign_resolve";
         }
         String path = "/" + config.getAccountId() + "/" + service + "?host=" + host + "&sdk=android_" + BuildConfig.VERSION_NAME + query + getSid() + toUrlParams(signs);
-        if (config.getNetworkDetector() != null && config.getNetworkDetector().getNetType() == NetType.v6) {
+        if (config.getNetworkDetector() != null && config.getNetworkDetector().getNetType(config.getContext()) == NetType.v6) {
             return new HttpRequestConfig(config.getSchema(), config.getCurrentServer().getServerIpForV6(), config.getCurrentServer().getPortForV6(), path, config.getTimeout(), RequestIpType.v6);
         } else {
             return new HttpRequestConfig(config.getSchema(), config.getCurrentServer().getServerIp(), config.getCurrentServer().getPort(), path, config.getTimeout(), RequestIpType.v4);

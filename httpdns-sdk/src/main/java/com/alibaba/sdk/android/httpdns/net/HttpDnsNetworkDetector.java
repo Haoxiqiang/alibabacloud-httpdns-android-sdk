@@ -1,5 +1,7 @@
 package com.alibaba.sdk.android.httpdns.net;
 
+import android.content.Context;
+
 import com.alibaba.sdk.android.httpdns.HttpDnsSettings;
 import com.alibaba.sdk.android.httpdns.NetType;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
@@ -33,21 +35,38 @@ public class HttpDnsNetworkDetector implements HttpDnsSettings.NetworkDetector {
     private boolean checkInterface = true;
     private String hostToCheckNetType = "www.taobao.com";
     private NetType cache = NetType.none;
+    private boolean disableCache = false;
+    private Context context;
 
     /**
      * 网络变化时，清除缓存
      */
-    public void cleanCache(boolean connected) {
+    public void cleanCache(final boolean connected) {
+        if (disableCache) {
+            return;
+        }
         cache = NetType.none;
-        if (connected) {
+        if (connected && this.context != null) {
             worker.execute(new Runnable() {
                 @Override
                 public void run() {
                     // 异步探测一下
-                    cache = detectNetType();
+                    if (context != null) {
+                        cache = detectNetType(context);
+                    }
                 }
             });
         }
+    }
+
+    /**
+     * 是否禁用缓存，默认不禁用
+     * 不确定是否存在网络链接不变的情况下，网络情况会发生变化的情况，所以提供了此开关
+     *
+     * @param disable
+     */
+    public void disableCache(boolean disable) {
+        this.disableCache = disable;
     }
 
     /**
@@ -69,21 +88,32 @@ public class HttpDnsNetworkDetector implements HttpDnsSettings.NetworkDetector {
     }
 
     @Override
-    public NetType getNetType() {
+    public NetType getNetType(Context context) {
+        if (disableCache) {
+            NetType tmp = detectNetType(context);
+            if (HttpDnsLog.isPrint()) {
+                HttpDnsLog.d("ipdetector type is " + tmp.name());
+            }
+            return tmp;
+        }
         if (cache != NetType.none) {
             return cache;
         }
-        cache = detectNetType();
+        cache = detectNetType(context);
+        if (HttpDnsLog.isPrint()) {
+            HttpDnsLog.d("ipdetector type is " + cache.name());
+        }
         return cache;
     }
 
-    private NetType detectNetType() {
+    private NetType detectNetType(Context context) {
+        this.context = context.getApplicationContext();
         try {
             Class clz = Class.forName("com.aliyun.ams.ipdetector.Inet64Util");
             if (checkInterface) {
-                Method getStackType = clz.getMethod("getIpStack");
-                int type = (int) getStackType.invoke(null);
-                HttpDnsLog.d("ipdetector type is " + type);
+                Method getStackType = clz.getMethod("getIpStack", Context.class);
+                int type = (int) getStackType.invoke(null, context);
+
                 if (type == IP_DUAL_STACK) {
                     return NetType.both;
                 } else if (type == IPV4_ONLY) {
@@ -95,9 +125,11 @@ public class HttpDnsNetworkDetector implements HttpDnsSettings.NetworkDetector {
                     return NetType.none;
                 }
             } else {
-                Method getStackType = clz.getMethod("getIpStackCheckLocal");
-                int type = (int) getStackType.invoke(null);
-                HttpDnsLog.d("ipdetector type is " + type);
+                Method getStackType = clz.getMethod("getIpStackCheckLocal", Context.class);
+                int type = (int) getStackType.invoke(null, context);
+                if (HttpDnsLog.isPrint()) {
+                    HttpDnsLog.d("ipdetector type is " + type);
+                }
                 if (type == IP_DUAL_STACK) {
                     // 不检查本地IP的情况下，无法过滤ipv6只有本地ip的情况，需要通过其它方式检测下。
                     NetType tmp = getNetTypeByHost();

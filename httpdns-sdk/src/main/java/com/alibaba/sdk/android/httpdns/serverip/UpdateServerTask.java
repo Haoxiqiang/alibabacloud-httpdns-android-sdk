@@ -38,7 +38,7 @@ public class UpdateServerTask {
 
         RequestIpType ipType;
         HttpDnsSettings.NetworkDetector networkDetector = config.getNetworkDetector();
-        if (networkDetector != null && networkDetector.getNetType() == NetType.v6) {
+        if (networkDetector != null && networkDetector.getNetType(config.getContext()) == NetType.v6) {
             servers = getAllServers(
                     config.getCurrentServer().getIpv6ServerIps(), config.getCurrentServer().getIpv6Ports(),
                     config.getInitServer().getIpv6ServerIps(), config.getInitServer().getIpv6Ports(),
