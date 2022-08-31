@@ -493,7 +493,9 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
                 @Override
                 public void run() {
                     HashMap<String, RequestIpType> allHost = repo.getAllHostWithoutFixedIP();
-                    HttpDnsLog.d("network change, clean record");
+                    if (HttpDnsLog.isPrint()) {
+                        HttpDnsLog.d("network change, clean record");
+                    }
                     repo.clearMemoryCacheForHostWithoutFixedIP();
                     if (resolveAfterNetworkChange && config.isEnabled()) {
                         ArrayList<String> v4List = new ArrayList<>();
@@ -518,7 +520,9 @@ public class HttpDnsServiceImpl implements HttpDnsService, ScheduleService.OnSer
                             resolveHostService.resolveHostAsync(bothList, RequestIpType.both);
                         }
                         if (v4List.size() > 0 || v6List.size() > 0 || bothList.size() > 0) {
-                            HttpDnsLog.d("network change, resolve hosts");
+                            if (HttpDnsLog.isPrint()) {
+                                HttpDnsLog.d("network change, resolve hosts");
+                            }
                         }
                     }
                 }

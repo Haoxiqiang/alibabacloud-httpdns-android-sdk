@@ -100,7 +100,9 @@ public class ThreadUtil {
             try {
                 return httpdnsThread.submit(task);
             } catch (RejectedExecutionException e) {
-                HttpDnsLog.e("too many request ?", e);
+                if (HttpDnsLog.isPrint()) {
+                    HttpDnsLog.e("too many request ?", e);
+                }
                 throw e;
             }
         }
@@ -110,7 +112,9 @@ public class ThreadUtil {
             try {
                 return httpdnsThread.submit(task, result);
             } catch (RejectedExecutionException e) {
-                HttpDnsLog.e("too many request ?", e);
+                if (HttpDnsLog.isPrint()) {
+                    HttpDnsLog.e("too many request ?", e);
+                }
                 throw e;
             }
         }
@@ -120,7 +124,9 @@ public class ThreadUtil {
             try {
                 return httpdnsThread.submit(task);
             } catch (RejectedExecutionException e) {
-                HttpDnsLog.e("too many request ?", e);
+                if (HttpDnsLog.isPrint()) {
+                    HttpDnsLog.e("too many request ?", e);
+                }
                 throw e;
             }
         }
@@ -130,7 +136,9 @@ public class ThreadUtil {
             try {
                 return httpdnsThread.invokeAll(tasks);
             } catch (RejectedExecutionException e) {
-                HttpDnsLog.e("too many request ?", e);
+                if (HttpDnsLog.isPrint()) {
+                    HttpDnsLog.e("too many request ?", e);
+                }
                 throw e;
             }
         }
@@ -140,7 +148,9 @@ public class ThreadUtil {
             try {
                 return httpdnsThread.invokeAll(tasks, timeout, unit);
             } catch (RejectedExecutionException e) {
-                HttpDnsLog.e("too many request ?", e);
+                if (HttpDnsLog.isPrint()) {
+                    HttpDnsLog.e("too many request ?", e);
+                }
                 throw e;
             }
         }
@@ -150,7 +160,9 @@ public class ThreadUtil {
             try {
                 return httpdnsThread.invokeAny(tasks);
             } catch (RejectedExecutionException e) {
-                HttpDnsLog.e("too many request ?", e);
+                if (HttpDnsLog.isPrint()) {
+                    HttpDnsLog.e("too many request ?", e);
+                }
                 throw e;
             }
         }
@@ -160,7 +172,9 @@ public class ThreadUtil {
             try {
                 return httpdnsThread.invokeAny(tasks, timeout, unit);
             } catch (RejectedExecutionException e) {
-                HttpDnsLog.e("too many request ?", e);
+                if (HttpDnsLog.isPrint()) {
+                    HttpDnsLog.e("too many request ?", e);
+                }
                 throw e;
             }
         }

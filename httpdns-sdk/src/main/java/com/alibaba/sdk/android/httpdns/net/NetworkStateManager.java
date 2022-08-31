@@ -98,7 +98,9 @@ public class NetworkStateManager {
             NetworkInfo info = connectivityManager.getActiveNetworkInfo();
             if (info != null && info.isAvailable() && info.isConnected()) {
                 String name = info.getTypeName();
-                HttpDnsLog.d("[detectCurrentNetwork] - Network name:" + name + " subType name: " + info.getSubtypeName());
+                if (HttpDnsLog.isPrint()) {
+                    HttpDnsLog.d("[detectCurrentNetwork] - Network name:" + name + " subType name: " + info.getSubtypeName());
+                }
                 return name == null ? NONE_NETWORK : name;
             }
         } catch (Exception e) {

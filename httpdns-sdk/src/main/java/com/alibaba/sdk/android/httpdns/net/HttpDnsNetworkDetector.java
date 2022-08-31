@@ -148,7 +148,9 @@ public class HttpDnsNetworkDetector implements HttpDnsSettings.NetworkDetector {
             }
 
         } catch (Throwable e) {
-            HttpDnsLog.i("ipdetector not exist.");
+            if (HttpDnsLog.isPrint()) {
+                HttpDnsLog.i("ipdetector not exist.");
+            }
             // 没有引入网络判断库时，使用local dns解析简单判断下
             return getNetTypeByHost();
         }
