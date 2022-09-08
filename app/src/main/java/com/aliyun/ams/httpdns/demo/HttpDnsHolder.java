@@ -82,7 +82,7 @@ public class HttpDnsHolder {
             public void onGetSp(SharedPreferences sp) {
                 enableExpiredIp = sp.getBoolean(KEY_EXPIRED_IP, true);
                 enableCacheIp = sp.getBoolean(KEY_CACHE_IP, false);
-                timeout = sp.getInt(KEY_CACHE_IP, 5 * 1000);
+                timeout = sp.getInt(KEY_TIMEOUT, 5 * 1000);
                 enableHttps = sp.getBoolean(KEY_HTTPS, false);
                 ipProbeItems = convertToProbeList(sp.getString(KEY_PROBE_ITEMS, null));
                 region = sp.getString(KEY_REGION, null);
