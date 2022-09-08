@@ -11,7 +11,13 @@ import com.alibaba.sdk.android.httpdns.RequestIpType;
 import com.alibaba.sdk.android.httpdns.probe.IPProbeItem;
 import com.aliyun.ams.httpdns.demo.utils.SpUtil;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -47,7 +53,7 @@ public class HttpDnsHolder {
     private boolean enableCacheIp;
     private int timeout;
     private boolean enableHttps;
-    private List<IPProbeItem> ipProbeItems;
+    private List<IPProbeItem> ipProbeItems = null;
     private String region;
     private List<String> hostListWithFixedIp;
     private HashMap<String, Integer> ttlCache;
@@ -238,26 +244,96 @@ public class HttpDnsHolder {
 
 
     private static String convertHostList(List<String> hostListWithFixedIp) {
-        return null;
+        if (hostListWithFixedIp == null) {
+            return null;
+        }
+        JSONArray array = new JSONArray();
+        for (String host : hostListWithFixedIp) {
+            array.put(host);
+        }
+        return array.toString();
     }
 
     private static String convertTtlCache(HashMap<String, Integer> ttlCache) {
-        return null;
+        if (ttlCache == null) {
+            return null;
+        }
+        JSONObject jsonObject = new JSONObject();
+        for (String host : ttlCache.keySet()) {
+            try {
+                jsonObject.put(host, ttlCache.get(host));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return jsonObject.toString();
     }
 
     private static String convertProbeList(List<IPProbeItem> ipProbeItems) {
-        return null;
+        if (ipProbeItems == null) {
+            return null;
+        }
+        JSONObject jsonObject = new JSONObject();
+        for (IPProbeItem item : ipProbeItems) {
+            try {
+                jsonObject.put(item.getHostName(), item.getPort());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return jsonObject.toString();
     }
 
     private static List<IPProbeItem> convertToProbeList(String json) {
+        if (json == null) {
+            return null;
+        }
+        try {
+            JSONObject jsonObject = new JSONObject(json);
+            ArrayList<IPProbeItem> list = new ArrayList<>();
+            for (Iterator<String> it = jsonObject.keys(); it.hasNext(); ) {
+                String host = it.next();
+                list.add(new IPProbeItem(host, jsonObject.getInt(host)));
+            }
+            return list;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
     private static HashMap<String, Integer> convertToCacheTtlData(String json) {
+        if (json == null) {
+            return null;
+        }
+        try {
+            JSONObject jsonObject = new JSONObject(json);
+            HashMap<String, Integer> map = new HashMap<>();
+            for (Iterator<String> it = jsonObject.keys(); it.hasNext(); ) {
+                String host = it.next();
+                map.put(host, jsonObject.getInt(host));
+            }
+            return map;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
         return null;
     }
 
     private static List<String> convertToStringList(String json) {
+        if (json != null) {
+            try {
+                JSONArray array = new JSONArray(json);
+                ArrayList<String> list = new ArrayList<>();
+                for (int i = 0; i < array.length(); i++) {
+                    list.add(array.getString(i));
+                }
+                return list;
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
         return null;
     }
 }
