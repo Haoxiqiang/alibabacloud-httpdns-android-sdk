@@ -66,25 +66,25 @@ public class ResolveHostService {
 
             if (type == RequestIpType.v4) {
                 HTTPDNSResult result = repo.getIps(host, type, null);
-                if(result == null || result.isExpired()) {
+                if (result == null || result.isExpired() || result.isFromDB()) {
                     // 需要解析
                     hostsRequestV4.add(host);
                 }
             } else if (type == RequestIpType.v6) {
                 HTTPDNSResult result = repo.getIps(host, type, null);
-                if(result == null || result.isExpired()) {
+                if (result == null || result.isExpired() || result.isFromDB()) {
                     // 需要解析
                     hostsRequestV6.add(host);
                 }
             } else {
                 HTTPDNSResult resultV4 = repo.getIps(host, RequestIpType.v4, null);
                 HTTPDNSResult resultV6 = repo.getIps(host, RequestIpType.v6, null);
-                if((resultV4 == null || resultV4.isExpired()) && (resultV6 == null || resultV6.isExpired())) {
+                if ((resultV4 == null || resultV4.isExpired() || resultV4.isFromDB()) && (resultV6 == null || resultV6.isExpired() || resultV6.isFromDB())) {
                     // 都需要解析
                     hostsRequestBoth.add(host);
-                } else if (resultV4 == null || resultV4.isExpired()) {
+                } else if (resultV4 == null || resultV4.isExpired() || resultV4.isFromDB()) {
                     hostsRequestV4.add(host);
-                } else if (resultV6 == null || resultV6.isExpired()) {
+                } else if (resultV6 == null || resultV6.isExpired() || resultV6.isFromDB()) {
                     hostsRequestV6.add(host);
                 }
             }
@@ -95,13 +95,13 @@ public class ResolveHostService {
     }
 
     private void resolveHost(ArrayList<String> hostList, final RequestIpType type) {
-        if(hostList == null || hostList.size() == 0) {
+        if (hostList == null || hostList.size() == 0) {
             return;
         }
         ArrayList<String> allHosts = new ArrayList<>(hostList);
         // 预解析每次最多5个域名
         final int maxCountPerRequest = 5;
-        int requestCount = (hostList.size() + maxCountPerRequest - 1) / maxCountPerRequest ;
+        int requestCount = (hostList.size() + maxCountPerRequest - 1) / maxCountPerRequest;
         for (int i = 0; i < requestCount; i++) {
             final ArrayList<String> targetHost = new ArrayList<>();
             while (targetHost.size() < maxCountPerRequest && allHosts.size() > 0) {
@@ -148,7 +148,7 @@ public class ResolveHostService {
                 @Override
                 public void onFail(Throwable throwable) {
                     HttpDnsLog.w("resolve hosts for " + targetHost.toString() + " fail", throwable);
-                    if(throwable instanceof HttpException && ((HttpException) throwable).shouldCreateEmptyCache()) {
+                    if (throwable instanceof HttpException && ((HttpException) throwable).shouldCreateEmptyCache()) {
                         ResolveHostResponse emptyResponse = ResolveHostResponse.createEmpty(targetHost, type, 60 * 60);
                         repo.save(region, type, emptyResponse);
                     }

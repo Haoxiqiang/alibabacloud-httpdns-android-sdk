@@ -63,20 +63,20 @@ public class InterpretHostService {
         if (HttpDnsLog.isPrint()) {
             HttpDnsLog.d("host " + host + " result is " + CommonUtil.toString(result));
         }
-        if ((result == null || result.isExpired())) {
+        if (result == null || result.isExpired() || result.isFromDB()) {
             if (type == RequestIpType.both) {
                 // 过滤掉 未过期的请求
                 HTTPDNSResult resultV4 = repo.getIps(host, RequestIpType.v4, cacheKey);
                 HTTPDNSResult resultV6 = repo.getIps(host, RequestIpType.v6, cacheKey);
-                boolean v4Invalid = resultV4 == null || resultV4.isExpired();
-                boolean v6Invalid = resultV6 == null || resultV6.isExpired();
-                if(v4Invalid && v6Invalid) {
+                boolean v4Invalid = resultV4 == null || resultV4.isExpired() || resultV4.isFromDB();
+                boolean v6Invalid = resultV6 == null || resultV6.isExpired() || resultV6.isFromDB();
+                if (v4Invalid && v6Invalid) {
                     // 都过期，不过滤
                     interpretHostInner(host, type, extras, cacheKey);
-                } else if(v4Invalid) {
+                } else if (v4Invalid) {
                     // 仅v4过期
                     interpretHostInner(host, RequestIpType.v4, extras, cacheKey);
-                } else if(v6Invalid) {
+                } else if (v6Invalid) {
                     // 仅v6过期
                     interpretHostInner(host, RequestIpType.v6, extras, cacheKey);
                 }
@@ -124,7 +124,7 @@ public class InterpretHostService {
                 @Override
                 public void onFail(Throwable throwable) {
                     HttpDnsLog.w("ip request for " + host + " fail", throwable);
-                    if(throwable instanceof HttpException && ((HttpException) throwable).shouldCreateEmptyCache()) {
+                    if (throwable instanceof HttpException && ((HttpException) throwable).shouldCreateEmptyCache()) {
                         InterpretHostResponse emptyResponse = InterpretHostResponse.createEmpty(host, 60 * 60);
                         repo.save(region, host, type, emptyResponse.getExtras(), cacheKey, emptyResponse);
                     }
@@ -152,22 +152,21 @@ public class InterpretHostService {
         if (HttpDnsLog.isPrint()) {
             HttpDnsLog.d("host " + host + " result is " + CommonUtil.toString(result));
         }
-        if ((result == null || result.isExpired())) {
-            // 没有缓存，或者缓存过期，需要解析
-
+        if (result == null || result.isExpired() || result.isFromDB()) {
+            // 没有缓存，或者缓存过期，或者是从数据库读取的 需要解析
             if (type == RequestIpType.both) {
                 // 过滤掉 未过期的请求
                 HTTPDNSResult resultV4 = repo.getIps(host, RequestIpType.v4, cacheKey);
                 HTTPDNSResult resultV6 = repo.getIps(host, RequestIpType.v6, cacheKey);
-                boolean v4Invalid = resultV4 == null || resultV4.isExpired();
-                boolean v6Invalid = resultV6 == null || resultV6.isExpired();
-                if(v4Invalid && v6Invalid) {
+                boolean v4Invalid = resultV4 == null || resultV4.isExpired() || resultV4.isFromDB();
+                boolean v6Invalid = resultV6 == null || resultV6.isExpired() || resultV6.isFromDB();
+                if (v4Invalid && v6Invalid) {
                     // 都过期，不过滤
                     syncInterpretHostInner(host, type, extras, cacheKey, result);
-                } else if(v4Invalid) {
+                } else if (v4Invalid) {
                     // 仅v4过期
                     syncInterpretHostInner(host, RequestIpType.v4, extras, cacheKey, result);
-                } else if(v6Invalid) {
+                } else if (v6Invalid) {
                     // 仅v6过期
                     syncInterpretHostInner(host, RequestIpType.v6, extras, cacheKey, result);
                 }
@@ -223,7 +222,7 @@ public class InterpretHostService {
                 @Override
                 public void onFail(Throwable throwable) {
                     HttpDnsLog.w("ip request for " + host + " fail", throwable);
-                    if(throwable instanceof HttpException && ((HttpException) throwable).shouldCreateEmptyCache()) {
+                    if (throwable instanceof HttpException && ((HttpException) throwable).shouldCreateEmptyCache()) {
                         InterpretHostResponse emptyResponse = InterpretHostResponse.createEmpty(host, 60 * 60);
                         repo.save(region, host, type, emptyResponse.getExtras(), cacheKey, emptyResponse);
                     }

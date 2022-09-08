@@ -216,17 +216,21 @@ public class InterpretHostCache {
         return records;
     }
 
-    public HashMap<String, RequestIpType> getAllHost() {
+    public HashMap<String, RequestIpType> getAllHostNotEmptyResult() {
         HashMap<String, RequestIpType> all = new HashMap<>();
         for (HostRecord record : v4Records.values()) {
-            all.put(record.getHost(), RequestIpType.v4);
+            if (record.getIps() != null && record.getIps().length > 0) {
+                all.put(record.getHost(), RequestIpType.v4);
+            }
         }
         for (HostRecord record : v6Records.values()) {
-            RequestIpType type = all.get(record.getHost());
-            if (type == null) {
-                all.put(record.getHost(), RequestIpType.v6);
-            } else {
-                all.put(record.getHost(), RequestIpType.both);
+            if (record.getIps() != null && record.getIps().length > 0) {
+                RequestIpType type = all.get(record.getHost());
+                if (type == null) {
+                    all.put(record.getHost(), RequestIpType.v6);
+                } else {
+                    all.put(record.getHost(), RequestIpType.both);
+                }
             }
         }
         return all;

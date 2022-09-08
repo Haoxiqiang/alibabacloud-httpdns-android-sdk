@@ -461,7 +461,7 @@ public class HttpDnsE2E {
         // 缩短请求间隔
         app.setUpdateServerTimeInterval(1000);
         try {
-            Thread.sleep(1000);
+            Thread.sleep(1001);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -1084,9 +1084,15 @@ public class HttpDnsE2E {
         app.start(true);
         app.enableCache(true);
 
+        // 此时返回缓存，然后由于是数据库读取的，触发一次解析
         ips = app.requestInterpretHost();
-        ServerStatusHelper.hasNotReceiveAppInterpretHostRequest("当本地有缓存时，不会请求服务器", app, server);
-        UnitTestUtil.assertIpsEqual("解析域名返回服务器结果", serverResponseIps, ips);
+        UnitTestUtil.assertIpsEqual("解析域名返回缓存结果", serverResponseIps, ips);
+
+        app.waitForAppThread();
+        // 由于从数据库读取的结果会触发一次解析更新，所以此处我们在此清除数据库缓存
+        app.enableCache(true);
+
+        server.getInterpretHostServer().cleanRecord();
 
         // 重置实例，
         HttpDns.resetInstance();
@@ -1123,8 +1129,7 @@ public class HttpDnsE2E {
         app.enableCache(false);
 
         ips = app.requestInterpretHost();
-        ServerStatusHelper.hasNotReceiveAppInterpretHostRequest("当本地有缓存时，不会请求服务器", app, server);
-        UnitTestUtil.assertIpsEqual("解析域名返回服务器结果", serverResponseIps, ips);
+        UnitTestUtil.assertIpsEqual("解析域名返回缓存结果", serverResponseIps, ips);
     }
 
 
@@ -1596,6 +1601,9 @@ public class HttpDnsE2E {
         // 读取缓存
         String[] ips2 = app.requestInterpretHost();
         UnitTestUtil.assertIpsEqual("确认缓存生效", ips1, ips2);
+        app.waitForAppThread();
+        // 获取新的缓存值
+        ips2 = app.requestInterpretHost();
 
         // 重置实例，
         HttpDns.resetInstance();
@@ -1606,6 +1614,7 @@ public class HttpDnsE2E {
 
         String[] ips3 = app.requestInterpretHost();
         UnitTestUtil.assertIpsEqual("确认缓存没有被清除，一直存在", ips3, ips2);
+        app.waitForAppThread();
 
         ArrayList<String> hosts = new ArrayList<>();
         hosts.add(app.getRequestHost());
@@ -1827,7 +1836,7 @@ public class HttpDnsE2E {
         app.start(true);
 
         String[] ips2 = app.requestInterpretHost();
-        ServerStatusHelper.hasReceiveAppInterpretHostRequest("有缓存，服务器还是一次请求记录", app, server, 1);
+        ServerStatusHelper.hasReceiveAppInterpretHostRequest("有缓存，但是由于无法判断之前和之后的网络是否一致，还是需要再请求一次", app, server, 2);
         UnitTestUtil.assertIpsEqual("解析域名返回服务器结果", ips2, ips);
     }
 
