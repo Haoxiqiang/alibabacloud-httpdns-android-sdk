@@ -13,6 +13,7 @@ import com.alibaba.sdk.android.httpdns.SyncService;
 import com.alibaba.sdk.android.httpdns.net.HttpDnsNetworkDetector;
 import com.aliyun.ams.httpdns.demo.MyApp;
 import com.aliyun.ams.httpdns.demo.NetworkRequest;
+import com.aliyun.ams.httpdns.demo.utils.Util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -89,7 +90,7 @@ public class HttpUrlConnectionRequest implements NetworkRequest {
         } else {
             result = ((SyncService) MyApp.getInstance().getService()).getByHost(host, type);
         }
-        Log.d(TAG, "httpdns 解析 " + host + " 结果为 " + result);
+        Log.d(TAG, "httpdns 解析 " + host + " 结果为 " + result + " ttl is " + Util.getTtl(result));
 
         // 这里需要根据实际情况选择使用ipv6地址 还是 ipv4地址， 下面示例的代码优先使用了ipv6地址
         if (result.getIpv6s() != null && result.getIpv6s().length > 0 && HttpDnsNetworkDetector.getInstance().getNetType(context) != NetType.v4) {

@@ -10,6 +10,7 @@ import com.alibaba.sdk.android.httpdns.SyncService;
 import com.alibaba.sdk.android.httpdns.net.HttpDnsNetworkDetector;
 import com.aliyun.ams.httpdns.demo.MyApp;
 import com.aliyun.ams.httpdns.demo.NetworkRequest;
+import com.aliyun.ams.httpdns.demo.utils.Util;
 
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
@@ -17,7 +18,9 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import okhttp3.ConnectionPool;
 import okhttp3.Dns;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -39,6 +42,8 @@ public class OkHttpRequest implements NetworkRequest {
 
     public OkHttpRequest(final Context context) {
         client = new OkHttpClient.Builder()
+                // 这里配置连接池，是为了方便测试httpdns能力，正式代码请不要配置
+                .connectionPool(new ConnectionPool(0, 10 * 1000, TimeUnit.MICROSECONDS))
                 .dns(new Dns() {
                     @Override
                     public List<InetAddress> lookup(String hostname) throws UnknownHostException {
@@ -48,7 +53,7 @@ public class OkHttpRequest implements NetworkRequest {
                         } else {
                             result = ((SyncService) MyApp.getInstance().getService()).getByHost(hostname, type);
                         }
-                        Log.d(TAG, "httpdns 解析 " + hostname + " 结果为 " + result);
+                        Log.d(TAG, "httpdns 解析 " + hostname + " 结果为 " + result + " ttl is " + Util.getTtl(result));
                         List<InetAddress> inetAddresses = new ArrayList<>();
                         // 这里需要根据实际情况选择使用ipv6地址 还是 ipv4地址， 下面示例的代码优先使用了ipv6地址
                         if (result.getIpv6s() != null && result.getIpv6s().length > 0 && HttpDnsNetworkDetector.getInstance().getNetType(context) != NetType.v4) {
