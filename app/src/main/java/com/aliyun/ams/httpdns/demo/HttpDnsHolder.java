@@ -53,9 +53,9 @@ public class HttpDnsHolder {
     private boolean enableCacheIp;
     private int timeout;
     private boolean enableHttps;
-    private List<IPProbeItem> ipProbeItems = null;
+    private ArrayList<IPProbeItem> ipProbeItems = null;
     private String region;
-    private List<String> hostListWithFixedIp;
+    private ArrayList<String> hostListWithFixedIp;
     private HashMap<String, Integer> ttlCache;
     private CacheTtlChanger cacheTtlChanger = new CacheTtlChanger() {
         @Override
@@ -182,8 +182,11 @@ public class HttpDnsHolder {
         });
     }
 
-    public void setHostListWithFixedIp(final List<String> hostListWithFixedIp) {
-        this.hostListWithFixedIp = hostListWithFixedIp;
+    public void addHostWithFixedIp(String host) {
+        if (this.hostListWithFixedIp == null) {
+            this.hostListWithFixedIp = new ArrayList<>();
+        }
+        this.hostListWithFixedIp.add(host);
         // 重启生效
         SpUtil.writeSp(context, getSpName(accountId), new SpUtil.OnGetSpEditor() {
             @Override
@@ -193,8 +196,11 @@ public class HttpDnsHolder {
         });
     }
 
-    public void setIpProbeItems(final List<IPProbeItem> ipProbeItems) {
-        this.ipProbeItems = ipProbeItems;
+    public void addIpProbeItem(IPProbeItem ipProbeItem) {
+        if (this.ipProbeItems == null) {
+            this.ipProbeItems = new ArrayList<>();
+        }
+        this.ipProbeItems.add(ipProbeItem);
         getService().setIPProbeList(ipProbeItems);
         SpUtil.writeSp(context, getSpName(accountId), new SpUtil.OnGetSpEditor() {
             @Override
@@ -284,7 +290,7 @@ public class HttpDnsHolder {
         return jsonObject.toString();
     }
 
-    private static List<IPProbeItem> convertToProbeList(String json) {
+    private static ArrayList<IPProbeItem> convertToProbeList(String json) {
         if (json == null) {
             return null;
         }
@@ -321,7 +327,7 @@ public class HttpDnsHolder {
         return null;
     }
 
-    private static List<String> convertToStringList(String json) {
+    private static ArrayList<String> convertToStringList(String json) {
         if (json != null) {
             try {
                 JSONArray array = new JSONArray(json);

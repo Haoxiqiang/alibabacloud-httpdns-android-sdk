@@ -1,17 +1,24 @@
 package com.aliyun.ams.httpdns.demo;
 
 import android.app.Application;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.alibaba.sdk.android.httpdns.HttpDnsService;
 import com.alibaba.sdk.android.httpdns.ILogger;
 import com.alibaba.sdk.android.httpdns.log.HttpDnsLog;
+import com.aliyun.ams.httpdns.demo.utils.SpUtil;
 
 /**
  * @author zonglin.nzl
  * @date 8/30/22
  */
 public class MyApp extends Application {
+
+    private static final String SP_NAME = "HTTPDNS_DEMO";
+    private static final String KEY_INSTANCE = "KEY_INSTANCE";
+    private static final String VALUE_INSTANCE_A = "A";
+    private static final String VALUE_INSTANCE_B = "B";
 
     public static final String TAG = "HTTPDNS DEMO";
     private static MyApp instance;
@@ -43,6 +50,18 @@ public class MyApp extends Application {
         // 初始化httpdns的配置
         holderA.init(this);
         holderB.init(this);
+
+        SpUtil.readSp(this, SP_NAME, new SpUtil.OnGetSp() {
+            @Override
+            public void onGetSp(SharedPreferences sp) {
+                String flag = sp.getString(KEY_INSTANCE, VALUE_INSTANCE_A);
+                if (flag.equals(VALUE_INSTANCE_A)) {
+                    current = holderA;
+                } else {
+                    current = holderB;
+                }
+            }
+        });
     }
 
     public HttpDnsHolder getCurrentHolder() {
@@ -52,8 +71,20 @@ public class MyApp extends Application {
     public HttpDnsHolder changeHolder() {
         if (current == holderA) {
             current = holderB;
+            SpUtil.writeSp(instance, SP_NAME, new SpUtil.OnGetSpEditor() {
+                @Override
+                public void onGetSpEditor(SharedPreferences.Editor editor) {
+                    editor.putString(KEY_INSTANCE, VALUE_INSTANCE_B);
+                }
+            });
         } else {
             current = holderA;
+            SpUtil.writeSp(instance, SP_NAME, new SpUtil.OnGetSpEditor() {
+                @Override
+                public void onGetSpEditor(SharedPreferences.Editor editor) {
+                    editor.putString(KEY_INSTANCE, VALUE_INSTANCE_A);
+                }
+            });
         }
         return current;
     }

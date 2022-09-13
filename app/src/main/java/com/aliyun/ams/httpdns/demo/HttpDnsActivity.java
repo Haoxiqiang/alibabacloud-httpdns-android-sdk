@@ -65,10 +65,6 @@ public class HttpDnsActivity extends BaseActivity {
     private OkHttpRequest okHttpRequest;
     private NetworkRequest networkRequest = httpUrlConnectionRequest;
 
-    // 配置主站域名临时用的list
-    private ArrayList<String> hostNotChange = new ArrayList<>();
-    // 配置probe能力的临时list
-    private ArrayList<IPProbeItem> ipProbeItems = new ArrayList<>();
     private ExecutorService worker = Executors.newSingleThreadExecutor();
 
     @Override
@@ -88,12 +84,16 @@ public class HttpDnsActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 sendLog(MyApp.getInstance().getCurrentHolder().getCurrentConfig());
+                sendLog("要解析的域名是" + host);
+                sendLog("要解析的ip类型是" + requestIpType.name());
+                sendLog("要模拟请求的url是" + getUrl(schema, host));
+                sendLog("模拟请求的网络框架是" + (networkRequest == httpUrlConnectionRequest ? " HttpUrlConnection" : "OkHttp"));
             }
         }, "清除配置缓存", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 MyApp.getInstance().getCurrentHolder().cleanSp();
-                sendLog(MyApp.getInstance().getCurrentHolder().getAccountId() + "配置缓存清除");
+                sendLog(MyApp.getInstance().getCurrentHolder().getAccountId() + "配置缓存清除, 重启生效");
             }
         }, "清除日志", new View.OnClickListener() {
             @Override
@@ -256,8 +256,7 @@ public class HttpDnsActivity extends BaseActivity {
                     public void onClick(View v) {
                         String host = actvOne.getEditableText().toString();
                         int port = Integer.parseInt(etOne.getEditableText().toString());
-                        ipProbeItems.add(new IPProbeItem(host, port));
-                        MyApp.getInstance().getCurrentHolder().setIpProbeItems(ipProbeItems);
+                        MyApp.getInstance().getCurrentHolder().addIpProbeItem(new IPProbeItem(host, port));
                         sendLog("添加域名" + host + " 探测");
                     }
                 });
@@ -269,8 +268,7 @@ public class HttpDnsActivity extends BaseActivity {
             public void onBtnClick(View view) {
                 AutoCompleteTextView actvOne = (AutoCompleteTextView) view;
                 String host = actvOne.getEditableText().toString();
-                hostNotChange.add(host);
-                MyApp.getInstance().getCurrentHolder().setHostListWithFixedIp(hostNotChange);
+                MyApp.getInstance().getCurrentHolder().addHostWithFixedIp(host);
                 sendLog("添加主站域名" + host);
             }
         });
@@ -345,13 +343,13 @@ public class HttpDnsActivity extends BaseActivity {
             }
         });
 
-        addTwoButton("使用https请求", new View.OnClickListener() {
+        addTwoButton("模拟请求使用https请求", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 schema = SCHEMA_HTTPS;
                 sendLog("测试url使用https");
             }
-        }, "使用http请求", new View.OnClickListener() {
+        }, "模拟请求使用http请求", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 schema = SCHEMA_HTTP;

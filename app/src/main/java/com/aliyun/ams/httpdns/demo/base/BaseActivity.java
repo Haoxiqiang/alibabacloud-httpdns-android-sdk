@@ -14,6 +14,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.aliyun.ams.httpdns.demo.MyApp;
@@ -27,6 +28,7 @@ public class BaseActivity extends Activity {
 
     public static final int MSG_WHAT_LOG = 10000;
 
+    private ScrollView logScrollView;
     private TextView logView;
     private LinearLayout llContainer;
 
@@ -44,11 +46,18 @@ public class BaseActivity extends Activity {
                 switch (msg.what) {
                     case MSG_WHAT_LOG:
                         logView.setText(logView.getText() + "\n" + (String) msg.obj);
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                logScrollView.fullScroll(View.FOCUS_DOWN);
+                            }
+                        });
                         break;
                 }
             }
         };
 
+        logScrollView = findViewById(R.id.logScrollView);
         logView = findViewById(R.id.tvConsoleText);
         llContainer = findViewById(R.id.llContainer);
     }
