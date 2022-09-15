@@ -7,8 +7,6 @@ import com.alibaba.sdk.android.httpdns.request.HttpRequestConfig;
 import com.alibaba.sdk.android.httpdns.request.HttpRequestWatcher;
 import com.alibaba.sdk.android.httpdns.serverip.ScheduleService;
 
-import java.net.SocketTimeoutException;
-
 /**
  * 请求失败时，切换服务IP，服务IP都切换过，更新服务IP
  *
@@ -79,12 +77,12 @@ public class ShiftServerWatcher implements HttpRequestWatcher.Watcher {
     }
 
     private boolean shouldShiftServer(Throwable throwable) {
-        if (throwable instanceof SocketTimeoutException) {
-            return true;
-        }
         if (throwable instanceof HttpException) {
             return ((HttpException) throwable).shouldShiftServer();
         }
-        return false;
+        // 除了特定的一些错误（sdk问题或者客户配置问题，不是服务网络问题），都切换服务IP，这边避免个别服务节点真的访问不上
+        // 一方面尽可能提高可用性，另一方面当客户发生异常时，也方便根据服务IP来判断是否是真的无网络，因为多个服务IP都访问不上的可能性较低
+        // 还有一方面是 sniff模式是在切换服务IP的前提下触发的，这样也提高的sniff模式触发几率，在真的网络异常时，降低网络请求频次
+        return true;
     }
 }
