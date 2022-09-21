@@ -78,15 +78,15 @@ public class ShiftServerWatcherTest {
     }
 
     @Test
-    public void doNotshiftServerWhenThrowOtherError() throws Throwable {
+    public void doShiftServerWhenThrowOtherError() throws Throwable {
         Exception exception = new Exception();
         watcher.onStart(requestConfig);
         watcher.onFail(requestConfig, exception);
-        Mockito.verify(serverConfig, Mockito.never()).shiftServer(ip, port);
-        Mockito.verify(requestConfig, Mockito.never()).setIp(ip);
-        Mockito.verify(requestConfig, Mockito.never()).setPort(port);
+        Mockito.verify(serverConfig).shiftServer(ip, port);
+        Mockito.verify(requestConfig).setIp(ip);
+        Mockito.verify(requestConfig).setPort(port);
         Mockito.verify(statusControl, Mockito.never()).turnUp();
-        Mockito.verify(statusControl, Mockito.never()).turnDown();
+        Mockito.verify(statusControl).turnDown();
     }
 
     @Test
